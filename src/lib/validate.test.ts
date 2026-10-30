@@ -2,8 +2,6 @@ import { describe, expect, test } from "bun:test";
 import { docUrl, TARGETS } from "./catalog";
 import { fixtures } from "./catalog/fixtures";
 import { EXAMPLE } from "./example";
-import { scan } from "./nix/scan";
-import { tokenize } from "./nix/tokenize";
 import { analyze, detectTarget, resolveTarget, type TargetChoice, validate } from "./validate";
 
 const run = (src: string, choice: TargetChoice = "auto") => validate(src, choice, fixtures);
@@ -99,15 +97,9 @@ describe("validate", () => {
 
   test("reports syntax errors only, in order", () => {
     const report = run('{ a = "x;\n b = 1; }');
-    expect(report.diagnostics.map((d) => d.code)).toEqual([
-      "syntax-unbalanced",
-      "syntax-unterminated-string",
-    ]);
+    expect(report.diagnostics.map((d) => d.code)).toEqual(["syntax-unterminated-string"]);
     const lines = run("{ a = [\n}").diagnostics;
-    expect(lines.map((d) => [d.line, d.col])).toEqual([
-      [1, 1],
-      [2, 1],
-    ]);
+    expect(lines.map((d) => [d.code, d.line, d.col])).toEqual([["syntax-unbalanced", 2, 1]]);
   });
 
   test("validates enums for disko, with free-form content", () => {
@@ -143,9 +135,13 @@ describe("validate", () => {
   });
 
   test("warns when there is no attribute set to read, instead of passing silently", () => {
-    const report = run("{ pkgs }:\n\nservices.openssh.enable = 1;");
+    const report = run("lib.mkMerge [ ]");
     expect(report.diagnostics).toMatchObject([
       { severity: "warning", code: "nothing-to-check", line: 1, col: 1 },
+    ]);
+    // Bare assignments are not valid Nix: that is a syntax error, not an empty file.
+    expect(run("{ pkgs }:\n\nservices.openssh.enable = 1;").diagnostics).toMatchObject([
+      { severity: "error", code: "syntax-unexpected", line: 3, params: { found: "=" } },
     ]);
     expect(codes("{ }")).toEqual(["nothing-to-check"]);
     expect(codes("")).toEqual([]);
@@ -169,7 +165,7 @@ describe("analyze", () => {
 
 describe("detectTarget", () => {
   test("recognizes each target", () => {
-    const target = (src: string) => detectTarget(scan(tokenize(src).tokens));
+    const target = (src: string) => detectTarget(analyze(src).assignments);
     expect(target("{ a.b = 1; }")).toBe("nixos");
     expect(target("{ inputs.x.url = 1; }")).toBe("flake");
     expect(target("{ nixConfig.x = 1; }")).toBe("flake");
@@ -229,15 +225,15 @@ describe("missing semicolons", () => {
   test("flags the last assignment of a set when its `;` is missing", () => {
     const report = run("{ pkgs }:\n\n{\nservices.openssh = ena\n}");
     expect(report.diagnostics.map((d) => [d.code, d.line, d.col])).toEqual([
-      ["syntax-unterminated", 4, 1],
       ["undefined-variable", 4, 20],
+      ["syntax-unterminated", 4, 23],
     ]);
   });
 
   test("still checks the value's type when the `;` is missing", () => {
     expect(codes('{ networking.firewall.enable = "yes" }')).toEqual([
-      "syntax-unterminated",
       "type-mismatch",
+      "syntax-unterminated",
     ]);
     expect(codes("{ services.openssh = { enable = true; } }")).toEqual(["syntax-unterminated"]);
     expect(codes("{ services.openssh.enable = true; }")).toEqual([]);

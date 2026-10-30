@@ -95,7 +95,7 @@ describe("checker", () => {
   });
 
   test("warns when there is nothing to check", async () => {
-    await validate("services.openssh.enable = 1;");
+    await validate("lib.mkMerge [ ]");
     expect(await page.$$eval(".diag.warning", (els) => els.length)).toBe(1);
   });
 

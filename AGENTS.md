@@ -12,7 +12,8 @@ Siempre que se terminen de implementar cambios en el proyecto, seguir rigurosame
    - Comprobar que queda limpio: `devenv shell -- lint`.
 3. **Generar tests**:
    - Ejecutar lint, tipos y la suite con la compuerta de cobertura (100 % de líneas): `devenv test`.
-   - Si cambia el generador de catálogos o su overlay: `devenv shell -- catalog` (necesita Nix) y revisar la diferencia en `public/catalog/`; la CI comprueba que lo versionado coincide con lo que generan las versiones fijadas.
+   - Si cambia el analizador de Nix (`src/lib/nix/`): `devenv shell -- corpus` (necesita Nix): todos los `.nix` de nixpkgs y Home Manager son válidos y deben parsearse sin problemas; la CI también lo ejecuta.
+  - Si cambia el generador de catálogos o su overlay: `devenv shell -- catalog` (necesita Nix) y revisar la diferencia en `public/catalog/`; la CI comprueba que lo versionado coincide con lo que generan las versiones fijadas.
    - Si cambia la interfaz: `devenv shell -- site-build && devenv shell -- e2e` (necesita Chrome).
    - Si cambia la salida generada **a propósito**, aceptar las instantáneas con `bun test --update-snapshots` y revisar la diferencia.
 4. **Commit**:
@@ -32,7 +33,7 @@ Siempre que se terminen de implementar cambios en el proyecto, seguir rigurosame
 
 ## Convenciones del proyecto
 
-- **Todo pasa por devenv**: la CI ejecuta los mismos scripts que en local (`devenv shell -- <script>`). Scripts: `dev`, `check` (tsc), `lint`, `fix`, `unit`, `e2e`, `site-build`, `start`, `catalog`, `secrets`, `sonar`. Se definen en `devenv.nix`.
+- **Todo pasa por devenv**: la CI ejecuta los mismos scripts que en local (`devenv shell -- <script>`). Scripts: `dev`, `check` (tsc), `lint`, `fix`, `unit`, `e2e`, `site-build`, `start`, `catalog`, `corpus`, `secrets`, `sonar`. Se definen en `devenv.nix`.
 - **Bun para todo** (instalar, ejecutar, tests); no usar `npm`.
 - **Idiomas**: la interfaz y lo que se genera existen en español (texto fuente, `src/lib/i18n/es.ts`) e inglés (`src/lib/i18n/en.ts`). Cada texto nuevo lleva su traducción; el compilador y un test fallan si falta. La documentación del repositorio (`README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CREDITS.md`) **y los comentarios del código** están en inglés americano; este archivo está en español.
 - **Salida de herramientas en inglés**: lo que imprimen los scripts, `devenv test`, la CI y los títulos de los tests (`describe`/`test`) va en inglés, igual que los mensajes de `devenv.nix`.

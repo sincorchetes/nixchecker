@@ -53,6 +53,8 @@ jobs:
       - run: devenv shell -- catalog
       - name: Fail if regenerating changed anything
         run: git diff --exit-code --stat -- public/catalog
+      - name: The parser accepts every .nix file of nixpkgs and Home Manager
+        run: devenv shell -- corpus
 
   build:
     name: Build

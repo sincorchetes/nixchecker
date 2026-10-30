@@ -9,11 +9,14 @@ NixOS, Home Manager, disko and Nix flakes.
 
 ## Status
 
-Early prototype. The validator tokenizes the file, collects every `a.b.c = value;` assignment and
-checks it against catalogs generated from the official sources: `nixosOptionsDoc` for NixOS
+Early prototype. The validator parses the file with its own Nix parser (syntax errors come with
+the exact line and column), collects every `a.b.c = value;` assignment and checks it against catalogs generated from the official sources: `nixosOptionsDoc` for NixOS
 (~27k options), the Home Manager manual (~6k) and the disko module, plus the flake format.
-It reports unknown options with "did you mean" suggestions, wrong value types, renamed options
-and options hidden from the manuals.
+It reports unknown options with "did you mean" suggestions and the options available there, wrong
+value types, renamed options, options hidden from the manuals, and names that are not defined.
+
+The parser is checked against every `.nix` file of nixpkgs and Home Manager (about 49,000), all of
+which must parse without a problem: `devenv shell -- corpus`, also run by CI.
 
 Limits to know about:
 
@@ -57,8 +60,9 @@ devenv shell -- fix     # format and lint with safe fixes (Biome)
 devenv test             # lint, types, unit tests (100% line coverage gate) and site build
 ```
 
-Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `e2e` (browser tests of the
-built site, needs Chrome), `secrets` (gitleaks) and `sonar`.
+Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `corpus` (the parser against nixpkgs and
+Home Manager), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
+`sonar`.
 
 ## Deployment (GitHub Pages)
 

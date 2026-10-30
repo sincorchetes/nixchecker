@@ -1,176 +1,262 @@
 import { describe, expect, test } from "bun:test";
-import { checkBalance } from "./balance";
+import { lex } from "./lex";
+import { parse } from "./parse";
 import { scan } from "./scan";
-import { tokenize } from "./tokenize";
 
-const paths = (src: string) => scan(tokenize(src).tokens).map((a) => a.path.join("."));
-const first = (src: string) => scan(tokenize(src).tokens)[0];
+const kinds = (src: string) => lex(src).tokens.map((t) => `${t.kind}:${t.text}`);
+const problems = (src: string) =>
+  parse(src).problems.map((p) => [p.code, p.line, p.col, p.params] as const);
+const codes = (src: string) => parse(src).problems.map((p) => p.code);
+const scanned = (src: string) => {
+  const { ast } = parse(src);
+  if (!ast) throw new Error("no tree");
+  return scan(ast);
+};
+const kindOf = (value: string) => scanned(`{ a = ${value}; }`).assignments[0]?.kind;
 
-describe("tokenize", () => {
-  test("skips comments and whitespace", () => {
-    const { tokens, errors } = tokenize("# line\n/* block\n */ a = 1;");
-    expect(tokens.map((t) => t.text)).toEqual(["a", "=", "1", ";"]);
-    expect(tokens[0]).toMatchObject({ line: 3, col: 5 });
-    expect(errors).toEqual([]);
+describe("lex", () => {
+  test("splits identifiers, numbers, strings and operators, tracking positions", () => {
+    expect(kinds('a-b = 1.5 + "x"; # note\n c = [ ] ++ x;')).toEqual([
+      "ident:a-b",
+      "punct:=",
+      "number:1.5",
+      "punct:+",
+      "string:x",
+      "punct:;",
+      "ident:c",
+      "punct:=",
+      "punct:[",
+      "punct:]",
+      "punct:++",
+      "ident:x",
+      "punct:;",
+    ]);
+    const [, second] = lex("a\n  bc").tokens;
+    expect(second).toMatchObject({ line: 2, col: 3, endLine: 2, endCol: 5 });
   });
 
-  test("reads plain, escaped and interpolated strings", () => {
-    const { tokens } = tokenize('"a\\"b" "x${"}"}y"');
-    expect(tokens[0]).toMatchObject({ kind: "string", text: 'a\\"b', interpolated: false });
-    expect(tokens[1]).toMatchObject({ kind: "string", interpolated: true });
+  test("reads paths, search paths, URIs and paths with interpolation", () => {
+    expect(kinds("./a/b.nix <nixpkgs> ~/x a / b")).toEqual([
+      "path:./a/b.nix",
+      "path:<nixpkgs>",
+      "path:~/x",
+      "ident:a",
+      "punct:/",
+      "ident:b",
+    ]);
+    expect(kinds("https://example.org/x")).toEqual(["path:https://example.org/x"]);
+    expect(kinds("./patches/${v}/x.patch ./${n}.cert")).toEqual([
+      "path:./patches/${…}/x.patch",
+      "path:./${…}.cert",
+    ]);
   });
 
-  test("reads indented strings with escapes and interpolation", () => {
-    const { tokens } = tokenize("''a '''b ''$c ''\\n ${x} d'' next");
-    expect(tokens).toHaveLength(2);
-    expect(tokens[0]).toMatchObject({ kind: "string", interpolated: true });
-    expect(tokens[1]?.text).toBe("next");
+  test("keeps the value of plain strings only, with escapes undone", () => {
+    const [plain, interpolated, indented] = lex(`"a\\"b\\n" "x\${y}" ''z''`).tokens;
+    expect(plain?.value).toBe('a"b\n');
+    expect(interpolated?.value).toBeUndefined();
+    expect(indented?.value).toBe("z");
   });
 
-  test("tells identifiers, numbers and punctuation apart", () => {
-    const { tokens } = tokenize("foo-bar 1.5 7 ;");
-    expect(tokens.map((t) => t.kind)).toEqual(["ident", "number", "number", "punct"]);
+  test("copes with nested strings, comments and escapes inside interpolations", () => {
+    const src = `''
+      \${f "a" ''b''} \${
+        # a " in a comment
+        x /* and " here */ }
+      ''\\'' ''$\{ '''
+    ''`;
+    expect(lex(src).errors).toEqual([]);
+    expect(lex(src).tokens).toHaveLength(1);
   });
 
-  test("reports unterminated strings and comments", () => {
-    expect(tokenize('a = "oops').errors[0]?.code).toBe("syntax-unterminated-string");
-    expect(tokenize("a = ''oops").errors[0]?.code).toBe("syntax-unterminated-string");
-    expect(tokenize("a /* oops").errors[0]).toMatchObject({
-      code: "syntax-unterminated-comment",
-      line: 1,
-      col: 3,
-    });
+  test("reports what is left open", () => {
+    expect(lex('a = "x;').errors).toMatchObject([{ code: "syntax-unterminated-string" }]);
+    expect(lex("a = ''x").errors).toMatchObject([{ code: "syntax-unterminated-string" }]);
+    expect(lex("a /* x").errors).toMatchObject([{ code: "syntax-unterminated-comment", col: 3 }]);
+    expect(kinds("a /* b */ c")).toEqual(["ident:a", "ident:c"]);
   });
 });
 
-describe("checkBalance", () => {
-  test("accepts balanced brackets", () => {
-    expect(checkBalance(tokenize("{ a = [ (1) ]; }").tokens)).toEqual([]);
+describe("parse: valid code", () => {
+  test("accepts the shapes of real Nix", () => {
+    const valid = [
+      "{ pkgs, lib ? 1, ... }@args: { a = pkgs.hello; }",
+      "args@{ a, b }: a",
+      "x: y: x + y * 2 - 1",
+      "let a = 1; b = a; inherit (c) d e; in { inherit a b; }",
+      "with import <nixpkgs> {}; [ hello world ]",
+      "assert a == b; if a then 1 else 2",
+      '{ a.b."c d".${e} = f g (h i); rec-x = rec { y = 1; z = y; }; }',
+      "a.b or c // { d = !e && f || g -> h; }",
+      "a ? b.c && (x: x) 1",
+      "-1 + (-a) * b / c ++ d",
+      '{ a = x: x; b = { c }: c; d = [ (x: x) "s" ./p ]; }',
+      "builtins.map (x: x) [ 1 2 3 ]",
+      "''multi ${x} line'' + \"\"",
+    ];
+    for (const src of valid) expect(problems(src), src).toEqual([]);
   });
 
-  test("reports stray and unclosed brackets", () => {
-    expect(checkBalance(tokenize("a }").tokens)).toEqual([{ char: "}", line: 1, col: 3 }]);
-    expect(checkBalance(tokenize("{ a = [ }").tokens).map((e) => e.char)).toEqual(["}", "{"]);
-    expect(checkBalance(tokenize("{ a").tokens)).toEqual([{ char: "{", line: 1, col: 1 }]);
+  test("an empty file has nothing to report", () => {
+    expect(parse("  # just a comment\n")).toEqual({ problems: [], lexical: false });
+  });
+});
+
+describe("parse: problems", () => {
+  test("a missing `;` is reported where it should go, and parsing goes on", () => {
+    const src = "{\n  a = 1\n  b = 2;\n  inherit x\n  c = 3;\n}";
+    expect(problems(src)).toEqual([
+      ["syntax-unterminated", 2, 8, { path: "a" }],
+      ["syntax-unterminated", 4, 12, { path: "inherit" }],
+    ]);
+    expect(scanned(src).assignments.map((a) => a.path[0])).toEqual(["a", "b", "c"]);
+  });
+
+  test("`;` is only assumed when something that can follow is there", () => {
+    expect(problems("{ a = 1 )")).toEqual([
+      ["syntax-expected", 1, 9, { expected: ";", found: ")" }],
+      ["syntax-unbalanced", 1, 9, { char: ")" }],
+    ]);
+    expect(problems("{ a = 1")).toEqual([["syntax-unclosed", 1, 1, { char: "{" }]]);
+  });
+
+  test("assignments without `=`, and paths cut off by a dot", () => {
+    expect(problems("{ services.openssl }")).toEqual([
+      ["syntax-incomplete", 1, 3, { path: "services.openssl" }],
+    ]);
+    expect(problems("{\n  a = 1;\n  gnome.\n}")).toEqual([
+      ["syntax-incomplete", 3, 3, { path: "gnome" }],
+    ]);
+    expect(problems("{ a b = 1; }")).toEqual([
+      ["syntax-expected", 1, 5, { expected: "=", found: "b" }],
+    ]);
+  });
+
+  test("brackets that do not match", () => {
+    expect(problems("{ a = [ 1; }")).toEqual([["syntax-unexpected", 1, 10, { found: ";" }]]);
+    expect(problems("{ a = (1; }")[0]?.[0]).toBe("syntax-expected");
+    expect(problems("{ a = 1; } }")).toEqual([["syntax-unbalanced", 1, 12, { char: "}" }]]);
+    expect(problems("( 1")).toEqual([["syntax-unclosed", 1, 1, { char: "(" }]]);
+    expect(problems("[ 1")).toEqual([["syntax-unclosed", 1, 1, { char: "[" }]]);
+    expect(problems("{ a }: { b = 1;")).toEqual([["syntax-unclosed", 1, 8, { char: "{" }]]);
+  });
+
+  test("keywords and expressions in the wrong place", () => {
+    expect(problems("if a 1 else 2")).toEqual([
+      ["syntax-expected", 1, 8, { expected: "then", found: "else" }],
+    ]);
+    expect(problems("let a = 1;")).toEqual([["syntax-expected-eof", 1, 11, { expected: "in" }]]);
+    expect(problems("a b )")).toEqual([["syntax-unbalanced", 1, 5, { char: ")" }]]);
+    expect(problems("a = ")).toEqual([["syntax-unexpected", 1, 3, { found: "=" }]]);
+    expect(problems("{ a = then; }")[0]?.[0]).toBe("syntax-unexpected");
+    expect(problems("with a")).toEqual([["syntax-expected-eof", 1, 7, { expected: ";" }]]);
+    expect(codes("{ a = ; }")).toEqual(["syntax-unexpected"]);
+    expect(codes("x:")).toEqual(["syntax-unexpected-eof"]);
+  });
+
+  test("function arguments", () => {
+    expect(codes("{ a, b c }: 1")).toEqual(["syntax-expected"]);
+    expect(codes("{ a, 1 }: 1")).toEqual(["syntax-unexpected"]);
+    expect(codes("{ a @ x }: 1")).toEqual(["syntax-expected"]);
+    expect(codes("{ a }@: 1")).toEqual(["syntax-unexpected"]);
+    expect(codes("{ a ")).toEqual(["syntax-unclosed"]);
+    expect(codes("a@x")).toEqual(["syntax-expected"]);
+  });
+
+  test("a recovered binding is left out, the rest is kept", () => {
+    const src = "{ a = 1; b = = 2; c = 3; d = [ 1 2; e = 4; }";
+    const result = parse(src);
+    expect(result.problems.length).toBeGreaterThan(1);
+    expect(scanned(src).assignments.map((a) => a.path[0])).toContain("c");
+  });
+
+  test("skips a broken binding, brackets included, and reads the next", () => {
+    const src = "{ a b = [ 1 (2) ]; c = 3; }";
+    expect(codes(src)).toEqual(["syntax-expected"]);
+    expect(scanned(src).assignments.map((a) => a.path[0])).toEqual(["c"]);
+  });
+
+  test("an open string or comment is the only thing reported", () => {
+    const result = parse('{ a = "x; b = (; }');
+    expect(result.lexical).toBe(true);
+    expect(result.problems.map((p) => p.code)).toEqual(["syntax-unterminated-string"]);
   });
 });
 
 describe("scan", () => {
-  test("collects dotted and nested paths", () => {
-    expect(paths("{ a.b = 1; c = { d = 2; e.f = 3; }; }")).toEqual(["a.b", "c", "c.d", "c.e.f"]);
+  test("finds the root set through functions, let, with, assert and parentheses", () => {
+    const src =
+      "{ pkgs }: let x = 1; in with pkgs; assert x == 1; ({ a.b = 1; c = { d = true; }; })";
+    expect(scanned(src).assignments).toEqual([
+      { path: ["a", "b"], kind: "int", line: 1, col: 54 },
+      { path: ["c"], kind: "attrs", line: 1, col: 63 },
+      { path: ["c", "d"], kind: "bool", line: 1, col: 69 },
+    ]);
+    expect(scanned("f { a = 1; }").assignments).toEqual([]);
+    expect(scanned("[ ]").assignments).toEqual([]);
   });
 
-  test("skips function patterns, let blocks and inherit", () => {
-    const src = "{ config, ... }: let x = { y = 1; }; in { inherit x; a = 1; }";
-    expect(paths(src)).toEqual(["a"]);
-  });
-
-  test("handles nested let and braces in default values", () => {
-    expect(paths("{ a ? {}, ... }: let b = let c = 1; in c; in { z = b; }")).toEqual(["z"]);
-  });
-
-  test("keeps function bodies and mkIf sets opaque", () => {
-    expect(paths("{ a = lib.mkIf x { b = 1; }; f = { y }: { g = 1; }; c = {} // d; }")).toEqual([
-      "a",
-      "f",
-      "c",
+  test("keeps `rec` sets, `mkIf` and lists opaque, and skips inherit", () => {
+    const { assignments } = scanned(
+      "{ inherit a; r = rec { x = 1; }; m = lib.mkIf c { y = 1; }; l = [ { z = 1; } ]; }",
+    );
+    expect(assignments.map((a) => [a.path.join("."), a.kind])).toEqual([
+      ["r", "other"],
+      ["m", "other"],
+      ["l", "list"],
     ]);
   });
 
-  test("treats quoted and interpolated segments as wildcards-by-name", () => {
-    expect(paths('{ a."b.c".d = 1; a.${x}.e = 2; }')).toEqual(["a.b.c.d", "a.*.e"]);
+  test("names a computed attribute as a wildcard", () => {
+    const { assignments } = scanned('{ a.${n}.b = 1; "x.y".z = 2; "p${q}" = 3; }');
+    expect(assignments.map((a) => a.path)).toEqual([["a", "*", "b"], ["x.y", "z"], ["*"]]);
   });
 
-  test("classifies scalar values", () => {
-    const kinds = scan(
-      tokenize('{ a = true; b = "s"; c = 3; d = [ 1 ]; e = 1.5; f = "x${y}"; g = true && x; }')
-        .tokens,
-    ).map((a) => a.kind);
-    expect(kinds).toEqual(["bool", "str", "int", "list", "other", "str", "bool"]);
-    expect(first('{ a = "s"; }')?.value).toBe("s");
+  test("looks through mkDefault, mkForce, mkOverride and mkIf", () => {
+    expect(kindOf("lib.mkDefault true")).toBe("bool");
+    expect(kindOf("mkForce [ 1 ]")).toBe("list");
+    expect(kindOf("lib.mkOverride 50 5")).toBe("int");
+    expect(kindOf('lib.mkIf c "x"')).toBe("str");
+    expect(kindOf("lib.mkDefault { x = 1; }")).toBe("other");
+    expect(kindOf("lib.mkMerge [ ]")).toBe("other");
+    expect(kindOf("lib.other.mkDefault true")).toBe("other");
   });
 
-  test("recovers from malformed statements", () => {
-    expect(paths("{ ; = ; a = 1; b ) c; d = 2 }")).toEqual(["a", "d"]);
+  test("knows the kind of simple expressions", () => {
+    expect(kindOf('"s"')).toBe("str");
+    expect(kindOf('"x-${y}"')).toBe("str");
+    expect(kindOf("3")).toBe("int");
+    expect(kindOf("1.5")).toBe("other");
+    expect(kindOf("!x")).toBe("bool");
+    expect(kindOf("-x")).toBe("other");
+    expect(kindOf("a && b")).toBe("bool");
+    expect(kindOf("x == y")).toBe("bool");
+    expect(kindOf("a ++ b")).toBe("list");
+    expect(kindOf("a + b")).toBe("other");
+    expect(kindOf("(true)")).toBe("bool");
+    expect(kindOf("if c then 1 else 2")).toBe("other");
   });
 
-  test("returns nothing without a root set", () => {
-    expect(paths("1 + 2")).toEqual([]);
-    expect(paths("{ a = 1;")).toEqual(["a"]);
-  });
-});
-
-describe("scan problems", () => {
-  const problems = (src: string) => {
-    const found: [string, string, number][] = [];
-    scan(tokenize(src).tokens, (p) => found.push([p.kind, p.path.join("."), p.col]));
-    return found;
-  };
-
-  test("reports assignments with no `=` and with no `;`", () => {
-    expect(problems("{ a.b }")).toEqual([["incomplete", "a.b", 3]]);
-    expect(problems("{ a.b = 1 }")).toEqual([["unterminated", "a.b", 3]]);
-    expect(problems("{ a.b = 1; }")).toEqual([]);
+  test("a string's value is kept only when it is plain", () => {
+    expect(scanned('{ a = "x"; b = "${y}"; }').assignments.map((a) => a.value)).toEqual([
+      "x",
+      undefined,
+    ]);
   });
 
-  test("treats a statement cut off by the end of the input as unterminated", () => {
-    expect(problems("{ a.b = 1")).toEqual([["unterminated", "a.b", 3]]);
-  });
-});
-
-describe("scan: a `;` lost in the middle of a set", () => {
-  const found = (src: string) => {
-    const problems: string[] = [];
-    const paths = scan(tokenize(src).tokens, (p) => problems.push(`${p.kind}:${p.path.join(".")}`));
-    return { problems, paths: paths.map((a) => a.path.join(".")) };
-  };
-
-  test("reports it and keeps scanning the next assignment", () => {
-    expect(found("{\n  a.b = 1\n  c.d = 2;\n}")).toEqual({
-      problems: ["unterminated:a.b"],
-      paths: ["a.b", "c.d"],
-    });
-    expect(found('{\n  a = "x"\n  "q.r".s = 2;\n}').problems).toEqual(["unterminated:a"]);
-  });
-
-  test("does not mistake multi-line values, comparisons or let bindings for new statements", () => {
-    expect(found("{\n  a = foo\n    bar;\n  b = 1;\n}").problems).toEqual([]);
-    expect(found("{\n  a = let\n    x = 1;\n  in x;\n}").problems).toEqual([]);
-    expect(found("{\n  a = if b\n    == c then 1 else 2;\n}").problems).toEqual([]);
-    expect(found("{\n  a = [\n    1\n  ];\n  b = 2;\n}").problems).toEqual([]);
-  });
-});
-
-describe("scan: kinds of simple expressions", () => {
-  const kind = (value: string) => scan(tokenize(`{ a = ${value}; }`).tokens)[0]?.kind;
-
-  test("looks through mkDefault, mkForce and mkOverride", () => {
-    expect(kind("lib.mkDefault true")).toBe("bool");
-    expect(kind("mkForce [ 1 ]")).toBe("list");
-    expect(kind("lib.mkOverride 50 5")).toBe("int");
-    expect(kind('lib.mkDefault "x"')).toBe("str");
-    expect(kind("lib.mkDefault { x = 1; }")).toBe("other");
-  });
-
-  test("knows what always yields a boolean", () => {
-    expect(kind("!config.x.enable")).toBe("bool");
-    expect(kind("a && b")).toBe("bool");
-    expect(kind("a || (b && c)")).toBe("bool");
-    expect(kind("x == y")).toBe("bool");
-    expect(kind("x != y")).toBe("bool");
-  });
-
-  test("does not guess when something could hide the type", () => {
-    expect(kind("if c then a == b else 1")).toBe("other");
-    expect(kind("let x = 1; in x == 1")).toBe("other");
-    expect(kind("x: x == 1")).toBe("other");
-    expect(kind("f (a == b)")).toBe("other");
-    expect(kind("a & b")).toBe("other");
-    expect(kind("[ (a == b) ]")).toBe("list");
-  });
-
-  test("an interpolated string is a string", () => {
-    expect(kind('"x-${y}"')).toBe("str");
-    expect(kind('"x-${y}" + z')).toBe("other");
+  test("reports a lone name nothing defines, honoring scopes", () => {
+    const undefinedIn = (src: string) => scanned(src).undefinedNames.map((n) => n.name);
+    expect(undefinedIn("{ pkgs }:\n{\nservices.openssh = ena;\n}")).toEqual(["ena"]);
+    expect(scanned("{ pkgs }: { a = ena; }").undefinedNames).toEqual([
+      { name: "ena", line: 1, col: 17 },
+    ]);
+    expect(undefinedIn("{ x, y ? 1 }@args: { a = x; b = y; c = args; }")).toEqual([]);
+    expect(undefinedIn("a: { b = a; }")).toEqual([]);
+    expect(undefinedIn("let n = 1; inherit (q) m; in { a = n; b = m; }")).toEqual([]);
+    expect(undefinedIn("rec { x = 1; a = x; }")).toEqual([]);
+    expect(undefinedIn("{ x = 1; a = x; }")).toEqual(["x"]);
+    expect(undefinedIn("with lib; { a = whatever; }")).toEqual([]);
+    expect(undefinedIn("{ a = null; b = builtins; c = true; }")).toEqual([]);
+    expect(undefinedIn("{ a = lib.mkDefault ena; }")).toEqual(["ena"]);
   });
 });

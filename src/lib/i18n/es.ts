@@ -46,6 +46,11 @@ export const es = {
   "result.goto": "Ir a la línea",
 
   "diag.syntax-unbalanced": "El carácter «{char}» no tiene pareja.",
+  "diag.syntax-expected": "Se esperaba «{expected}», pero aparece «{found}».",
+  "diag.syntax-expected-eof": "Se esperaba «{expected}», pero el archivo termina.",
+  "diag.syntax-unexpected": "No se esperaba «{found}» aquí.",
+  "diag.syntax-unexpected-eof": "El archivo termina antes de completar la expresión.",
+  "diag.syntax-unclosed": "«{char}» se abre aquí pero nunca se cierra.",
   "diag.syntax-unterminated-string": "Cadena de texto sin cerrar.",
   "diag.syntax-unterminated-comment": "Comentario /* ... */ sin cerrar.",
   "diag.syntax-incomplete": "«{path}» no tiene «= valor;»: la asignación está incompleta.",

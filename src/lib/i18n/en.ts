@@ -47,6 +47,11 @@ export const en: Record<MessageKey, string> = {
   "result.goto": "Go to line",
 
   "diag.syntax-unbalanced": "The character “{char}” has no matching pair.",
+  "diag.syntax-expected": "Expected “{expected}” but found “{found}”.",
+  "diag.syntax-expected-eof": "Expected “{expected}” but the file ends.",
+  "diag.syntax-unexpected": "Unexpected “{found}” here.",
+  "diag.syntax-unexpected-eof": "The file ends before the expression is complete.",
+  "diag.syntax-unclosed": "“{char}” is opened here but never closed.",
   "diag.syntax-unterminated-string": "Unterminated string.",
   "diag.syntax-unterminated-comment": "Unterminated /* ... */ comment.",
   "diag.syntax-incomplete": "“{path}” has no “= value;”: the assignment is incomplete.",

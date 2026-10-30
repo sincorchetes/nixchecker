@@ -7,20 +7,14 @@ import {
   knownPrefix,
   siblings,
 } from "./catalog/tree";
-import { checkBalance } from "./nix/balance";
-import { declaredNames } from "./nix/names";
+import { type Problem, parse } from "./nix/parse";
 import { type Assignment, scan } from "./nix/scan";
-import { tokenize } from "./nix/tokenize";
 import { closest, distance } from "./suggest";
 
 export type TargetChoice = Target | "auto";
 
 export type DiagnosticCode =
-  | "syntax-unbalanced"
-  | "syntax-unterminated-string"
-  | "syntax-unterminated-comment"
-  | "syntax-incomplete"
-  | "syntax-unterminated"
+  | Problem["code"]
   | "undefined-variable"
   | "nothing-to-check"
   | "unknown-option"
@@ -53,56 +47,22 @@ export interface Analysis {
 }
 
 export function analyze(source: string): Analysis {
-  const { tokens, errors } = tokenize(source);
-  const syntax: Diagnostic[] = [
-    ...errors.map((e) => ({
-      severity: "error" as const,
-      code: e.code,
-      line: e.line,
-      col: e.col,
-      params: {},
-    })),
-    ...checkBalance(tokens).map((e) => ({
-      severity: "error" as const,
-      code: "syntax-unbalanced" as const,
-      line: e.line,
-      col: e.col,
-      params: { char: e.char },
-    })),
-  ];
-  const assignments =
-    syntax.length > 0
-      ? []
-      : scan(tokens, ({ kind, path, line, col }) =>
-          syntax.push({
-            severity: "error",
-            code: `syntax-${kind}`,
-            line,
-            col,
-            params: { path: path.join(".") },
-          }),
-        );
-  const declared = assignments.length > 0 ? declaredNames(tokens) : undefined;
-  for (const { ref } of assignments) {
-    if (declared && ref && !declared.has(ref.name)) {
-      syntax.push({
-        severity: "error",
-        code: "undefined-variable",
-        line: ref.line,
-        col: ref.col,
-        params: { name: ref.name },
-      });
-    }
+  const { ast, problems, lexical } = parse(source);
+  const syntax: Diagnostic[] = problems.map((p) => ({ severity: "error", ...p }));
+  // An unterminated string or comment garbles what follows, so nothing is read after one.
+  const { assignments, undefinedNames } =
+    ast && !lexical ? scan(ast) : { assignments: [], undefinedNames: [] };
+  for (const { name, line, col } of undefinedNames) {
+    syntax.push({ severity: "error", code: "undefined-variable", line, col, params: { name } });
   }
-  // Valid brackets but no attribute set to read (e.g. bare `a.b = 1;` lines): say so instead of
+  // A file with no attribute set to read (e.g. a bare function call): say so instead of
   // reporting a clean bill of health for a file nothing was checked in.
-  const first = tokens[0];
-  if (first && syntax.length === 0 && assignments.length === 0) {
+  if (ast && syntax.length === 0 && assignments.length === 0) {
     syntax.push({
       severity: "warning",
       code: "nothing-to-check",
-      line: first.line,
-      col: first.col,
+      line: ast.line,
+      col: ast.col,
       params: {},
     });
   }
