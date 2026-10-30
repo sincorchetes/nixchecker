@@ -1,0 +1,6 @@
+[test]
+coverage = true
+coverageSkipTestFiles = true
+coverageReporter = ["text", "lcov"]
+# Gate: every line of src/lib must be covered.
+coverageThreshold = { line = 1.0, function = 1.0 }

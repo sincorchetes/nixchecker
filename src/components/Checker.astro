@@ -1,0 +1,321 @@
+---
+import { TARGETS } from "../lib/catalog";
+import { type Lang, messages } from "../lib/i18n";
+import { withBase } from "../lib/site";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const m = messages[lang];
+// Only what the browser script needs to render results.
+const client = Object.fromEntries(
+  Object.entries(m).filter(([key]) => /^(diag|result|target)\./.test(key)),
+);
+---
+
+<section
+  id="checker"
+  class="glass checker"
+  data-messages={JSON.stringify(client)}
+  data-base={withBase(import.meta.env.BASE_URL)}
+>
+  <label for="source">{m["checker.label"]}</label>
+  <textarea
+    id="source"
+    spellcheck="false"
+    autocomplete="off"
+    autocapitalize="off"
+    placeholder={m["checker.placeholder"]}></textarea>
+
+  <div class="bar">
+    <label class="target">
+      <span>{m["checker.target"]}</span>
+      <select id="target">
+        <option value="auto">{m["target.auto"]}</option>
+        {TARGETS.map((t) => <option value={t}>{m[`target.${t}`]}</option>)}
+      </select>
+    </label>
+    <div class="actions">
+      <button type="button" class="btn" id="clear">{m["checker.clear"]}</button>
+      <button type="button" class="btn" id="example">{m["checker.example"]}</button>
+      <button type="button" class="btn primary" id="validate">{m["checker.validate"]}</button>
+    </div>
+  </div>
+
+  <p class="privacy">{m["checker.privacy"]}</p>
+  <div id="results" class="results" aria-live="polite"></div>
+</section>
+
+<script>
+  import { loadCatalog } from "../lib/catalog";
+  import { EXAMPLE } from "../lib/example";
+  import { applyAll, applyFix, wordAt } from "../lib/fix";
+  import { format } from "../lib/i18n";
+  import { analyze, check, resolveTarget, type TargetChoice } from "../lib/validate";
+
+  const root = document.querySelector<HTMLElement>("#checker");
+  const source = document.querySelector<HTMLTextAreaElement>("#source");
+  const target = document.querySelector<HTMLSelectElement>("#target");
+  const results = document.querySelector<HTMLElement>("#results");
+  if (root?.dataset.messages && source && target && results) {
+    const text = JSON.parse(root.dataset.messages) as Record<string, string>;
+    const tr = (key: string, params?: Record<string, string | number>) =>
+      format(text[key] ?? key, params);
+
+    // Results are built with textContent only: option names come from user input.
+    const el = (tag: string, className: string, content = "") => {
+      const node = document.createElement(tag);
+      node.className = className;
+      node.textContent = content;
+      return node;
+    };
+
+    // A button that selects the offending word in the text, so it can be found at a glance.
+    const goto = (d: { line: number; col: number }) => {
+      const button = el("button", "where", tr("result.line", { line: d.line, col: d.col }));
+      button.setAttribute("type", "button");
+      button.title = tr("result.goto");
+      button.addEventListener("click", () => {
+        const [start, end] = wordAt(source.value, d.line, d.col);
+        source.focus();
+        source.setSelectionRange(start, end);
+      });
+      return button;
+    };
+
+    // Only the latest run may touch the page: catalogs download asynchronously.
+    let run = 0;
+    const render = async () => {
+      const current = ++run;
+      results.removeAttribute("data-stale");
+      if (!source.value.trim()) {
+        results.replaceChildren(el("p", "empty", tr("result.empty")));
+        return;
+      }
+      const analysis = analyze(source.value);
+      const kind = resolveTarget(analysis, target.value as TargetChoice);
+      let catalog: Awaited<ReturnType<typeof loadCatalog>>;
+      try {
+        results.setAttribute("aria-busy", "true");
+        catalog = await loadCatalog(
+          kind,
+          root.dataset.base ?? "/",
+          analysis.assignments.map((a) => a.path),
+        );
+      } catch {
+        if (current === run) results.replaceChildren(el("p", "empty", tr("result.loadError")));
+        return;
+      } finally {
+        if (current === run) results.removeAttribute("aria-busy");
+      }
+      if (current !== run) return;
+
+      const report = check(analysis, kind, catalog.tree);
+      const errors = report.diagnostics.filter((d) => d.severity === "error").length;
+      const warnings = report.diagnostics.length - errors;
+
+      results.replaceChildren();
+      const head = el("div", "head");
+      head.append(
+        el(
+          "span",
+          `summary ${report.diagnostics.length ? "bad" : "good"}`,
+          report.diagnostics.length ? tr("result.summary", { errors, warnings }) : tr("result.ok"),
+        ),
+        el(
+          "span",
+          "detected",
+          `${tr("result.detected", { target: tr(`target.${report.target}`) })} · ${tr("result.catalog", { source: catalog.source })}`,
+        ),
+      );
+      results.append(head);
+      const fixable = report.diagnostics.filter((d) => applyFix(source.value, d) !== undefined);
+      if (fixable.length > 1) {
+        const all = el("button", "btn fix", tr("result.applyAll")) as HTMLButtonElement;
+        all.type = "button";
+        all.addEventListener("click", () => {
+          source.value = applyAll(source.value, fixable);
+          render();
+        });
+        results.append(all);
+      }
+
+      for (const d of report.diagnostics) {
+        const item = el("article", `diag ${d.severity}`);
+        item.append(
+          el("p", "msg", tr(`diag.${d.code}`, d.params)),
+          goto(d),
+        );
+        if (d.suggestion) item.append(el("p", "hint", tr("result.suggest", { suggestion: d.suggestion })));
+        if (applyFix(source.value, d) !== undefined) {
+          const apply = el("button", "btn fix", tr("result.apply")) as HTMLButtonElement;
+          apply.type = "button";
+          apply.addEventListener("click", () => {
+            // Re-checked against the current text: it may have been edited since validating.
+            const fixed = applyFix(source.value, d);
+            if (fixed === undefined) return;
+            source.value = fixed;
+            render();
+          });
+          item.append(apply);
+        }
+        if (d.docUrl) {
+          const link = el("a", "docs", tr("result.docs")) as HTMLAnchorElement;
+          link.href = d.docUrl;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          item.append(link);
+        }
+        results.append(item);
+      }
+    };
+
+    // Results describe the text as it was when validated: dim them as soon as it changes.
+    source.addEventListener("input", () => results.setAttribute("data-stale", ""));
+    target.addEventListener("change", render);
+    document.querySelector("#validate")?.addEventListener("click", render);
+    document.querySelector("#example")?.addEventListener("click", () => {
+      source.value = EXAMPLE;
+      render();
+    });
+    document.querySelector("#clear")?.addEventListener("click", () => {
+      source.value = "";
+      render();
+    });
+    render();
+  }
+</script>
+
+<style>
+  .checker {
+    padding: 1.5rem;
+  }
+  label {
+    font-size: 0.85rem;
+    color: var(--text-2);
+  }
+  textarea {
+    display: block;
+    width: 100%;
+    min-height: 16rem;
+    margin-top: 0.5rem;
+    padding: 1rem;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    tab-size: 2;
+  }
+  textarea::placeholder {
+    color: var(--text-3);
+  }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+  .target {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  select {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.9rem;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .privacy {
+    margin: 1rem 0 0;
+    color: var(--text-3);
+    font-size: 0.8rem;
+  }
+  .results {
+    margin-top: 1.25rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .results :global(.fix) {
+    justify-self: start;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  .results[data-stale] {
+    opacity: 0.4;
+  }
+  .results :global(.empty) {
+    margin: 0;
+    color: var(--text-3);
+  }
+  .results :global(.head) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    justify-content: space-between;
+    font-size: 0.9rem;
+  }
+  .results :global(.summary.good) {
+    color: var(--ok);
+  }
+  .results :global(.summary.bad) {
+    color: var(--text);
+  }
+  .results :global(.detected) {
+    color: var(--text-3);
+  }
+  .results :global(.diag) {
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--error);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .results :global(.diag.warning) {
+    border-left-color: var(--warning);
+  }
+  .results :global(.diag p) {
+    margin: 0;
+  }
+  .results :global(.where) {
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--text-3);
+    font-size: 0.8rem;
+    text-align: left;
+    cursor: pointer;
+  }
+  .results :global(.where:hover) {
+    color: var(--accent-light);
+    text-decoration: underline;
+  }
+  .results :global(.hint) {
+    margin-top: 0.3rem;
+    color: var(--accent-light);
+    font-size: 0.9rem;
+  }
+  .results :global(.docs) {
+    display: inline-block;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+  }
+</style>

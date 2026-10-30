@@ -1,0 +1,127 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/outfit";
+
+/* Palette shared with sincorchetes.tech: near-black canvas, indigo accent, glass cards. */
+:root {
+  --bg: #0a0a0c;
+  --card: rgba(20, 20, 24, 0.4);
+  --card-hover: rgba(30, 30, 36, 0.6);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f0f0f0;
+  --text-2: #9ea3b0;
+  --text-3: #5e6475;
+  --accent: #5e6ad2;
+  --accent-light: #8e98ff;
+  --accent-soft: rgba(94, 106, 210, 0.15);
+  --error: #ff7b8a;
+  --warning: #f5c36b;
+  --ok: #6ee7a8;
+  --motion: 0.15s;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --font-body: "Inter Variable", system-ui, sans-serif;
+  --font-display: "Outfit Variable", "Inter Variable", system-ui, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, monospace;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #fafafb;
+    --card: rgba(255, 255, 255, 0.7);
+    --card-hover: rgba(255, 255, 255, 0.95);
+    --border: rgba(10, 10, 12, 0.1);
+    --text: #14141a;
+    --text-2: #4a4f5e;
+    --text-3: #7a8091;
+    --accent-light: #4a55c0;
+    --accent-soft: rgba(94, 106, 210, 0.12);
+    --error: #c92a3e;
+    --warning: #946200;
+    --ok: #12804c;
+    color-scheme: light;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(60rem 30rem at 50% -10%, var(--accent-soft), transparent 70%), var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent-light);
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+.wrap {
+  width: min(100% - 2rem, 62rem);
+  margin-inline: auto;
+}
+
+.glass {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+}
+
+.btn {
+  font: inherit;
+  font-weight: 500;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background var(--motion),
+    border-color var(--motion);
+}
+
+.btn:hover {
+  background: var(--card-hover);
+  border-color: var(--accent);
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: var(--accent-light);
+  border-color: var(--accent-light);
+  color: #0a0a0c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  :root {
+    --motion: 0s;
+  }
+}

@@ -1,0 +1,1 @@
+[["nixConfig.bash-prompt","str"],["nixConfig.extra-substituters","list"],["nixConfig.extra-trusted-public-keys","list"],["nixConfig.flake-registry","str"]]

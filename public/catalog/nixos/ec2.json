@@ -1,0 +1,1 @@
+[["ec2.zfs.datasets","set"],["ec2.zfs.datasets.*.mount","str"],["ec2.zfs.datasets.*.properties","attrs"]]

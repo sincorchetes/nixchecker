@@ -1,0 +1,15 @@
+name: Feature request
+description: A new option, profile, module or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you like to be able to do
+    validations:
+      required: true
+  - type: textarea
+    id: nix
+    attributes:
+      label: How it is configured in NixOS (if you know)
+      description: Options, modules or nixpkgs packages involved.

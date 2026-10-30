@@ -1,0 +1,3 @@
+[test]
+# The browser tests exercise the built site, not src/lib: no coverage gate here.
+coverage = false

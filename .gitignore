@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.env
+.devenv/
+.devenv.flake.nix
+devenv.local.nix
+devenv.local.yaml
+.direnv/
+coverage/
+sonar-project.properties

@@ -1,0 +1,41 @@
+name: Catalog canary
+
+# Every day, regenerates the catalogs from the latest nixpkgs, Home Manager and disko and runs the tests
+# against them. If an upstream change breaks what nixchecker expects (an option moved, a type changed, the
+# renames stopped being readable), it opens an issue. Nothing is committed: this only reports.
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  latest:
+    name: Latest upstream
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-devenv
+      - run: devenv shell -- catalog --update
+      - run: devenv shell -- unit
+
+  report:
+    name: Report failures
+    needs: latest
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Canary: tests fail against the latest upstream catalogs"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$title in:title" --json number --jq '.[0].number')
+          body="The daily canary failed. Check which test broke: $RUN_URL"
+          if [ -n "$existing" ]; then gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body" --label bug; fi

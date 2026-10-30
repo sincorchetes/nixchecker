@@ -1,0 +1,1 @@
+[["inputs.*.flake","bool"],["inputs.*.follows","str"],["inputs.*.inputs.*.follows","str"],["inputs.*.url","str"]]

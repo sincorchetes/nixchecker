@@ -1,0 +1,111 @@
+name: CI
+
+# Continuous integration. Every step runs through devenv (`devenv shell -- <script>`), so CI does exactly
+# what a developer does locally; the scripts live in devenv.nix.
+# It is also reused from deploy.yml and release.yml (workflow_call): nothing ships without passing here.
+on:
+  pull_request:
+  push:
+    branches-ignore: [main] # main goes through deploy.yml, which calls this workflow
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A called workflow gets no concurrency group of its own, so it never blocks its caller.
+concurrency:
+  group: ${{ github.event_name == 'workflow_call' && format('ci-call-{0}', github.run_id) || format('ci-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_call' }}
+
+env:
+  CI: true
+
+jobs:
+  quality:
+    name: Lint, types and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-devenv
+      - name: Format and lint (Biome)
+        run: devenv shell -- lint
+      - name: Types (tsc)
+        run: devenv shell -- check
+      - name: Tests with coverage gate (100% of lines)
+        run: devenv shell -- unit
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 7
+
+  # The committed catalogs must be what the pinned upstream sources generate (tools/catalog/flake.lock).
+  catalog:
+    name: Catalogs up to date
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-devenv
+      - run: devenv shell -- catalog
+      - name: Fail if regenerating changed anything
+        run: git diff --exit-code --stat -- public/catalog
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-devenv
+      - run: devenv shell -- site-build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  e2e:
+    name: Browser tests
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-devenv
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - run: devenv shell -- e2e
+
+  sonar:
+    name: SonarQube
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Only runs if the repository defines the SONAR_HOST_URL variable (and the SONAR_TOKEN secret).
+    # The server must be reachable from GitHub (localhost will not work).
+    if: ${{ vars.SONAR_HOST_URL != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-devenv
+      - run: devenv shell -- sonar
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # A single result to require in the branch ruleset.
+  ci-ok:
+    name: CI passed
+    if: ${{ always() }}
+    needs: [quality, catalog, build, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          if echo "$RESULTS" | grep -Eq '"result": "(failure|cancelled)"'; then echo "A job failed"; exit 1; fi
+          echo "All jobs passed"

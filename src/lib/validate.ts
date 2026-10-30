@@ -1,0 +1,236 @@
+import { docUrl, type IndexedOption, type OptionTree, type Target } from "./catalog";
+import { candidates, findExact, findOwner, knownPrefix, siblings } from "./catalog/tree";
+import { checkBalance } from "./nix/balance";
+import { declaredNames } from "./nix/names";
+import { type Assignment, scan } from "./nix/scan";
+import { tokenize } from "./nix/tokenize";
+import { closest } from "./suggest";
+
+export type TargetChoice = Target | "auto";
+
+export type DiagnosticCode =
+  | "syntax-unbalanced"
+  | "syntax-unterminated-string"
+  | "syntax-unterminated-comment"
+  | "syntax-incomplete"
+  | "syntax-unterminated"
+  | "undefined-variable"
+  | "nothing-to-check"
+  | "unknown-option"
+  | "type-mismatch"
+  | "deprecated"
+  | "hidden-option";
+
+export interface Diagnostic {
+  severity: "error" | "warning";
+  code: DiagnosticCode;
+  line: number;
+  col: number;
+  /** Values for the `{placeholders}` of the message template `diag.<code>`. */
+  params: Record<string, string>;
+  suggestion?: string;
+  docUrl?: string;
+}
+
+export interface Report {
+  target: Target;
+  diagnostics: Diagnostic[];
+}
+
+/** What can be learned from the source alone, before any catalog is loaded. */
+export interface Analysis {
+  syntax: Diagnostic[];
+  assignments: Assignment[];
+}
+
+export function analyze(source: string): Analysis {
+  const { tokens, errors } = tokenize(source);
+  const syntax: Diagnostic[] = [
+    ...errors.map((e) => ({
+      severity: "error" as const,
+      code: e.code,
+      line: e.line,
+      col: e.col,
+      params: {},
+    })),
+    ...checkBalance(tokens).map((e) => ({
+      severity: "error" as const,
+      code: "syntax-unbalanced" as const,
+      line: e.line,
+      col: e.col,
+      params: { char: e.char },
+    })),
+  ];
+  const assignments =
+    syntax.length > 0
+      ? []
+      : scan(tokens, ({ kind, path, line, col }) =>
+          syntax.push({
+            severity: "error",
+            code: `syntax-${kind}`,
+            line,
+            col,
+            params: { path: path.join(".") },
+          }),
+        );
+  const declared = assignments.length > 0 ? declaredNames(tokens) : undefined;
+  for (const { ref } of assignments) {
+    if (declared && ref && !declared.has(ref.name)) {
+      syntax.push({
+        severity: "error",
+        code: "undefined-variable",
+        line: ref.line,
+        col: ref.col,
+        params: { name: ref.name },
+      });
+    }
+  }
+  // Valid brackets but no attribute set to read (e.g. bare `a.b = 1;` lines): say so instead of
+  // reporting a clean bill of health for a file nothing was checked in.
+  const first = tokens[0];
+  if (first && syntax.length === 0 && assignments.length === 0) {
+    syntax.push({
+      severity: "warning",
+      code: "nothing-to-check",
+      line: first.line,
+      col: first.col,
+      params: {},
+    });
+  }
+  return { syntax, assignments };
+}
+
+/** Guesses what kind of file it is from the top-level attributes. */
+export function detectTarget(assignments: Assignment[]): Target {
+  const roots = new Set(assignments.map((a) => a.path[0]));
+  if (roots.has("inputs") || roots.has("outputs") || roots.has("nixConfig")) return "flake";
+  if (roots.has("disko")) return "disko";
+  if (roots.has("home")) return "home-manager";
+  return "nixos";
+}
+
+export const resolveTarget = (analysis: Analysis, choice: TargetChoice): Target =>
+  choice === "auto" ? detectTarget(analysis.assignments) : choice;
+
+// Closest known path to `path`, with `*` filled in from what the user wrote.
+function suggest(tree: OptionTree, path: string[], known: number): string | undefined {
+  const written = path.join(".");
+  const found =
+    closest(written, siblings(tree, path, known)) ?? closest(written, candidates(tree, path));
+  return found === written ? undefined : found;
+}
+
+function typeMismatch(entry: IndexedOption, a: Assignment): string | undefined {
+  const { type } = entry;
+  if (a.kind === "other" || type === "any" || type === "hidden") return undefined;
+  if (type === "enum") {
+    const ok = a.kind === "str" && (a.value === undefined || entry.values?.includes(a.value));
+    return ok ? undefined : `enum(${entry.values?.join(" | ")})`;
+  }
+  // The manuals describe the final type of coercing types, so an int may be valid for a string.
+  if (type === "str" && a.kind === "int") return undefined;
+  const expected = type === "set" ? "attrs" : type;
+  return expected === a.kind ? undefined : expected;
+}
+
+/** Checks an analyzed file against the options of `target`. */
+export function check(analysis: Analysis, target: Target, tree: OptionTree): Report {
+  const diagnostics = [...analysis.syntax];
+  const reported = new Set<string>();
+
+  // Renamed and hidden options still work (or fail) upstream: warn, do not error.
+  const warnIfOutdated = (
+    entry: IndexedOption,
+    path: string,
+    at: { line: number; col: number },
+  ) => {
+    if (entry.renamedTo) {
+      diagnostics.push({
+        severity: "warning",
+        code: "deprecated",
+        ...at,
+        params: { path, replacement: entry.renamedTo },
+        docUrl: docUrl(target, entry.renamedTo),
+      });
+    } else if (entry.type === "hidden") {
+      diagnostics.push({
+        severity: "warning",
+        code: "hidden-option",
+        ...at,
+        params: { path },
+        docUrl: docUrl(target, path),
+      });
+    }
+  };
+
+  for (const a of analysis.assignments) {
+    const at = { line: a.line, col: a.col };
+    const path = a.path.join(".");
+    const exact = findExact(tree, a.path);
+    // An entry above this path that cannot be checked any deeper (free-form set, opaque
+    // type, or an alias whose children are unknown).
+    const owner = findOwner(tree, a.path);
+
+    if (exact) {
+      const expected = typeMismatch(exact, a);
+      if (expected) {
+        diagnostics.push({
+          severity: "error",
+          code: "type-mismatch",
+          ...at,
+          params: { path, expected, got: a.kind },
+          docUrl: docUrl(target, exact.path),
+        });
+      }
+      warnIfOutdated(exact, path, at);
+    } else if (owner) {
+      // Nothing below can be checked, but an outdated owner is worth saying once.
+      const ownerPath = a.path.slice(0, owner.segs.length).join(".");
+      if (!reported.has(ownerPath)) {
+        reported.add(ownerPath);
+        warnIfOutdated(owner, ownerPath, at);
+      }
+    } else {
+      const known = knownPrefix(tree, a.path);
+      if (known === a.path.length) {
+        // A group such as `services.openssh`: it can only hold a set.
+        if (a.kind !== "attrs" && a.kind !== "other") {
+          diagnostics.push({
+            severity: "error",
+            code: "type-mismatch",
+            ...at,
+            params: { path, expected: "attrs", got: a.kind },
+            docUrl: docUrl(target),
+          });
+        }
+        continue;
+      }
+      const key = a.path.slice(0, known + 1).join(".");
+      if (reported.has(key)) continue;
+      reported.add(key);
+      const suggestion = suggest(tree, a.path, known);
+      diagnostics.push({
+        severity: "error",
+        code: "unknown-option",
+        ...at,
+        params: { path },
+        ...(suggestion && { suggestion }),
+        docUrl: docUrl(target, suggestion ?? path),
+      });
+    }
+  }
+
+  diagnostics.sort((x, y) => x.line - y.line || x.col - y.col);
+  return { target, diagnostics };
+}
+
+/** Synchronous convenience over `analyze` + `check`, for callers that already hold the catalogs. */
+export function validate(
+  source: string,
+  choice: TargetChoice,
+  catalogs: Record<Target, OptionTree>,
+): Report {
+  const analysis = analyze(source);
+  const target = resolveTarget(analysis, choice);
+  return check(analysis, target, catalogs[target]);
+}

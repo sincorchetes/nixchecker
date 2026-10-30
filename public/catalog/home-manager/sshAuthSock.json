@@ -1,0 +1,1 @@
+[["sshAuthSock.enable","bool"],["sshAuthSock.initialization.bash","str"],["sshAuthSock.initialization.fish","str"],["sshAuthSock.initialization.nushell","str"],["sshAuthSock.initialization.zsh","str"],["sshAuthSock.systemd.socketProviderUnit","str"]]

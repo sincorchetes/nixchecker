@@ -1,0 +1,25 @@
+name: Bug
+description: Something does not work, or the generated configuration does not evaluate
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected and what happened. If it is a Nix error, paste the whole message.
+    validations:
+      required: true
+  - type: input
+    id: channel
+    attributes:
+      label: NixOS channel
+      placeholder: 25.11 / 26.05 / unstable
+  - type: textarea
+    id: options
+    attributes:
+      label: Options you chose
+      description: Profile, desktop, disk, Secure Boot… or the generated .zip (without personal data).
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and system
