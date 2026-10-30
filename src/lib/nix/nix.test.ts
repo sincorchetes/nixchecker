@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { findBadCalls } from "./calls";
 import { lex } from "./lex";
 import { parse } from "./parse";
 import { scan } from "./scan";
@@ -258,5 +259,54 @@ describe("scan", () => {
     expect(undefinedIn("with lib; { a = whatever; }")).toEqual([]);
     expect(undefinedIn("{ a = null; b = builtins; c = true; }")).toEqual([]);
     expect(undefinedIn("{ a = lib.mkDefault ena; }")).toEqual(["ena"]);
+  });
+});
+
+describe("findBadCalls", () => {
+  const bad = (src: string) => {
+    const { ast } = parse(src);
+    if (!ast) throw new Error("no tree");
+    return findBadCalls(ast).map((c) => [c.name, c.kind, c.line, c.col]);
+  };
+
+  test("a name bound to a list, string or number cannot be called", () => {
+    expect(bad("let xs = [ 1 ]; in { a = xs [ 2 ]; }")).toEqual([["xs", "list", 1, 26]]);
+    expect(bad('let s = "x"; in s 1')).toEqual([["s", "string", 1, 17]]);
+    expect(bad("let n = 1; in { a = n 2; }")).toEqual([["n", "number", 1, 21]]);
+    expect(bad("rec { xs = [ ]; a = xs 1; }")).toEqual([["xs", "list", 1, 21]]);
+    expect(bad("let xs = [ ]; ys = xs; in ys 1")).toEqual([["ys", "list", 1, 27]]);
+    expect(bad("let xs = [ ]; ys = (xs); in ys 1")).toEqual([["ys", "list", 1, 29]]);
+  });
+
+  test("so is a literal", () => {
+    expect(bad("[ 1 ] [ 2 ]")).toEqual([["[ … ]", "list", 1, 1]]);
+    expect(bad('"x" y')).toEqual([['"…"', "string", 1, 1]]);
+    expect(bad("1 y")).toEqual([["…", "number", 1, 1]]);
+    expect(bad('("x") y')).toEqual([['"…"', "string", 1, 1]]);
+  });
+
+  test("it looks everywhere, with the scope of each place", () => {
+    const src = `{
+      a = let xs = [ ]; in f (g xs) { b = [ (xs 1) ]; };
+      c = if p then x: x y else (with q; z) w;
+      d = !(xs 1) && e ? f.g or (xs 2);
+      inherit (h xs) i;
+      k.${"l"} = assert m; -n;
+    }`;
+    // `xs` is only a list inside the first `let`: the later calls to it are not flagged.
+    expect(bad(src)).toEqual([["xs", "list", 2, 46]]);
+  });
+
+  test("only calls that are certain to fail are reported", () => {
+    expect(bad("let xs = [ ]; in xs")).toEqual([]);
+    expect(bad("let f = x: x; in f 1")).toEqual([]);
+    expect(bad("let xs = [ ]; in x: xs 1")).toEqual([["xs", "list", 1, 21]]);
+    expect(bad("let xs = [ ]; in xs: xs 1")).toEqual([]);
+    expect(bad("{ xs = [ ]; a = xs 1; }")).toEqual([]);
+    expect(bad("let xs = [ ]; in { inherit xs; a = xs 1; }")).toEqual([["xs", "list", 1, 36]]);
+    expect(bad("let xs.y = [ ]; in xs 1")).toEqual([]);
+    expect(bad("let s = { __functor = self: x: x; }; in s 1")).toEqual([]);
+    expect(bad("f g h")).toEqual([]);
+    expect(bad("let a = a; in a 1")).toEqual([]);
   });
 });

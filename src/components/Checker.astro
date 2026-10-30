@@ -22,12 +22,17 @@ const client = Object.fromEntries(
   data-base={withBase(import.meta.env.BASE_URL)}
 >
   <label for="source">{m["checker.label"]}</label>
-  <textarea
-    id="source"
-    spellcheck="false"
-    autocomplete="off"
-    autocapitalize="off"
-    placeholder={m["checker.placeholder"]}></textarea>
+  <div class="editor">
+    <pre id="gutter" class="gutter" aria-hidden="true"></pre>
+    <textarea
+      id="source"
+      wrap="off"
+      spellcheck="false"
+      autocomplete="off"
+      autocapitalize="off"
+      placeholder={m["checker.placeholder"]}></textarea>
+  </div>
+  <p id="cursor" class="cursor"></p>
 
   <div class="bar">
     <label class="target">
@@ -66,7 +71,9 @@ const client = Object.fromEntries(
   const target = document.querySelector<HTMLSelectElement>("#target");
   const version = document.querySelector<HTMLSelectElement>("#version");
   const results = document.querySelector<HTMLElement>("#results");
-  if (root?.dataset.messages && source && target && version && results) {
+  const gutter = document.querySelector<HTMLElement>("#gutter");
+  const cursor = document.querySelector<HTMLElement>("#cursor");
+  if (root?.dataset.messages && source && target && version && results && gutter && cursor) {
     const text = JSON.parse(root.dataset.messages) as Record<string, string>;
     const tr = (key: string, params?: Record<string, string | number>) =>
       format(text[key] ?? key, params);
@@ -77,6 +84,25 @@ const client = Object.fromEntries(
       node.className = className;
       node.textContent = content;
       return node;
+    };
+
+    // Line numbers beside the text, red or yellow where the last validation found something.
+    let marks = new Map<number, string>();
+    let painted = 0;
+    const paint = (force = false) => {
+      const lines = source.value.split("\n").length;
+      if (!force && lines === painted) return;
+      painted = lines;
+      gutter.replaceChildren(
+        ...Array.from({ length: lines }, (_, n) => el("span", `ln ${marks.get(n + 1) ?? ""}`, String(n + 1))),
+      );
+      gutter.scrollTop = source.scrollTop;
+    };
+    // The cursor position, as the ruler of an editor shows it.
+    const where = () => {
+      const before = source.value.slice(0, source.selectionStart);
+      const line = before.split("\n").length;
+      cursor.textContent = tr("result.line", { line, col: before.length - before.lastIndexOf("\n") });
     };
 
     // A button that selects the offending word in the text, so it can be found at a glance.
@@ -97,6 +123,9 @@ const client = Object.fromEntries(
     const render = async () => {
       const current = ++run;
       results.removeAttribute("data-stale");
+      marks = new Map();
+      paint(true);
+      where();
       if (!source.value.trim()) {
         results.replaceChildren(el("p", "empty", tr("result.empty")));
         return;
@@ -123,6 +152,11 @@ const client = Object.fromEntries(
       const report = check(analysis, kind, catalog.tree, version.value as Version);
       const errors = report.diagnostics.filter((d) => d.severity === "error").length;
       const warnings = report.diagnostics.length - errors;
+
+      for (const d of report.diagnostics) {
+        if (d.severity === "error" || !marks.has(d.line)) marks.set(d.line, d.severity);
+      }
+      paint(true);
 
       results.replaceChildren();
       const head = el("div", "head");
@@ -184,7 +218,18 @@ const client = Object.fromEntries(
     };
 
     // Results describe the text as it was when validated: dim them as soon as it changes.
-    source.addEventListener("input", () => results.setAttribute("data-stale", ""));
+    source.addEventListener("input", () => {
+      results.setAttribute("data-stale", "");
+      marks = new Map(); // the lines have moved
+      paint(true);
+      where();
+    });
+    source.addEventListener("scroll", () => {
+      gutter.scrollTop = source.scrollTop;
+    });
+    document.addEventListener("selectionchange", () => {
+      if (document.activeElement === source) where();
+    });
     target.addEventListener("change", render);
     version.addEventListener("change", render);
     document.querySelector("#validate")?.addEventListener("click", render);
@@ -208,21 +253,69 @@ const client = Object.fromEntries(
     font-size: 0.85rem;
     color: var(--text-2);
   }
-  textarea {
-    display: block;
-    width: 100%;
-    min-height: 16rem;
+  .editor {
+    display: flex;
     margin-top: 0.5rem;
-    padding: 1rem;
-    resize: vertical;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    background: rgba(0, 0, 0, 0.3);
-    color: var(--text);
+    /* A tint of the text color: darker than the card in the dark theme, lighter in the light one. */
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+    overflow: hidden;
+  }
+  .editor:focus-within {
+    border-color: var(--accent-light);
+  }
+  .gutter,
+  textarea {
+    margin: 0;
+    padding: 1rem 0;
     font-family: var(--font-mono);
     font-size: 0.9rem;
     line-height: 1.5;
+  }
+  .gutter {
+    flex: none;
+    min-width: 3rem;
+    padding-inline: 0.6rem;
+    overflow: hidden;
+    text-align: right;
+    color: var(--text-3);
+    border-right: 1px solid var(--border);
+    user-select: none;
+  }
+  .gutter :global(.ln) {
+    display: block;
+  }
+  .gutter :global(.ln.error) {
+    color: var(--error);
+    font-weight: 700;
+  }
+  .gutter :global(.ln.warning) {
+    color: var(--warning);
+    font-weight: 700;
+  }
+  textarea {
+    display: block;
+    flex: 1;
+    min-width: 0;
+    min-height: 16rem;
+    padding-inline: 1rem;
+    resize: vertical;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    white-space: pre;
+    overflow: auto;
     tab-size: 2;
+  }
+  .cursor {
+    margin: 0.35rem 0 0;
+    text-align: right;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    min-height: 1em;
   }
   textarea::placeholder {
     color: var(--text-3);

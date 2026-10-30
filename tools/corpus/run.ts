@@ -1,8 +1,9 @@
 // Parses every .nix file of the pinned nixpkgs and Home Manager sources and fails on any syntax
-// problem. All of those files are valid Nix, so a problem here is a false positive of the parser.
+// problem or impossible call. All of those files are valid Nix, so either is a false positive.
 //   bun tools/corpus/run.ts            (needs Nix; `devenv shell -- corpus`)
 import { realpath } from "node:fs/promises";
 import { join } from "node:path";
+import { findBadCalls } from "../../src/lib/nix/calls";
 import { parse } from "../../src/lib/nix/parse";
 
 const flakeDir = join(import.meta.dir, "..", "catalog");
@@ -36,11 +37,15 @@ const failures: string[] = [];
 for (const root of roots) {
   for await (const file of new Bun.Glob("**/*.nix").scan({ cwd: root, followSymlinks: true })) {
     files++;
-    const { problems } = parse(await Bun.file(join(root, file)).text());
+    const { ast, problems } = parse(await Bun.file(join(root, file)).text());
     const first = problems[0];
     if (first) failures.push(`${file}:${first.line}:${first.col} ${first.code}`);
+    // Valid code never calls a list, a string or a number.
+    const call = ast && findBadCalls(ast)[0];
+    if (call)
+      failures.push(`${file}:${call.line}:${call.col} not-callable-${call.kind} ${call.name}`);
   }
 }
-console.log(`${files} files parsed, ${failures.length} with syntax problems`);
+console.log(`${files} files parsed, ${failures.length} with problems`);
 for (const failure of failures.slice(0, 20)) console.log(`  ${failure}`);
 if (failures.length > 0) process.exit(1);

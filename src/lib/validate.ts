@@ -7,6 +7,7 @@ import {
   knownPrefix,
   siblings,
 } from "./catalog/tree";
+import { findBadCalls } from "./nix/calls";
 import { type Problem, parse } from "./nix/parse";
 import { type Assignment, scan } from "./nix/scan";
 import { closest, distance } from "./suggest";
@@ -16,6 +17,9 @@ export type TargetChoice = Target | "auto";
 export type DiagnosticCode =
   | Problem["code"]
   | "undefined-variable"
+  | "not-callable-list"
+  | "not-callable-string"
+  | "not-callable-number"
   | "nothing-to-check"
   | "unknown-option"
   | "type-mismatch"
@@ -54,6 +58,10 @@ export function analyze(source: string): Analysis {
     ast && !lexical ? scan(ast) : { assignments: [], undefinedNames: [] };
   for (const { name, line, col } of undefinedNames) {
     syntax.push({ severity: "error", code: "undefined-variable", line, col, params: { name } });
+  }
+  // Calls that cannot work, found anywhere in the file (a flake's `outputs` included).
+  for (const { name, kind, line, col } of ast && !lexical ? findBadCalls(ast) : []) {
+    syntax.push({ severity: "error", code: `not-callable-${kind}`, line, col, params: { name } });
   }
   // A file with no attribute set to read (e.g. a bare function call): say so instead of
   // reporting a clean bill of health for a file nothing was checked in.

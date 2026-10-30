@@ -55,6 +55,12 @@ export const es = {
   "diag.syntax-unterminated-comment": "Comentario /* ... */ sin cerrar.",
   "diag.syntax-incomplete": "«{path}» no tiene «= valor;»: la asignación está incompleta.",
   "diag.syntax-unterminated": "Falta el «;» al final de la asignación de «{path}».",
+  "diag.not-callable-list":
+    "«{name}» es una lista y no se puede llamar como una función. ¿Falta un operador, como «++»?",
+  "diag.not-callable-string":
+    "«{name}» es una cadena de texto y no se puede llamar como una función. ¿Falta un operador, como «+»?",
+  "diag.not-callable-number":
+    "«{name}» es un número y no se puede llamar como una función. ¿Falta un operador?",
   "diag.undefined-variable":
     "«{name}» no está definido: no es un argumento ni se declara en el archivo. ¿Faltan comillas o un valor?",
   "diag.nothing-to-check":

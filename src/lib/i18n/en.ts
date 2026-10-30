@@ -56,6 +56,12 @@ export const en: Record<MessageKey, string> = {
   "diag.syntax-unterminated-comment": "Unterminated /* ... */ comment.",
   "diag.syntax-incomplete": "“{path}” has no “= value;”: the assignment is incomplete.",
   "diag.syntax-unterminated": "The assignment of “{path}” is missing its closing “;”.",
+  "diag.not-callable-list":
+    "“{name}” is a list and cannot be called as a function. Is an operator such as “++” missing?",
+  "diag.not-callable-string":
+    "“{name}” is a string and cannot be called as a function. Is an operator such as “+” missing?",
+  "diag.not-callable-number":
+    "“{name}” is a number and cannot be called as a function. Is an operator missing?",
   "diag.undefined-variable":
     "“{name}” is not defined: it is not an argument and is not declared in the file. Missing quotes or a value?",
   "diag.nothing-to-check":

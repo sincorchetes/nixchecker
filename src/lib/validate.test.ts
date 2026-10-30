@@ -288,3 +288,29 @@ describe("what the catalog offers", () => {
     expect(run("{ zzzzzz.qqqqqq = 1; }").diagnostics[0]?.options?.length).toBeGreaterThan(3);
   });
 });
+
+describe("calls that cannot work", () => {
+  test("a list called as a function is an error that hints at the missing operator", () => {
+    const src = `{
+  outputs = inputs: let
+    common = [ ./a.nix ];
+  in {
+    nixosConfigurations.x = lib.nixosSystem {
+      modules = common  [ ./b.nix ];
+    };
+  };
+}`;
+    expect(run(src).diagnostics).toMatchObject([
+      {
+        severity: "error",
+        code: "not-callable-list",
+        line: 6,
+        col: 17,
+        params: { name: "common" },
+      },
+    ]);
+    expect(codes("{ a = [ 1 ] [ 2 ]; }")).toContain("not-callable-list");
+    expect(codes('{ a = "x" y; }')).toContain("not-callable-string");
+    expect(codes("{ a = 1 y; }")).toContain("not-callable-number");
+  });
+});

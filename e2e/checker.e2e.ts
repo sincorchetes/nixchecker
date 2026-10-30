@@ -135,6 +135,25 @@ describe("checker", () => {
     await page.select("#version", "26.05");
   });
 
+  test("numbers the lines, marks the ones with problems and tracks the cursor", async () => {
+    await validate('{\n  services.openssh.enabel = true;\n  networking.hostName = "x";\n}');
+    expect(await page.$$eval("#gutter .ln", (els) => els.length)).toBe(4);
+    expect(await page.$$eval("#gutter .ln.error", (els) => els.map((e) => e.textContent))).toEqual([
+      "2",
+    ]);
+    await page.focus("#source");
+    await page.$eval("#source", (el) => (el as HTMLTextAreaElement).setSelectionRange(14, 14));
+    await page.waitForFunction(() =>
+      document.querySelector("#cursor")?.textContent?.startsWith("Línea 2"),
+    );
+    expect(await page.$eval("#cursor", (el) => el.textContent)).toBe("Línea 2, columna 13");
+    // Typing moves the lines and clears the marks, which belonged to the old text.
+    await page.keyboard.press("Enter");
+    expect(await page.$$eval("#gutter .ln", (els) => els.length)).toBe(5);
+    expect(await page.$$eval("#gutter .ln.error", (els) => els.length)).toBe(0);
+    expect(await page.$eval("#cursor", (el) => el.textContent)).toBe("Línea 3, columna 1");
+  });
+
   test("works in English", async () => {
     await page.goto(url("/en/"));
     await validate("{ services.openssh.enabel = true; }");
