@@ -28,7 +28,7 @@
   # Damaged copies of those files: our parser and `nix-instantiate --parse` must agree on each one.
   # An optional argument is the sampling step (default 40: one file in 40, six damages each); a second one is the seed.
   scripts.differential.exec = "bun tools/corpus/differential.ts \"$@\"";
-  # Modules put to real Nix (the NixOS module system) and to our validator: hand-written ones and ones
+  # Modules put to real Nix (the NixOS, Home Manager and disko module systems) and to our validator: hand-written ones and ones
   # made from a sample of the catalog (optional arguments: how many options, and the seed). They must agree
   # on unknown options and wrong types; false positives are failures, misses are counted.
   scripts.oracle.exec = "bun tools/oracle/run.ts \"$@\"";

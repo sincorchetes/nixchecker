@@ -14,7 +14,7 @@ Siempre que se terminen de implementar cambios en el proyecto, seguir rigurosame
    - Ejecutar lint, tipos y la suite con la compuerta de cobertura (100 % de líneas): `devenv test`.
    - Si cambia el analizador de Nix (`src/lib/nix/`): `devenv shell -- corpus` (necesita Nix): todos los `.nix` de nixpkgs y Home Manager son válidos y deben parsearse sin problemas; la CI también lo ejecuta.
   - Si cambia el analizador de Nix (`src/lib/nix/`): `devenv shell -- differential` (necesita Nix): nuestro analizador y `nix-instantiate --parse` deben coincidir sobre copias dañadas de esos archivos; la CI también lo ejecuta.
-  - Si cambia el validador o el catálogo: `devenv shell -- oracle` (necesita Nix): módulos reales evaluados con Nix y con nuestro validador deben coincidir en opciones desconocidas y tipos erróneos (salvo lo documentado en `tools/oracle/run.ts`); la CI también lo ejecuta.
+  - Si cambia el validador o el catálogo: `devenv shell -- oracle` (necesita Nix): módulos reales de NixOS, Home Manager y disko (escritos y generados desde el catálogo) evaluados con Nix y con nuestro validador deben coincidir en opciones desconocidas y tipos erróneos (salvo lo documentado en `tools/oracle/run.ts`); la CI también lo ejecuta.
   - Si cambia el generador de catálogos o su overlay: `devenv shell -- catalog` (necesita Nix) y revisar la diferencia en `public/catalog/`; la CI comprueba que lo versionado coincide con lo que generan las versiones fijadas.
    - Si cambia la interfaz: `devenv shell -- site-build && devenv shell -- e2e` (necesita Chrome).
    - Si cambia la salida generada **a propósito**, aceptar las instantáneas con `bun test --update-snapshots` y revisar la diferencia.

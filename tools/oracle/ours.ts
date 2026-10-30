@@ -2,7 +2,7 @@
 import { join } from "node:path";
 import { loadCatalog } from "../../src/lib/catalog/load";
 import { analyze, check } from "../../src/lib/validate";
-import type { Verdict } from "./nix";
+import type { Kind, Verdict } from "./nix";
 
 const publicDir = join(import.meta.dir, "..", "..", "public");
 const files = (async (url) => new Response(Bun.file(join(publicDir, String(url))))) as typeof fetch;
@@ -12,17 +12,11 @@ export interface Ours extends Verdict {
   paths: string[][];
 }
 
-export async function judgeOurs(source: string): Promise<Ours> {
+export async function judgeOurs(source: string, kind: Kind = "nixos"): Promise<Ours> {
   const analysis = analyze(source);
   const paths = analysis.assignments.map((a) => a.path);
-  const catalog = await loadCatalog(
-    "nixos",
-    "unstable",
-    "/",
-    analysis.assignments.map((a) => a.path),
-    files,
-  );
-  const codes = check(analysis, "nixos", catalog.tree, "unstable").diagnostics.map((d) => d.code);
+  const catalog = await loadCatalog(kind, "unstable", "/", paths, files);
+  const codes = check(analysis, kind, catalog.tree, "unstable").diagnostics.map((d) => d.code);
   return {
     paths,
     unknown: codes.includes("unknown-option"),

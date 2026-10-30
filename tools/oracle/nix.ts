@@ -12,14 +12,55 @@ export interface Verdict {
   other?: string;
 }
 
-const EXPRESSION = (root: string) => `{ file, path, deep }:
+export type Kind = "nixos" | "home-manager" | "disko";
+
+/** The sources the evaluations are made from. */
+export interface Roots {
+  nixpkgs: string;
+  homeManager: string;
+  disko: string;
+}
+
+const FORCE = `(if deep then builtins.deepSeq else builtins.seq) (builtins.foldl' (c: n: c.\${n}) config path) true`;
+
+// A NixOS system made of the module (and, for disko, of its module too).
+const nixos = (r: Roots, extra: string) => `{ file, path, deep }:
 let
-  ev = import (${JSON.stringify(root)} + "/nixos/lib/eval-config.nix") {
+  ev = import (${JSON.stringify(r.nixpkgs)} + "/nixos/lib/eval-config.nix") {
     system = "x86_64-linux";
-    modules = [ file ];
+    modules = [ file ${extra} ];
   };
+  config = ev.config;
 in
-(if deep then builtins.deepSeq else builtins.seq) (builtins.foldl' (c: n: c.\${n}) ev.config path) true`;
+${FORCE}`;
+
+// A Home Manager configuration made of the module.
+const homeManager = (r: Roots) => `{ file, path, deep }:
+let
+  pkgs = import ${JSON.stringify(r.nixpkgs)} { system = "x86_64-linux"; };
+  hm = import (${JSON.stringify(r.homeManager)} + "/modules") {
+    inherit pkgs;
+    configuration = {
+      imports = [ file ];
+      home = { username = "u"; homeDirectory = "/home/u"; stateVersion = "25.05"; };
+    };
+  };
+  config = hm.config;
+in
+${FORCE}`;
+
+const EXPRESSION: Record<Kind, (r: Roots) => string> = {
+  nixos: (r) => nixos(r, ""),
+  "home-manager": homeManager,
+  disko: (r) => nixos(r, `(${JSON.stringify(r.disko)} + "/module.nix")`),
+};
+
+// Something every system has, to force first: unknown options are found by reading any of them.
+const BASE: Record<Kind, string[]> = {
+  nixos: ["system", "name"],
+  "home-manager": ["home", "username"],
+  disko: ["system", "name"],
+};
 
 /** Evaluates `config.<path>` of a NixOS system made from the module, and classifies the failure. */
 async function force(
@@ -59,10 +100,10 @@ async function force(
   };
 }
 
-export async function makeOracle(root: string) {
+export async function makeOracle(kind: Kind, roots: Roots) {
   const dir = await mkdtemp(join(tmpdir(), "nixchecker-oracle-"));
   const expression = join(dir, "eval.nix");
-  await Bun.write(expression, EXPRESSION(root));
+  await Bun.write(expression, EXPRESSION[kind](roots));
   let counter = 0;
 
   return {
@@ -71,7 +112,7 @@ export async function makeOracle(root: string) {
       const file = join(dir, `case-${counter++}.nix`);
       await Bun.write(file, source);
       const verdict: Verdict = { unknown: false, typeError: false };
-      for (const path of [["system", "name"], ...paths]) {
+      for (const path of [BASE[kind], ...paths]) {
         // Deep first, so a wrong element is found; a group holds packages that cannot be forced
         // that way, and for it reading the value itself is as far as the check goes.
         let one = await force(expression, file, path, true);

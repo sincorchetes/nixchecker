@@ -29,3 +29,6 @@ export const sourceRoots = (): Promise<string[]> =>
     sourceRoot("nixos-unstable", 2), // nixpkgs/nixos/modules
     sourceRoot("home-manager-unstable", 1), // home-manager/modules
   ]);
+
+/** The disko repository, whose module is the one the catalog describes. */
+export const diskoRoot = (): Promise<string> => sourceRoot("disko", 0);
