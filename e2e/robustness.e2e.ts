@@ -110,30 +110,46 @@ describe("robustness", () => {
     expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe("BODY");
   });
 
-  test("has no accessibility violations a machine can find", async () => {
-    for (const path of ["/", "/en/"]) {
-      const page = await freshPage();
-      await page.setBypassCSP(true);
-      await page.goto(site.url(path));
-      await validateIn(page, "{ services.openssh.enabel = true; }");
-      // The entrance animations blend colors while they run: measure the settled page.
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
-      await page.addScriptTag({ path: join(root, "node_modules/axe-core/axe.min.js") });
-      const violations = await page.evaluate(async () => {
-        // biome-ignore lint/suspicious/noExplicitAny: axe is injected as a global
-        const result = await (window as any).axe.run();
-        return result.violations.map(
-          (v: { id: string; nodes: unknown[] }) => `${v.id} (${v.nodes.length})`,
-        );
-      });
-      expect(violations).toEqual([]);
-    }
-  });
+  // Every state the page can be in, in both languages and both color schemes.
+  const states: Array<[string, string | undefined]> = [
+    ["nothing validated yet", undefined],
+    ["a clean result", "{ services.openssh.enable = true; }"],
+    ["an unknown option", "{ services.openssh.enabel = true; }"],
+    ["a syntax error", "{ a = ; }"],
+    ["unchecked assignments", "{ x }: { networking.hostName = x; }"],
+  ];
+  for (const [name, source] of states) {
+    test(`has no accessibility violations with ${name}`, async () => {
+      for (const path of ["/", "/en/"]) {
+        for (const scheme of ["light", "dark"]) {
+          const page = await freshPage();
+          await page.setBypassCSP(true);
+          await page.emulateMediaFeatures([{ name: "prefers-color-scheme", value: scheme }]);
+          await page.goto(site.url(path));
+          if (source) await validateIn(page, source);
+          // The entrance animations blend colors while they run: measure the settled page.
+          await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+          await page.addScriptTag({ path: join(root, "node_modules/axe-core/axe.min.js") });
+          const violations = await page.evaluate(async () => {
+            // biome-ignore lint/suspicious/noExplicitAny: axe is injected as a global
+            const result = await (window as any).axe.run();
+            return result.violations.map(
+              (v: { id: string; nodes: unknown[] }) => `${v.id} (${v.nodes.length})`,
+            );
+          });
+          expect({ path, scheme, violations }).toEqual({ path, scheme, violations: [] });
+        }
+      }
+    }, 60_000);
+  }
 
+  // CI sets REQUIRE_FIREFOX, so a missing browser fails the run instead of skipping the test.
   const firefox = Bun.which("firefox");
-  test.skipIf(!firefox)(
+  const required = process.env.REQUIRE_FIREFOX === "1";
+  test.skipIf(!firefox && !required)(
     "validates in Firefox too",
     async () => {
+      expect(firefox).toBeTruthy();
       const other = await puppeteer.launch({
         browser: "firefox",
         executablePath: firefox as string,

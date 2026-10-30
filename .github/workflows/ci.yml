@@ -85,6 +85,9 @@ jobs:
           name: dist
           path: dist
       - run: devenv shell -- e2e
+        env:
+          # The runner image ships Firefox; the Firefox test must run there, not be skipped.
+          REQUIRE_FIREFOX: "1"
 
   sonar:
     name: SonarQube
