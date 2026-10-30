@@ -20,10 +20,28 @@ which must parse without a problem: `devenv shell -- corpus`, also run by CI. A 
 sampled files (cuts, a lost character, a stray symbol) and requires our parser and the official
 `nix-instantiate --parse` to agree on whether each one is valid: `devenv shell -- differential`.
 
+## Checking a whole configuration with real Nix
+
+The page only analyzes text. For what needs evaluation (`imports`, `mkIf`, `mkMerge`, priorities,
+the assertions of the system), run the file through the module system of your own Nix:
+
+```sh
+devenv shell -- evaluate my-config.nix --target nixos --release 26.05
+```
+
+It prints the static findings and then what Nix itself says, each marked by how sure it is
+(`syntax`, `static check`, `confirmed by Nix`), and exits with 1 when something is an error. Files
+named in `imports` are read from where they are, so a configuration split over several files works.
+`--target` is `nixos`, `home-manager` or `disko`; `--release` picks the pinned nixpkgs and Home
+Manager (or give `--nixpkgs DIR --home-manager DIR`); `--static` skips the evaluation and `--json`
+prints the findings as data. Nothing is uploaded: it all runs on your machine. Nix stops at the
+first error it meets, so fix it and run again to see the next. Flakes are not evaluated yet.
+
 Limits to know about:
 
-- It is static: nothing is evaluated, so values built with functions, `mkIf` or `let` are not
-  checked, and options defined by modules you import yourself are unknown to it.
+- The page is static: nothing is evaluated, so values built with functions, `mkIf` or `let` are not
+  checked, and options defined by modules you import yourself are unknown to it. The command above
+  settles those with real Nix.
 - disko documents only its top level; the nested disk layout options come from a hand-written
   overlay (`tools/catalog/overlay.ts`).
 - Renamed options are read from the `mkRenamedOptionModule` calls in the nixpkgs and Home Manager
@@ -63,7 +81,7 @@ devenv test             # lint, types, unit tests (100% line coverage gate) and 
 ```
 
 Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `corpus` (the parser against nixpkgs and
-Home Manager), `differential` (the parser against the official one on damaged files), `oracle` (the validator against
+Home Manager), `differential` (the parser against the official one on damaged files), `evaluate` (a file against real Nix), `oracle` (the validator against
 the real NixOS, Home Manager and disko module systems, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
 `sonar`.
 

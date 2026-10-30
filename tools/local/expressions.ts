@@ -1,0 +1,47 @@
+// The Nix expressions that build a system out of a module with the real module systems.
+export type Kind = "nixos" | "home-manager" | "disko";
+
+/** The sources the evaluations are made from. */
+export interface Roots {
+  nixpkgs: string;
+  homeManager: string;
+  disko: string;
+}
+
+const quote = (s: string) => JSON.stringify(s);
+
+/**
+ * An expression taking `args` (an attribute set pattern such as `{ file, path }`). In `force`, `config`
+ * is the configuration of the system made of the module `file` and `top` the path of its derivation, which
+ * only evaluates when every assertion of the system holds.
+ */
+export function systemExpression(kind: Kind, r: Roots, args: string, force: string): string {
+  if (kind === "home-manager") {
+    return `${args}:
+let
+  pkgs = import ${quote(r.nixpkgs)} { system = "x86_64-linux"; };
+  hm = import (${quote(r.homeManager)} + "/modules") {
+    inherit pkgs;
+    configuration = {
+      imports = [ file ];
+      home = { username = "u"; homeDirectory = "/home/u"; stateVersion = "25.05"; };
+    };
+  };
+  config = hm.config;
+  top = hm.activationPackage.drvPath;
+in
+${force}`;
+  }
+  // disko is a module of a NixOS system.
+  const extra = kind === "disko" ? `(${quote(r.disko)} + "/module.nix")` : "";
+  return `${args}:
+let
+  ev = import (${quote(r.nixpkgs)} + "/nixos/lib/eval-config.nix") {
+    system = "x86_64-linux";
+    modules = [ file ${extra} ];
+  };
+  config = ev.config;
+  top = ev.config.system.build.toplevel.drvPath;
+in
+${force}`;
+}

@@ -31,6 +31,9 @@
   # Modules put to real Nix (the NixOS, Home Manager and disko module systems) and to our validator: hand-written ones and ones
   # made from a sample of the catalog (optional arguments: how many options, the seed, and `all` for every release). They must agree
   # on unknown options and wrong types; false positives are failures, misses are counted.
+  # Checks a file with the static analysis and with the real module system of your Nix (needs Nix):
+  #   devenv shell -- evaluate my-config.nix --target nixos --release 26.05
+  scripts.evaluate.exec = "bun tools/local/check.ts \"$@\"";
   scripts.oracle.exec = "bun tools/oracle/run.ts \"$@\"";
   scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --no-banner --redact --verbose";
   # Sends the code and coverage (coverage/lcov.info, written by `unit`) to SonarQube.

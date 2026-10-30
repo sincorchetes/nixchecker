@@ -2,6 +2,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { type Kind, type Roots, systemExpression } from "../local/expressions";
 
 export interface Verdict {
   /** Some option the module sets does not exist. */
@@ -12,48 +13,13 @@ export interface Verdict {
   other?: string;
 }
 
-export type Kind = "nixos" | "home-manager" | "disko";
+export type { Kind, Roots };
 
-/** The sources the evaluations are made from. */
-export interface Roots {
-  nixpkgs: string;
-  homeManager: string;
-  disko: string;
-}
-
+// Reads `config.<path>`, all of it when `deep`.
 const FORCE = `(if deep then builtins.deepSeq else builtins.seq) (builtins.foldl' (c: n: c.\${n}) config path) true`;
 
-// A NixOS system made of the module (and, for disko, of its module too).
-const nixos = (r: Roots, extra: string) => `{ file, path, deep }:
-let
-  ev = import (${JSON.stringify(r.nixpkgs)} + "/nixos/lib/eval-config.nix") {
-    system = "x86_64-linux";
-    modules = [ file ${extra} ];
-  };
-  config = ev.config;
-in
-${FORCE}`;
-
-// A Home Manager configuration made of the module.
-const homeManager = (r: Roots) => `{ file, path, deep }:
-let
-  pkgs = import ${JSON.stringify(r.nixpkgs)} { system = "x86_64-linux"; };
-  hm = import (${JSON.stringify(r.homeManager)} + "/modules") {
-    inherit pkgs;
-    configuration = {
-      imports = [ file ];
-      home = { username = "u"; homeDirectory = "/home/u"; stateVersion = "25.05"; };
-    };
-  };
-  config = hm.config;
-in
-${FORCE}`;
-
-const EXPRESSION: Record<Kind, (r: Roots) => string> = {
-  nixos: (r) => nixos(r, ""),
-  "home-manager": homeManager,
-  disko: (r) => nixos(r, `(${JSON.stringify(r.disko)} + "/module.nix")`),
-};
+const EXPRESSION = (kind: Kind, roots: Roots) =>
+  systemExpression(kind, roots, "{ file, path, deep }", FORCE);
 
 // Something every system has, to force first: unknown options are found by reading any of them.
 const BASE: Record<Kind, string[]> = {
@@ -103,7 +69,7 @@ async function force(
 export async function makeOracle(kind: Kind, roots: Roots) {
   const dir = await mkdtemp(join(tmpdir(), "nixchecker-oracle-"));
   const expression = join(dir, "eval.nix");
-  await Bun.write(expression, EXPRESSION[kind](roots));
+  await Bun.write(expression, EXPRESSION(kind, roots));
   let counter = 0;
 
   return {
