@@ -42,6 +42,26 @@ describe("generated catalogs (public/catalog)", () => {
     expect(DEFAULT_VERSION).toBe(VERSIONS[0]);
   });
 
+  test("keys inside an open submodule are not errors (programs.ssh.settings)", async () => {
+    const src = `{ programs.ssh.settings."*" = { KexAlgorithms = "x"; IdentityAgent = "y"; header = "h"; }; }`;
+    const analysis = analyze(src);
+    const paths = analysis.assignments.map((a) => a.path);
+    const catalog = await loadCatalog("home-manager", "26.05", "/", paths, disk);
+    expect(check(analysis, "home-manager", catalog.tree, "26.05").diagnostics).toEqual([]);
+    // The one documented key is still checked.
+    const wrong = analyze(`{ programs.ssh.settings."*".header = [ ]; }`);
+    const loaded = await loadCatalog(
+      "home-manager",
+      "26.05",
+      "/",
+      wrong.assignments.map((a) => a.path),
+      disk,
+    );
+    expect(check(wrong, "home-manager", loaded.tree, "26.05").diagnostics[0]?.code).toBe(
+      "type-mismatch",
+    );
+  });
+
   test("a file that only names a root does not make it look unknown", async () => {
     const src = "{ programs = lib.mkMerge [ ]; services = lib.mkMerge [ ]; }";
     const analysis = analyze(src);

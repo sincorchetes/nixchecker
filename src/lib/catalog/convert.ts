@@ -54,7 +54,8 @@ export function mapType(description: string): Mapped {
   if (flat === "boolean") return { type: "bool" };
   // Containers and lists come first: "list of integer" must not read as an integer.
   if (/^(non-empty )?list of/.test(flat)) return { type: "list" };
-  if (/^open submodule/.test(flat)) return { type: "attrs" };
+  // An open submodule takes any key, wherever the text mentions it ("DAG of open submodule of ...").
+  if (/open submodule/.test(text)) return { type: "attrs" };
   if (
     /submodule|^(lazy )?attribute set|\b(JSON|TOML|YAML|INI|Java properties)\b.*value/.test(flat)
   ) {

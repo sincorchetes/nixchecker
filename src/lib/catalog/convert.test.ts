@@ -29,6 +29,9 @@ describe("mapType", () => {
     expect(type("attribute set of signed integer")).toBe("container");
     expect(type("TOML value")).toBe("container");
     expect(type("open submodule of (JSON value)")).toBe("attrs");
+    expect(type("DAG of open submodule of attribute set of anything")).toBe("attrs");
+    expect(type("attribute set of (open submodule of (JSON value))")).toBe("attrs");
+    expect(type("attribute set of (submodule)")).toBe("container");
   });
 
   test("parses enums, including numeric and boolean ones", () => {
