@@ -38,7 +38,7 @@ const verifies = (entry: IndexedOption, a: Assignment): boolean =>
   a.kind !== "other" &&
   entry.type !== "any" &&
   entry.type !== "hidden" &&
-  !(entry.type === "enum" && a.value === undefined);
+  !(entry.type === "enum" && a.kind === "str" && a.value === undefined);
 
 // A path that is a known group of options (`services.openssh`) rather than an option itself.
 const isGroup = (tree: OptionTree, path: string[]): boolean =>

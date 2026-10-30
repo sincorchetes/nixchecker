@@ -29,6 +29,7 @@ describe("validate", () => {
     expect(unchecked(disko('"gpt"'))).toBe(0);
     expect(unchecked(disko('"nope"'))).toBe(0);
     expect(unchecked(disko('"${x}"'))).toBe(1);
+    expect(unchecked(disko("1"))).toBe(0);
   });
 
   test("accepts a correct NixOS module", () => {
