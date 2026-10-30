@@ -58,7 +58,7 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
       </div>
     </header>
 
-    <div class="unofficial-bar" role="note">{m["bar.unofficial"]}</div>
+    <aside class="unofficial-bar" aria-label={m["bar.label"]}>{m["bar.unofficial"]}</aside>
 
     <slot />
 

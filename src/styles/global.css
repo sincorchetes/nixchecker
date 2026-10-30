@@ -13,6 +13,7 @@
   --accent: #5e6ad2;
   --accent-light: #8e98ff;
   --accent-soft: rgba(94, 106, 210, 0.15);
+  --on-accent-hover: #0a0a0c;
   --error: #ff7b8a;
   --warning: #f5c36b;
   --ok: #6ee7a8;
@@ -42,6 +43,7 @@
     --text-3: #5b6173;
     --accent-light: #4a55c0;
     --accent-soft: rgba(94, 106, 210, 0.12);
+    --on-accent-hover: #fff;
     --error: #c92a3e;
     --warning: #946200;
     --ok: #12804c;
@@ -136,7 +138,7 @@ a {
 .btn.primary:hover {
   background: var(--accent-light);
   border-color: var(--accent-light);
-  color: #0a0a0c;
+  color: var(--on-accent-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {

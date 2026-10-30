@@ -97,6 +97,7 @@ export const en: Record<MessageKey, string> = {
   "nav.validator": "Validator",
   "nav.how": "How it works",
   "nav.cta": "Validate now",
+  "bar.label": "Notice",
   "bar.unofficial":
     "Unofficial tool: not affiliated with, endorsed or maintained by the NixOS, Home Manager or disko projects.",
   "hero.titleA": "Validate your Nix.",

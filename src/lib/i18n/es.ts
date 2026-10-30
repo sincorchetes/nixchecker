@@ -97,6 +97,7 @@ export const es = {
   "nav.validator": "Validador",
   "nav.how": "Cómo funciona",
   "nav.cta": "Validar ahora",
+  "bar.label": "Aviso",
   "bar.unofficial":
     "Herramienta no oficial: no está afiliada, respaldada ni mantenida por el proyecto NixOS, Home Manager ni disko.",
   "hero.titleA": "Valida tu Nix.",

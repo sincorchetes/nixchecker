@@ -1,54 +1,29 @@
 // Browser tests: they drive the built site (`dist/`) in a real Chrome, so they need
 // `bun run build` first and a Chrome binary (CHROME_BIN, or google-chrome on the PATH).
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { join } from "node:path";
-import puppeteer, { type Browser, type Page } from "puppeteer-core";
+import type { Browser, Page } from "puppeteer-core";
+import { dist, launchChrome, serveSite, validateIn } from "./support";
 
-let server: ReturnType<typeof Bun.serve>;
+let site: ReturnType<typeof serveSite>;
 let browser: Browser;
 let page: Page;
-const port = 4100 + Math.floor(Math.random() * 500);
-const url = (path = "/") => `http://localhost:${port}${path}`;
+const url = (path = "/") => site.url(path);
 
 const summary = () => page.$eval(".summary", (el) => el.className);
 const messages = () => page.$$eval(".diag .msg", (els) => els.map((el) => el.textContent ?? ""));
 
-// Replaces the text, validates and waits for the (asynchronous) result to settle.
-async function validate(source: string) {
-  await page.$eval("#source", (el, value) => ((el as HTMLTextAreaElement).value = value), source);
-  // Empty the results first, so the wait below cannot be satisfied by the previous run.
-  await page.$eval("#results", (el) => el.replaceChildren());
-  await page.click("#validate");
-  await page.waitForSelector("#results .summary");
-}
+const validate = (source: string) => validateIn(page, source);
 
 beforeAll(async () => {
-  // Serves `dist/` the way GitHub Pages does: `/x/` is `/x/index.html`.
-  const root = join(import.meta.dir, "..", "dist");
-  server = Bun.serve({
-    port,
-    async fetch(request) {
-      const path = decodeURIComponent(new URL(request.url).pathname);
-      const file = Bun.file(join(root, path.endsWith("/") ? `${path}index.html` : path));
-      const inside = file.name?.startsWith(root);
-      return inside && (await file.exists())
-        ? new Response(file)
-        : new Response("Not found", { status: 404 });
-    },
-  });
-  browser = await puppeteer.launch({
-    executablePath:
-      process.env.CHROME_BIN ?? Bun.which("google-chrome") ?? Bun.which("chromium") ?? "",
-    headless: true,
-    args: ["--no-sandbox"],
-  });
+  site = serveSite(dist);
+  browser = await launchChrome();
   page = await browser.newPage();
   await page.goto(url());
 });
 
 afterAll(async () => {
   await browser?.close();
-  server?.stop(true);
+  site?.stop();
 });
 
 describe("checker", () => {
