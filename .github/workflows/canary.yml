@@ -26,8 +26,8 @@ jobs:
         run: devenv shell -- corpus
       - name: The parser agrees with the official one on every file, damaged
         run: devenv shell -- differential 1
-      - name: The validator agrees with the real module system on a new sample every day
-        run: devenv shell -- oracle 200 $(date +%j)
+      - name: The validator agrees with the real module systems of every release, on a new sample every day
+        run: devenv shell -- oracle 60 $(date +%j) all
 
   report:
     name: Report failures

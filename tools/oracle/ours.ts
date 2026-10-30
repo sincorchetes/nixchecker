@@ -1,6 +1,7 @@
 // Our verdict on a module, in the same terms as the oracle's, using the generated NixOS catalog.
 import { join } from "node:path";
 import { loadCatalog } from "../../src/lib/catalog/load";
+import type { Version } from "../../src/lib/catalog/versions";
 import { analyze, check } from "../../src/lib/validate";
 import type { Kind, Verdict } from "./nix";
 
@@ -12,11 +13,15 @@ export interface Ours extends Verdict {
   paths: string[][];
 }
 
-export async function judgeOurs(source: string, kind: Kind = "nixos"): Promise<Ours> {
+export async function judgeOurs(
+  source: string,
+  kind: Kind = "nixos",
+  version: Version = "unstable",
+): Promise<Ours> {
   const analysis = analyze(source);
   const paths = analysis.assignments.map((a) => a.path);
-  const catalog = await loadCatalog(kind, "unstable", "/", paths, files);
-  const codes = check(analysis, kind, catalog.tree, "unstable").diagnostics.map((d) => d.code);
+  const catalog = await loadCatalog(kind, version, "/", paths, files);
+  const codes = check(analysis, kind, catalog.tree, version).diagnostics.map((d) => d.code);
   return {
     paths,
     unknown: codes.includes("unknown-option"),

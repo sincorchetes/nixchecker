@@ -2,8 +2,9 @@
 // and fails when they disagree about unknown options or wrong types. Two sets for each: the
 // hand-written cases, and modules generated from a sample of the catalog, counted as false positives
 // and as wrong values let through.
-//   bun tools/oracle/run.ts [options to sample] [seed]   (needs Nix; `devenv shell -- oracle`)
-import { diskoRoot, sourceRoots } from "../corpus/sources";
+//   bun tools/oracle/run.ts [options to sample] [seed] [all]   (needs Nix; `devenv shell -- oracle`)
+import { VERSIONS, type Version } from "../../src/lib/catalog/versions";
+import { diskoRoot, releaseRoots } from "../corpus/sources";
 import { CASES } from "./cases";
 import { DISKO_CASES, HOME_MANAGER_CASES } from "./cases-other";
 import { modulesFor, sampleOptions } from "./generated";
@@ -23,22 +24,38 @@ const SEED = Number(process.argv[3] ?? 1);
 // The share of wrong values Nix rejects that we may let through (what is not checked is not wrong).
 const MAX_MISSED = 0.15;
 
-const TARGETS: Array<{ kind: Kind; cases: string[]; catalog: string }> = [
-  { kind: "nixos", cases: CASES, catalog: "nixos-unstable" },
-  { kind: "home-manager", cases: HOME_MANAGER_CASES, catalog: "home-manager-unstable" },
-  { kind: "disko", cases: DISKO_CASES, catalog: "disko" },
-];
+// `all` runs every release the site has catalogs for; the default is the development branch.
+const RELEASES: readonly Version[] = process.argv[4] === "all" ? VERSIONS : ["unstable"];
+
+interface Target {
+  kind: Kind;
+  version: Version;
+  cases: string[];
+  catalog: string;
+}
+// disko is not versioned: it is evaluated against the development nixpkgs, once.
+const TARGETS: Target[] = RELEASES.flatMap((version) => [
+  { kind: "nixos" as const, version, cases: CASES, catalog: `nixos-${version}` },
+  {
+    kind: "home-manager" as const,
+    version,
+    cases: HOME_MANAGER_CASES,
+    catalog: `home-manager-${version}`,
+  },
+  ...(version === "unstable"
+    ? [{ kind: "disko" as const, version, cases: DISKO_CASES, catalog: "disko" }]
+    : []),
+]);
 
 type Judged = Pick<Verdict, "unknown" | "typeError">;
 const agrees = (a: Judged, b: Judged) => a.unknown === b.unknown && a.typeError === b.typeError;
 const say = (v: Judged) => `${v.unknown ? "unknown" : ""}${v.typeError ? "type" : ""}` || "ok";
 
-const [nixpkgs, homeManager] = await sourceRoots();
-const roots = {
-  nixpkgs: nixpkgs as string,
-  homeManager: homeManager as string,
-  disko: await diskoRoot(),
-};
+const disko = await diskoRoot();
+async function rootsOf(version: Version) {
+  const [nixpkgs, homeManager] = await releaseRoots(version);
+  return { nixpkgs: nixpkgs as string, homeManager: homeManager as string, disko };
+}
 
 // Runs `work` over the items with a few at a time.
 async function each<T>(items: T[], work: (item: T) => Promise<void>) {
@@ -53,10 +70,11 @@ async function each<T>(items: T[], work: (item: T) => Promise<void>) {
 const problems: string[] = [];
 let tooLoose = false;
 
-for (const { kind, cases, catalog } of TARGETS) {
-  const oracle = await makeOracle(kind, roots);
+for (const { kind, version, cases, catalog } of TARGETS) {
+  const oracle = await makeOracle(kind, await rootsOf(version));
+  const name = kind === "disko" ? kind : `${kind} ${version}`;
   const judge = async (source: string) => {
-    const ours = await judgeOurs(source, kind);
+    const ours = await judgeOurs(source, kind, version);
     return { ours, real: await oracle.judge(source, ours.paths) };
   };
 
@@ -64,11 +82,11 @@ for (const { kind, cases, catalog } of TARGETS) {
   await each(cases, async (source) => {
     const { ours, real } = await judge(source);
     if (real.other) {
-      problems.push(`  ${kind}: case does not evaluate (${real.other.trim()}): ${source}`);
+      problems.push(`  ${name}: case does not evaluate (${real.other.trim()}): ${source}`);
     } else if (agrees(real, ours) && KNOWN.has(source)) {
       problems.push(`  now agrees, remove it from KNOWN: ${source}`);
     } else if (!agrees(real, ours) && !KNOWN.has(source)) {
-      problems.push(`  ${kind}: nix says ${say(real)}, we say ${say(ours)}: ${source}`);
+      problems.push(`  ${name}: nix says ${say(real)}, we say ${say(ours)}: ${source}`);
     }
   });
 
@@ -84,7 +102,7 @@ for (const { kind, cases, catalog } of TARGETS) {
     if (real.typeError) wrong++;
     if (ours.typeError && !real.typeError) {
       falsePositives++;
-      problems.push(`  ${kind}: false positive (we reject, Nix takes it): ${source}`);
+      problems.push(`  ${name}: false positive (we reject, Nix takes it): ${source}`);
     } else if (real.typeError && !ours.typeError) {
       missed++;
     }
@@ -94,7 +112,7 @@ for (const { kind, cases, catalog } of TARGETS) {
   const share = wrong === 0 ? 0 : missed / wrong;
   tooLoose ||= share > MAX_MISSED;
   console.log(
-    `${kind}: ${cases.length} written modules, ${generated.length} generated from ${options.length} options:`,
+    `${name}: ${cases.length} written modules, ${generated.length} generated from ${options.length} options:`,
     `${falsePositives} false positives, ${missed} of ${wrong} wrong values let through`,
   );
 }

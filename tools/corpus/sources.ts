@@ -30,5 +30,13 @@ export const sourceRoots = (): Promise<string[]> =>
     sourceRoot("home-manager-unstable", 1), // home-manager/modules
   ]);
 
+import type { Version } from "../../src/lib/catalog/versions";
+
+/** The nixpkgs and Home Manager of a release the site has catalogs for. */
+export const releaseRoots = (version: Version): Promise<string[]> => {
+  const name = version === "unstable" ? version : version.replace(".", "");
+  return Promise.all([sourceRoot(`nixos-${name}`, 2), sourceRoot(`home-manager-${name}`, 1)]);
+};
+
 /** The disko repository, whose module is the one the catalog describes. */
 export const diskoRoot = (): Promise<string> => sourceRoot("disko", 0);
