@@ -312,5 +312,7 @@ describe("calls that cannot work", () => {
     expect(codes("{ a = [ 1 ] [ 2 ]; }")).toContain("not-callable-list");
     expect(codes('{ a = "x" y; }')).toContain("not-callable-string");
     expect(codes("{ a = 1 y; }")).toContain("not-callable-number");
+    expect(codes("{ a = [ 1 ] + [ 2 ]; }")).toContain("list-plus");
+    expect(codes('{ a = "x" ++ [ 2 ]; }')).toContain("concat-non-list");
   });
 });

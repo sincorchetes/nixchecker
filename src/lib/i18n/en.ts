@@ -62,6 +62,8 @@ export const en: Record<MessageKey, string> = {
     "“{name}” is a string and cannot be called as a function. Is an operator such as “+” missing?",
   "diag.not-callable-number":
     "“{name}” is a number and cannot be called as a function. Is an operator missing?",
+  "diag.list-plus": "“{name}” is a list: lists are joined with “++”, not “+”.",
+  "diag.concat-non-list": "“++” only joins lists, and “{name}” is not a list.",
   "diag.undefined-variable":
     "“{name}” is not defined: it is not an argument and is not declared in the file. Missing quotes or a value?",
   "diag.nothing-to-check":

@@ -61,6 +61,8 @@ export const es = {
     "«{name}» es una cadena de texto y no se puede llamar como una función. ¿Falta un operador, como «+»?",
   "diag.not-callable-number":
     "«{name}» es un número y no se puede llamar como una función. ¿Falta un operador?",
+  "diag.list-plus": "«{name}» es una lista: para unir listas se usa «++», no «+».",
+  "diag.concat-non-list": "«++» solo une listas, y «{name}» no es una lista.",
   "diag.undefined-variable":
     "«{name}» no está definido: no es un argumento ni se declara en el archivo. ¿Faltan comillas o un valor?",
   "diag.nothing-to-check":

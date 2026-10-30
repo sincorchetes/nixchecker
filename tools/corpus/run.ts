@@ -3,8 +3,14 @@
 //   bun tools/corpus/run.ts            (needs Nix; `devenv shell -- corpus`)
 import { realpath } from "node:fs/promises";
 import { join } from "node:path";
-import { findBadCalls } from "../../src/lib/nix/calls";
+import { findMistakes } from "../../src/lib/nix/mistakes";
 import { parse } from "../../src/lib/nix/parse";
+
+// Real mistakes in nixpkgs that the check is right about: valid syntax, but evaluating them fails
+// (`[ 1 ] + [ 2 ]` is an error in Nix). They stay unnoticed because the attribute is never forced.
+const KNOWN_UPSTREAM = new Set([
+  "nixos/modules/system/boot/networkd.nix:560:61 list-plus [ … ]", // boolValues + [ "inherit" ]
+]);
 
 const flakeDir = join(import.meta.dir, "..", "catalog");
 
@@ -40,10 +46,10 @@ for (const root of roots) {
     const { ast, problems } = parse(await Bun.file(join(root, file)).text());
     const first = problems[0];
     if (first) failures.push(`${file}:${first.line}:${first.col} ${first.code}`);
-    // Valid code never calls a list, a string or a number.
-    const call = ast && findBadCalls(ast)[0];
-    if (call)
-      failures.push(`${file}:${call.line}:${call.col} not-callable-${call.kind} ${call.name}`);
+    // Valid code never has a mistake of that kind.
+    const call = ast && findMistakes(ast)[0];
+    const known = call && `${file}:${call.line}:${call.col} ${call.code} ${call.name}`;
+    if (known && !KNOWN_UPSTREAM.has(known)) failures.push(known);
   }
 }
 console.log(`${files} files parsed, ${failures.length} with problems`);
