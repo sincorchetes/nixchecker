@@ -57,6 +57,8 @@ jobs:
         run: devenv shell -- corpus
       - name: The parser agrees with the official one on damaged files
         run: devenv shell -- differential
+      - name: The validator agrees with the real module system
+        run: devenv shell -- oracle
 
   build:
     name: Build

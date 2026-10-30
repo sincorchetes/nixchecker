@@ -28,6 +28,9 @@
   # Damaged copies of those files: our parser and `nix-instantiate --parse` must agree on each one.
   # An optional argument is the sampling step (default 40: one file in 40, six damages each); a second one is the seed.
   scripts.differential.exec = "bun tools/corpus/differential.ts \"$@\"";
+  # Modules put to real Nix (the NixOS module system) and to our validator: they must agree on unknown
+  # options and wrong types, except for the documented gaps in tools/oracle/run.ts.
+  scripts.oracle.exec = "bun tools/oracle/run.ts";
   scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --no-banner --redact --verbose";
   # Sends the code and coverage (coverage/lcov.info, written by `unit`) to SonarQube.
   # Needs SONAR_HOST_URL and SONAR_TOKEN; the project settings are passed here, never committed.
