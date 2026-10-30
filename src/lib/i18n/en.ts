@@ -31,7 +31,8 @@ export const en: Record<MessageKey, string> = {
   "target.flake": "Flake",
 
   "result.empty": "Paste some Nix to get started.",
-  "result.ok": "No problems found. Everything matches the known documentation.",
+  "result.ok":
+    "No static problems detected in the analyzable parts. Dynamic values, functions and rec sets are not evaluated: this does not guarantee the configuration will work.",
   "result.summary": "{errors} errors · {warnings} warnings",
   "result.detected": "Target: {target}",
   "result.catalog": "Catalog: {source}",

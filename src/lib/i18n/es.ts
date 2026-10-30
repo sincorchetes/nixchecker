@@ -30,7 +30,8 @@ export const es = {
   "target.flake": "Flake",
 
   "result.empty": "Pega algo de Nix para empezar.",
-  "result.ok": "Sin problemas. Todo coincide con la documentación conocida.",
+  "result.ok":
+    "No se detectaron problemas estáticos en las partes analizables. Los valores dinámicos, las funciones y los conjuntos rec no se evalúan: esto no garantiza que la configuración funcione.",
   "result.summary": "{errors} errores · {warnings} avisos",
   "result.detected": "Objetivo: {target}",
   "result.catalog": "Catálogo: {source}",

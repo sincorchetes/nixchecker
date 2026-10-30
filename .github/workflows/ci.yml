@@ -109,5 +109,6 @@ jobs:
       - env:
           RESULTS: ${{ toJSON(needs) }}
         run: |
-          if echo "$RESULTS" | grep -Eq '"result": "(failure|cancelled)"'; then echo "A job failed"; exit 1; fi
+          # Every required job must have succeeded: a skipped or cancelled one is not a pass.
+          if echo "$RESULTS" | grep '"result":' | grep -vq '"result": "success"'; then echo "A job did not succeed"; exit 1; fi
           echo "All jobs passed"
