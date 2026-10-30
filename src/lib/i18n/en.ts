@@ -39,6 +39,7 @@ export const en: Record<MessageKey, string> = {
   "result.coverage": "{checked} of {total} assignments checked",
   "coverage.dynamic": "{n} with a dynamic value",
   "coverage.any": "{n} of free type",
+  "coverage.hidden": "{n} inside a hidden option",
   "coverage.interpolated": "{n} with interpolated text",
   "coverage.free-form": "{n} inside a free-form option",
   "result.loadError": "Could not load the catalog. Check your connection and try again.",

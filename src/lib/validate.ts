@@ -37,7 +37,8 @@ function suggest(tree: OptionTree, path: string[], known: number): string | unde
 /** Why the catalog entry cannot judge this value, if it cannot: dynamic, `any`, or interpolated. */
 function skipReason(entry: IndexedOption, a: Assignment): SkipCause | undefined {
   if (a.kind === "other") return "dynamic";
-  if (entry.type === "any" || entry.type === "hidden") return "any";
+  if (entry.type === "hidden") return "hidden";
+  if (entry.type === "any") return "any";
   const interpolated = entry.type === "enum" && a.kind === "str" && a.value === undefined;
   return interpolated ? "interpolated" : undefined;
 }
@@ -126,9 +127,9 @@ export function check(
     // Read but not verified: a dynamic value, an opaque option, or a place with no structure.
     const cause = exact
       ? skipReason(exact, a)
-      : (owner && "free-form") ||
+      : (owner && (owner.type === "hidden" ? "hidden" : "free-form")) ||
         (a.kind === "other" && isGroup(tree, a.path) ? "dynamic" : undefined);
-    if (cause) skipped.push({ cause, line: a.line, col: a.col });
+    if (cause) skipped.push({ cause, path, line: a.line, col: a.col });
 
     if (exact) {
       const expected = typeMismatch(exact, a);

@@ -33,9 +33,10 @@ export interface Diagnostic {
 }
 
 /** Why an assignment was read but not verified. */
-export type SkipCause = "dynamic" | "any" | "interpolated" | "free-form";
+export type SkipCause = "dynamic" | "any" | "hidden" | "interpolated" | "free-form";
 
 export interface Skipped {
+  path: string;
   cause: SkipCause;
   line: number;
   col: number;

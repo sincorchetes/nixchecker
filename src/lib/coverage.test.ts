@@ -25,6 +25,11 @@ describe("coverage", () => {
       ["dynamic", "dynamic"],
     );
     expect(causes("{ outputs = {}; }")).toEqual(["any"]);
+    expect(causes("{ boot.cleanTmpDir = true; }")).toEqual(["hidden"]);
+    expect(causes("{ boot.cleanTmpDir.x = true; }")).toEqual(["hidden"]);
+    expect(run("{ x }: { networking.hostName = x; }").coverage.skipped[0]?.path).toBe(
+      "networking.hostName",
+    );
     expect(causes('{ disko.devices.disk.main.content.type = "${x}"; }')).toEqual(["interpolated"]);
     expect(causes('{ disko.devices.disk.main.content.extra = "y"; }')).toEqual(["free-form"]);
   });

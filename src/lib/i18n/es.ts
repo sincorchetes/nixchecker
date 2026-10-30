@@ -38,6 +38,7 @@ export const es = {
   "result.coverage": "{checked} de {total} asignaciones comprobadas",
   "coverage.dynamic": "{n} con valor dinámico",
   "coverage.any": "{n} de tipo libre",
+  "coverage.hidden": "{n} en una opción oculta",
   "coverage.interpolated": "{n} con texto interpolado",
   "coverage.free-form": "{n} en una opción de forma libre",
   "result.loadError": "No se pudo cargar el catálogo. Revisa tu conexión e inténtalo de nuevo.",
