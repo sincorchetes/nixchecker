@@ -19,7 +19,7 @@ const codes = (src: string, choice?: TargetChoice) =>
 
 describe("validate", () => {
   test("counts only what the catalog could not verify", () => {
-    const unchecked = (src: string) => run(src).coverage.unchecked;
+    const unchecked = (src: string) => run(src).coverage.skipped.length;
     expect(
       unchecked("{ x }: { networking.hostName = x; networking.useDHCP = true; foo.bar = 1; }"),
     ).toBe(1);
@@ -30,6 +30,16 @@ describe("validate", () => {
     expect(unchecked(disko('"nope"'))).toBe(0);
     expect(unchecked(disko('"${x}"'))).toBe(1);
     expect(unchecked(disko("1"))).toBe(0);
+  });
+
+  test("says why each assignment was skipped", () => {
+    const causes = (src: string) => run(src).coverage.skipped.map((s) => s.cause);
+    expect(causes("{ x }: { networking.hostName = x; services.openssh = lib.mkIf x {}; }")).toEqual(
+      ["dynamic", "dynamic"],
+    );
+    expect(causes("{ outputs = {}; }")).toEqual(["any"]);
+    expect(causes('{ disko.devices.disk.main.content.type = "${x}"; }')).toEqual(["interpolated"]);
+    expect(causes('{ disko.devices.disk.main.content.extra = "y"; }')).toEqual(["free-form"]);
   });
 
   test("accepts a correct NixOS module", () => {
@@ -231,7 +241,7 @@ describe("choosing the target", () => {
     expect(candidateTargets(analysis, "auto")).toEqual(["nixos", "home-manager"]);
     const report = (target: Target, errors: number): Report => ({
       target,
-      coverage: { total: 0, unchecked: 0 },
+      coverage: { total: 0, skipped: [] },
       diagnostics: Array.from({ length: errors }, () => ({
         severity: "error",
         code: "unknown-option",

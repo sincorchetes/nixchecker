@@ -1,5 +1,6 @@
 import { applyAll, applyFix, wordAt } from "../../lib/fix";
 import type { Diagnostic, Report } from "../../lib/validate";
+import { coverageGroups } from "./coverage";
 import { el, type Translate } from "./dom";
 
 export interface ReportView {
@@ -81,13 +82,15 @@ export function showReport(view: ReportView, report: Report, catalogSource: stri
         tr("result.detected", { target: tr(`target.${report.target}`) }),
         tr("result.catalog", { source: catalogSource }),
         tr("result.coverage", {
-          checked: coverage.total - coverage.unchecked,
+          checked: coverage.total - coverage.skipped.length,
           total: coverage.total,
         }),
       ].join(" · "),
     ),
   );
   results.append(head);
+  const skips = coverageGroups(view, report);
+  if (skips) results.append(skips);
 
   const fixable = report.diagnostics.filter((d) => applyFix(source.value, d) !== undefined);
   if (fixable.length > 1) {

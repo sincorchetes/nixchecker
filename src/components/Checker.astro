@@ -13,7 +13,7 @@ const { lang } = Astro.props;
 const m = messages[lang];
 // Only what the browser script needs to render results.
 const client = Object.fromEntries(
-  Object.entries(m).filter(([key]) => /^(diag|result|target)\./.test(key)),
+  Object.entries(m).filter(([key]) => /^(diag|result|target|coverage)\./.test(key)),
 );
 ---
 

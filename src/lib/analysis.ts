@@ -32,11 +32,20 @@ export interface Diagnostic {
   docUrl?: string;
 }
 
+/** Why an assignment was read but not verified. */
+export type SkipCause = "dynamic" | "any" | "interpolated" | "free-form";
+
+export interface Skipped {
+  cause: SkipCause;
+  line: number;
+  col: number;
+}
+
 export interface Report {
   target: Target;
   diagnostics: Diagnostic[];
-  /** Assignments read, and those whose value or place the catalog could not check. */
-  coverage: { total: number; unchecked: number };
+  /** Assignments read, and those the catalog could not check, each with the reason. */
+  coverage: { total: number; skipped: Skipped[] };
 }
 
 /** What can be learned from the source alone, before any catalog is loaded. */

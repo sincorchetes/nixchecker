@@ -30,6 +30,24 @@
   .results :global(.detected) {
     color: var(--text-3);
   }
+  .results :global(.skips) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .results :global(.skip) {
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-3);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .results :global(.skip:hover) {
+    color: var(--text);
+  }
   .results :global(.diag) {
     padding: 0.8rem 1rem;
     border: 1px solid var(--border);

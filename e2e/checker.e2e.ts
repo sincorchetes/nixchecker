@@ -68,6 +68,13 @@ describe("checker", () => {
     await validate("{ x, ... }: { networking.hostName = x; networking.useDHCP = true; }");
     const detected = await page.$eval(".detected", (el) => el.textContent ?? "");
     expect(detected).toMatch(/1 de 2 asignaciones comprobadas/);
+    expect(await page.$eval(".skip.dynamic", (el) => el.textContent)).toBe("1 con valor dinámico");
+    await page.click(".skip.dynamic");
+    const picked = await page.$eval("#source", (el) => {
+      const area = el as HTMLTextAreaElement;
+      return area.value.slice(area.selectionStart, area.selectionEnd);
+    });
+    expect(picked).toBe("networking.hostName");
   });
 
   test("does not validate while typing, and dims stale results", async () => {

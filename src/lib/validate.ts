@@ -1,4 +1,4 @@
-import type { Analysis, Diagnostic, Report, TargetChoice } from "./analysis";
+import type { Analysis, Diagnostic, Report, SkipCause, Skipped, TargetChoice } from "./analysis";
 import { analyze, resolveTarget } from "./analysis";
 import { docUrl, type IndexedOption, type OptionTree, type Target, type Version } from "./catalog";
 import {
@@ -22,6 +22,7 @@ export {
   detectTarget,
   type Report,
   resolveTarget,
+  type SkipCause,
   type TargetChoice,
 } from "./analysis";
 
@@ -33,12 +34,13 @@ function suggest(tree: OptionTree, path: string[], known: number): string | unde
   return found === written ? undefined : found;
 }
 
-/** Whether the catalog entry can say anything about this value: not a dynamic one, not `any`. */
-const verifies = (entry: IndexedOption, a: Assignment): boolean =>
-  a.kind !== "other" &&
-  entry.type !== "any" &&
-  entry.type !== "hidden" &&
-  !(entry.type === "enum" && a.kind === "str" && a.value === undefined);
+/** Why the catalog entry cannot judge this value, if it cannot: dynamic, `any`, or interpolated. */
+function skipReason(entry: IndexedOption, a: Assignment): SkipCause | undefined {
+  if (a.kind === "other") return "dynamic";
+  if (entry.type === "any" || entry.type === "hidden") return "any";
+  const interpolated = entry.type === "enum" && a.kind === "str" && a.value === undefined;
+  return interpolated ? "interpolated" : undefined;
+}
 
 // A path that is a known group of options (`services.openssh`) rather than an option itself.
 const isGroup = (tree: OptionTree, path: string[]): boolean =>
@@ -87,7 +89,7 @@ export function check(
     };
   });
   const reported = new Set<string>();
-  let unchecked = 0;
+  const skipped: Skipped[] = [];
 
   // Renamed and hidden options still work (or fail) upstream: warn, do not error.
   const warnIfOutdated = (
@@ -121,10 +123,12 @@ export function check(
     // An entry above this path that cannot be checked any deeper (free-form set, opaque
     // type, or an alias whose children are unknown).
     const owner = findOwner(tree, a.path);
-    // Dynamic values and free-form places are read but not verified.
-    if (exact ? !verifies(exact, a) : owner || (a.kind === "other" && isGroup(tree, a.path))) {
-      unchecked++;
-    }
+    // Read but not verified: a dynamic value, an opaque option, or a place with no structure.
+    const cause = exact
+      ? skipReason(exact, a)
+      : (owner && "free-form") ||
+        (a.kind === "other" && isGroup(tree, a.path) ? "dynamic" : undefined);
+    if (cause) skipped.push({ cause, line: a.line, col: a.col });
 
     if (exact) {
       const expected = typeMismatch(exact, a);
@@ -178,7 +182,7 @@ export function check(
   }
 
   diagnostics.sort((x, y) => x.line - y.line || x.col - y.col);
-  return { target, diagnostics, coverage: { total: analysis.assignments.length, unchecked } };
+  return { target, diagnostics, coverage: { total: analysis.assignments.length, skipped } };
 }
 
 /** Synchronous convenience over `analyze` + `check`, for callers that already hold the catalogs. */
