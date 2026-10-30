@@ -1,0 +1,96 @@
+---
+import { type Lang, messages } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const m = messages[Astro.props.lang];
+---
+
+<label for="source">{m["checker.label"]}</label>
+<div class="editor">
+  <pre id="gutter" class="gutter" aria-hidden="true"></pre>
+  <textarea
+    id="source"
+    wrap="off"
+    spellcheck="false"
+    autocomplete="off"
+    autocapitalize="off"
+    placeholder={m["checker.placeholder"]}></textarea>
+</div>
+<p id="cursor" class="cursor"></p>
+
+<style>
+  label {
+    font-size: 0.85rem;
+    color: var(--text-2);
+  }
+  .editor {
+    display: flex;
+    margin-top: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    /* A tint of the text color: darker than the card in the dark theme, lighter in the light one. */
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+    overflow: hidden;
+  }
+  .editor:focus-within {
+    border-color: var(--accent-light);
+  }
+  .gutter,
+  textarea {
+    margin: 0;
+    padding: 1rem 0;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .gutter {
+    flex: none;
+    min-width: 3rem;
+    padding-inline: 0.6rem;
+    overflow: hidden;
+    text-align: right;
+    color: var(--text-3);
+    border-right: 1px solid var(--border);
+    user-select: none;
+  }
+  .gutter :global(.ln) {
+    display: block;
+  }
+  .gutter :global(.ln.error) {
+    color: var(--error);
+    font-weight: 700;
+  }
+  .gutter :global(.ln.warning) {
+    color: var(--warning);
+    font-weight: 700;
+  }
+  textarea {
+    display: block;
+    flex: 1;
+    min-width: 0;
+    min-height: 16rem;
+    padding-inline: 1rem;
+    resize: vertical;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    white-space: pre;
+    overflow: auto;
+    tab-size: 2;
+  }
+  textarea::placeholder {
+    color: var(--text-3);
+  }
+  .cursor {
+    margin: 0.35rem 0 0;
+    text-align: right;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    min-height: 1em;
+  }
+</style>

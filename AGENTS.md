@@ -37,7 +37,7 @@ Siempre que se terminen de implementar cambios en el proyecto, seguir rigurosame
 - **Bun para todo** (instalar, ejecutar, tests); no usar `npm`.
 - **Idiomas**: la interfaz y lo que se genera existen en español (texto fuente, `src/lib/i18n/es.ts`) e inglés (`src/lib/i18n/en.ts`). Cada texto nuevo lleva su traducción; el compilador y un test fallan si falta. La documentación del repositorio (`README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CREDITS.md`) **y los comentarios del código** están en inglés americano; este archivo está en español.
 - **Salida de herramientas en inglés**: lo que imprimen los scripts, `devenv test`, la CI y los títulos de los tests (`describe`/`test`) va en inglés, igual que los mensajes de `devenv.nix`.
-- **Archivos cortos**, con una sola responsabilidad (hoy ninguno supera ~270 líneas); sin duplicar datos entre catálogos.
+- **Archivos cortos**, con una sola responsabilidad: ninguno supera 250 líneas (`src`, `tools` y `e2e`; `lint` lo comprueba con `tools/lint/max-lines.ts`). Si un archivo crece, se parte por responsabilidad, no se sube el límite. Sin duplicar datos entre catálogos.
 - **Cobertura**: 100 % de líneas en `src/lib` (la compuerta está en `bunfig.toml`). Un test nuevo por cada rama nueva.
 - **Proyecto no oficial y hecho con ayuda de IA**: mantener esos avisos (pie de la web, `README.md`, `CREDITS.md`). Licencia GPL v3.0 o posterior.
 - **Secretos**: nunca en el repositorio. Las credenciales locales van en `.env` (ignorado) y en CI como secretos o variables del repositorio. `sonar-project.properties` está ignorado: la configuración de Sonar vive en `devenv.nix`.

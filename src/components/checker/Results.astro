@@ -1,0 +1,76 @@
+<div id="results" class="results" aria-live="polite"></div>
+
+<style>
+  .results {
+    margin-top: 1.25rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .results[data-stale] {
+    opacity: 0.4;
+  }
+  /* The cards are built by the page script, so their selectors have to be global. */
+  .results :global(.empty) {
+    margin: 0;
+    color: var(--text-3);
+  }
+  .results :global(.head) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    justify-content: space-between;
+    font-size: 0.9rem;
+  }
+  .results :global(.summary.good) {
+    color: var(--ok);
+  }
+  .results :global(.summary.bad) {
+    color: var(--text);
+  }
+  .results :global(.detected) {
+    color: var(--text-3);
+  }
+  .results :global(.diag) {
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--error);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .results :global(.diag.warning) {
+    border-left-color: var(--warning);
+  }
+  .results :global(.diag p) {
+    margin: 0;
+  }
+  .results :global(.where) {
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--text-3);
+    font-size: 0.8rem;
+    text-align: left;
+    cursor: pointer;
+  }
+  .results :global(.where:hover) {
+    color: var(--accent-light);
+    text-decoration: underline;
+  }
+  .results :global(.hint) {
+    margin-top: 0.3rem;
+    color: var(--accent-light);
+    font-size: 0.9rem;
+  }
+  .results :global(.docs) {
+    display: inline-block;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+  }
+  .results :global(.fix) {
+    justify-self: start;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+  }
+</style>

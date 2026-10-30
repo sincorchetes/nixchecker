@@ -13,7 +13,7 @@
   # Every script below is what CI runs too: `devenv shell -- <script>`.
   scripts.dev.exec = "bun install --frozen-lockfile && bun run dev";
   scripts.check.exec = "bun run check";
-  scripts.lint.exec = "biome check .";
+  scripts.lint.exec = "biome check . && bun tools/lint/max-lines.ts";
   scripts.fix.exec = "biome check --write .";
   scripts.unit.exec = "bun test";
   scripts.site-build.exec = "bun install --frozen-lockfile && bun run build";
@@ -41,7 +41,7 @@
     echo "==> Installing dependencies"
     bun install --frozen-lockfile
     echo "==> Lint"
-    biome check .
+    biome check . && bun tools/lint/max-lines.ts
     echo "==> Type check"
     bun run check
     echo "==> Unit tests (100% line coverage gate)"
