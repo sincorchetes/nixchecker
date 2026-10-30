@@ -1,6 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { fixtures } from "./fixtures";
-import { candidates, findExact, findOwner, knownPrefix, siblings } from "./tree";
+import {
+  buildTree,
+  candidates,
+  childrenOf,
+  findExact,
+  findOwner,
+  knownPrefix,
+  siblings,
+} from "./tree";
 
 const tree = fixtures.nixos;
 const path = (p: string) => p.split(".");
@@ -42,4 +50,28 @@ describe("option tree", () => {
     );
     expect(siblings(tree, path("services.openssh.enabel.x"), 2).size).toBe(0);
   });
+});
+
+describe("childrenOf", () => {
+  test("lists the names that follow a path, through wildcards, without `*` or hidden ones", () => {
+    expect(childrenOf(tree, path("services.openssh"))).toEqual(["enable", "ports", "settings"]);
+    expect(childrenOf(tree, path("users.users.alice"))).toEqual([
+      "description",
+      "extraGroups",
+      "isNormalUser",
+    ]);
+    expect(childrenOf(tree, path("boot"))).toEqual([]);
+    expect(childrenOf(tree, [])).toContain("networking");
+    expect(childrenOf(tree, path("nope"))).toEqual([]);
+  });
+});
+
+test("a partial node does not list its children", () => {
+  const partial = buildTree([
+    { path: "a.b", type: "bool", segs: ["a", "b"] },
+    { path: "a.c", type: "bool", segs: ["a", "c"] },
+  ]);
+  expect(childrenOf(partial, ["a"])).toEqual(["b", "c"]);
+  (partial.kids.get("a") as { partial?: boolean }).partial = true;
+  expect(childrenOf(partial, ["a"])).toEqual([]);
 });

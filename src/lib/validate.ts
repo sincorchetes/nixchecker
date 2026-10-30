@@ -1,10 +1,17 @@
 import { docUrl, type IndexedOption, type OptionTree, type Target } from "./catalog";
-import { candidates, findExact, findOwner, knownPrefix, siblings } from "./catalog/tree";
+import {
+  candidates,
+  childrenOf,
+  findExact,
+  findOwner,
+  knownPrefix,
+  siblings,
+} from "./catalog/tree";
 import { checkBalance } from "./nix/balance";
 import { declaredNames } from "./nix/names";
 import { type Assignment, scan } from "./nix/scan";
 import { tokenize } from "./nix/tokenize";
-import { closest } from "./suggest";
+import { closest, distance } from "./suggest";
 
 export type TargetChoice = Target | "auto";
 
@@ -29,6 +36,8 @@ export interface Diagnostic {
   /** Values for the `{placeholders}` of the message template `diag.<code>`. */
   params: Record<string, string>;
   suggestion?: string;
+  /** What the catalog offers where the path goes wrong, nearest to what was written first. */
+  options?: string[];
   docUrl?: string;
 }
 
@@ -133,9 +142,30 @@ function typeMismatch(entry: IndexedOption, a: Assignment): string | undefined {
   return expected === a.kind ? undefined : expected;
 }
 
+// The options the catalog offers after the first `known` segments, nearest to `written` first.
+const OPTIONS_SHOWN = 8;
+function available(tree: OptionTree, path: string[], known: number, written?: string): string[] {
+  const names = childrenOf(tree, path.slice(0, known));
+  const ranked = written
+    ? [...names].sort((a, b) => distance(written, a) - distance(written, b) || (a < b ? -1 : 1))
+    : names;
+  return ranked.slice(0, OPTIONS_SHOWN);
+}
+
 /** Checks an analyzed file against the options of `target`. */
 export function check(analysis: Analysis, target: Target, tree: OptionTree): Report {
-  const diagnostics = [...analysis.syntax];
+  // An assignment cut short (`gnome.`, `services.openssh`) still gets what the catalog can offer.
+  const diagnostics = analysis.syntax.map((d): Diagnostic => {
+    if (d.code !== "syntax-incomplete") return d;
+    const path = (d.params.path ?? "").split(".");
+    const known = knownPrefix(tree, path);
+    const options = available(tree, path, known, path[known]);
+    return {
+      ...d,
+      ...(options.length > 0 && { options }),
+      docUrl: docUrl(target, d.params.path),
+    };
+  });
   const reported = new Set<string>();
 
   // Renamed and hidden options still work (or fail) upstream: warn, do not error.
@@ -209,12 +239,14 @@ export function check(analysis: Analysis, target: Target, tree: OptionTree): Rep
       if (reported.has(key)) continue;
       reported.add(key);
       const suggestion = suggest(tree, a.path, known);
+      const options = available(tree, a.path, known, a.path[known]);
       diagnostics.push({
         severity: "error",
         code: "unknown-option",
         ...at,
         params: { path },
         ...(suggestion && { suggestion }),
+        ...(options.length > 0 && { options }),
         docUrl: docUrl(target, suggestion ?? path),
       });
     }

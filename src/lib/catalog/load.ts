@@ -75,5 +75,12 @@ export async function loadCatalog(
     return pending;
   };
   await Promise.all([...new Set(paths.flatMap(plan))].map(load));
+  // Only some shards are loaded: neither the roots nor the split roots know all their children.
+  const { tree } = here.catalog;
+  tree.partial = true;
+  for (const root of Object.keys(index.split)) {
+    const node = tree.kids.get(root);
+    if (node) node.partial = true;
+  }
   return here.catalog;
 }

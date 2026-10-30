@@ -256,3 +256,32 @@ describe("expression types", () => {
     expect(codes('{ x }: { networking.hostName = "a-${x}"; }')).toEqual([]);
   });
 });
+
+describe("what the catalog offers", () => {
+  test("a path cut off by a dangling dot is an error that lists the options after it", () => {
+    const [d] = run("{\n  services.openssh.enable = true;\n  services.openssh.\n}").diagnostics;
+    expect(d).toMatchObject({
+      severity: "error",
+      code: "syntax-incomplete",
+      line: 3,
+      params: { path: "services.openssh" },
+      options: ["enable", "ports", "settings"],
+      docUrl: "https://search.nixos.org/options?query=services.openssh",
+    });
+  });
+
+  test("an unknown root gets a search link and the roots that exist", () => {
+    const [d] = run("{ services.openssh.enable = true;\n  gnome.\n}").diagnostics;
+    expect(d).toMatchObject({
+      code: "syntax-incomplete",
+      docUrl: expect.stringContaining("gnome"),
+    });
+    expect(d?.options).toContain("services");
+  });
+
+  test("an unknown option lists what exists there, nearest to the typo first", () => {
+    const [d] = run("{ services.openssh.enabel = true; }").diagnostics;
+    expect(d?.options).toEqual(["enable", "ports", "settings"]);
+    expect(run("{ zzzzzz.qqqqqq = 1; }").diagnostics[0]?.options?.length).toBeGreaterThan(3);
+  });
+});

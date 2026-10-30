@@ -149,6 +149,9 @@ const client = Object.fromEntries(
           goto(d),
         );
         if (d.suggestion) item.append(el("p", "hint", tr("result.suggest", { suggestion: d.suggestion })));
+        if (d.options) {
+          item.append(el("p", "hint", tr("result.available", { options: d.options.join(", ") })));
+        }
         if (applyFix(source.value, d) !== undefined) {
           const apply = el("button", "btn fix", tr("result.apply")) as HTMLButtonElement;
           apply.type = "button";

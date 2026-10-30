@@ -114,7 +114,7 @@ export function scan(
       const token = tokens[pos];
       if (token?.kind === "ident") segments.push(token.text);
       else if (token?.kind === "string") segments.push(token.interpolated ? "*" : token.text);
-      else return undefined;
+      else return segments.length > 0 ? segments : undefined; // `a.` ends in a dangling dot
       pos++;
       if (!isPunct(tokens[pos], ".")) return segments;
       pos++;

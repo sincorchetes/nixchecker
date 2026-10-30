@@ -5,6 +5,8 @@ export interface OptionTree {
   entry?: IndexedOption;
   /** Some non-hidden option sits at or below this node (so it is worth suggesting). */
   visible: boolean;
+  /** Only some of its children are loaded (sharded catalogs), so it cannot list them all. */
+  partial?: boolean;
   kids: Map<string, OptionTree>;
 }
 
@@ -119,4 +121,16 @@ export function siblings(at: OptionTree, path: string[], known: number): Set<str
   };
   walk(at, 0, []);
   return found;
+}
+
+/** Names that can follow `path`, as the catalog knows them (never `*`, never hidden-only). */
+export function childrenOf(at: OptionTree, path: string[]): string[] {
+  let here = [at];
+  for (const seg of path) here = here.flatMap((node) => step(node, seg));
+  const names = new Set<string>();
+  for (const node of here) {
+    if (node.partial) continue;
+    for (const [name, kid] of node.kids) if (name !== "*" && kid.visible) names.add(name);
+  }
+  return [...names].sort();
 }

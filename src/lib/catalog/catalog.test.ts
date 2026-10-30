@@ -4,6 +4,7 @@ import { convert, mapType, toRow } from "./convert";
 import { decodeRow, loadCatalog } from "./load";
 import { extractRenames } from "./renames";
 import { BUCKET_ROWS, bucketOf, planner, SPLIT_LIMIT, shardFile, toShards } from "./shard";
+import { childrenOf } from "./tree";
 import { type CatalogIndex, type OptionRow, opt } from "./types";
 
 describe("mapType", () => {
@@ -287,6 +288,10 @@ describe("generated catalogs (public/catalog)", () => {
       "services.openssh.ports",
     ]);
     expect(catalog.entries.length).toBeLessThan((await read("nixos")).entries.length / 20);
+    // What is loaded cannot list the roots or the children of a split root; a branch below it can.
+    expect(childrenOf(catalog.tree, [])).toEqual([]);
+    expect(childrenOf(catalog.tree, ["services"])).toEqual([]);
+    expect(childrenOf(catalog.tree, ["services", "openssh"])).toContain("enable");
   });
 });
 

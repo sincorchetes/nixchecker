@@ -38,6 +38,7 @@ export const es = {
   "result.line": "Línea {line}, columna {col}",
   "result.suggest": "¿Quisiste decir {suggestion}?",
   "result.docs": "Documentación oficial",
+  "result.available": "Opciones disponibles: {options}",
   "result.apply": "Aplicar corrección",
   "result.applyAll": "Aplicar todas las correcciones",
   "result.goto": "Ir a la línea",

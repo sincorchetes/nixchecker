@@ -39,6 +39,7 @@ export const en: Record<MessageKey, string> = {
   "result.line": "Line {line}, column {col}",
   "result.suggest": "Did you mean {suggestion}?",
   "result.docs": "Official documentation",
+  "result.available": "Available options: {options}",
   "result.apply": "Apply fix",
   "result.applyAll": "Apply all fixes",
   "result.goto": "Go to line",
