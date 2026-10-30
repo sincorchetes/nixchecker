@@ -1,0 +1,236 @@
+/* The hero, its parallax layers (moved by parallax.ts) and the blur-to-sharp entrance. */
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 100px 2rem 90px;
+  text-align: center;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: 760px;
+  max-width: 100%;
+  height: 460px;
+  left: 50%;
+  top: 20px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, var(--glow), transparent 68%);
+  filter: blur(12px);
+}
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1050px;
+  margin: 0 auto;
+}
+.eyebrow,
+.kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--text);
+}
+.eyebrow span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  box-shadow: 0 0 0 4px var(--info-bg);
+}
+.hero h1 {
+  margin: 1.6rem 0 1.4rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 7vw, 5.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--accent-light);
+}
+.hero-lead {
+  max-width: 650px;
+  margin: 0 auto 2rem;
+  color: var(--text-2);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 24px var(--glow);
+  transition:
+    transform 0.18s,
+    background 0.18s;
+}
+.primary-button:hover {
+  transform: translateY(-2px);
+  background: var(--accent-light);
+}
+.hero-notes {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-top: 1.75rem;
+  color: var(--text-2);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ---- parallax layers: positioned here, moved by parallax.ts ---- */
+.parallax-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.plx {
+  position: absolute;
+  will-change: transform;
+}
+.plx-a {
+  width: 150px;
+  left: 6%;
+  top: 60px;
+}
+.plx-b {
+  width: 100px;
+  right: 9%;
+  top: 90px;
+}
+.plx-c {
+  width: 70px;
+  left: 17%;
+  bottom: 40px;
+}
+.plx-d {
+  width: 190px;
+  right: 4%;
+  bottom: 10px;
+}
+.plx-e {
+  width: 120px;
+  left: 50%;
+  top: -20px;
+  margin-left: 260px;
+}
+.plx-f {
+  width: 130px;
+  left: 3%;
+  top: 90px;
+}
+.plx-g {
+  width: 90px;
+  right: 5%;
+  bottom: 120px;
+}
+
+/* ---- the page comes in from blur to sharp, one piece after another ---- */
+@keyframes focus-in {
+  from {
+    opacity: 0;
+    filter: blur(16px);
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+@keyframes focus-in-soft {
+  from {
+    opacity: 0;
+    filter: blur(28px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+@keyframes focus-in-static {
+  from {
+    opacity: 0;
+    filter: blur(16px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+.site-header,
+.unofficial-bar,
+.hero-content > * {
+  animation: focus-in 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.hero-content > :nth-child(1) {
+  animation-delay: 0.1s;
+}
+.hero-content > :nth-child(2) {
+  animation-delay: 0.22s;
+}
+.hero-content > :nth-child(3) {
+  animation-delay: 0.36s;
+}
+.hero-content > :nth-child(4) {
+  animation-delay: 0.5s;
+}
+.hero-content > :nth-child(5) {
+  animation-delay: 0.62s;
+}
+.hero .parallax-scene {
+  animation: focus-in-soft 1.6s ease-out 0.2s both;
+}
+
+@media (max-width: 800px) {
+  .hero {
+    padding: 70px 1.4rem 64px;
+  }
+  .plx {
+    opacity: 0.55;
+  }
+  .plx-a {
+    width: 90px;
+  }
+  .plx-d {
+    width: 120px;
+  }
+}
+@media (max-width: 460px) {
+  .hero-notes {
+    display: grid;
+    gap: 0.6rem;
+  }
+}
+
+/* Reduced motion keeps the blur-to-sharp fade (nothing moves) and drops the slide. */
+@media (prefers-reduced-motion: reduce) {
+  .site-header,
+  .unofficial-bar,
+  .hero-content > * {
+    animation-name: focus-in-static;
+  }
+}

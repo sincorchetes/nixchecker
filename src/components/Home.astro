@@ -1,7 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
-import Checker from "./Checker.astro";
 import { type Lang, messages } from "../lib/i18n";
+import Checker from "./Checker.astro";
+import Layers from "./Layers.astro";
 
 interface Props {
   lang: Lang;
@@ -10,108 +11,65 @@ interface Props {
 const { lang } = Astro.props;
 const m = messages[lang];
 const features = ["docs", "local", "hints"] as const;
+const notes = ["note1", "note2", "note3"] as const;
 ---
 
 <Base lang={lang}>
   <main>
-    <section class="wrap hero">
-      <p class="eyebrow">{m["hero.eyebrow"]}</p>
-      <h1>{m["hero.title"]}</h1>
-      <p class="sub">{m["hero.subtitle"]}</p>
+    <section class="hero">
+      <Layers scene="hero" />
+      <div class="hero-content" data-parallax="-0.14">
+        <p class="eyebrow"><span></span>{m["hero.eyebrow"]}</p>
+        <h1>{m["hero.titleA"]}<br /><em>{m["hero.titleB"]}</em></h1>
+        <p class="hero-lead">{m["hero.subtitle"]}</p>
+        <a class="primary-button" href="#validador">{m["hero.cta"]} <span aria-hidden="true">↓</span></a>
+        <div class="hero-notes">
+          {notes.map((key) => <span>✓ {m[`hero.${key}`]}</span>)}
+        </div>
+      </div>
     </section>
 
-    <section class="wrap">
-      <Checker lang={lang} />
-      <p class="notice">{m["hero.unofficial"]}</p>
+    <section id="validador" class="validator-section" aria-labelledby="validator-title">
+      <div class="validator-inner">
+        <div class="section-heading">
+          <span class="kicker">{m["validator.kicker"]}</span>
+          <h2 id="validator-title">{m["validator.title"]}</h2>
+          <p>{m["validator.lead"]}</p>
+        </div>
+        <Checker lang={lang} />
+      </div>
     </section>
 
-    <section class="wrap features">
-      <h2>{m["features.title"]}</h2>
-      <div class="grid">
+    <section id="como-funciona" class="how-section" aria-labelledby="how-title">
+      <Layers scene="how" />
+      <div class="section-heading centered">
+        <span class="kicker">{m["features.kicker"]}</span>
+        <h2 id="how-title">{m["features.title"]}</h2>
+        <p>{m["features.lead"]}</p>
+      </div>
+      <div class="feature-grid">
         {
-          features.map((key) => (
-            <article class="glass card">
+          features.map((key, n) => (
+            <article>
+              <span class="feature-number">{`0${n + 1}`}</span>
               <h3>{m[`features.${key}.title`]}</h3>
-              <p>{m[`features.${key}.body`]}</p>
+              <p class="feature-body">{m[`features.${key}.body`]}</p>
             </article>
           ))
         }
       </div>
     </section>
+
+    <section class="final-cta">
+      <div>
+        <span class="kicker">{m["cta.kicker"]}</span>
+        <h2>{m["cta.title1"]}<br />{m["cta.title2"]}</h2>
+      </div>
+      <a class="primary-button" href="#validador">{m["cta.button"]} <span aria-hidden="true">↑</span></a>
+    </section>
   </main>
 </Base>
 
-<style>
-  .hero {
-    padding-block: 4rem 2.5rem;
-    text-align: center;
-  }
-  .eyebrow {
-    display: inline-block;
-    margin: 0 0 1.25rem;
-    padding: 0.3rem 0.9rem;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent-light);
-    font-size: 0.8rem;
-    font-weight: 500;
-  }
-  h1 {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(2.2rem, 6vw, 3.8rem);
-    font-weight: 600;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-    background: linear-gradient(120deg, var(--text) 30%, var(--accent-light));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .sub {
-    max-width: 40rem;
-    margin: 1.25rem auto 0;
-    color: var(--text-2);
-    font-size: clamp(1rem, 2.5vw, 1.2rem);
-  }
-  .notice {
-    margin: 1rem 0 0;
-    text-align: center;
-    color: var(--text-3);
-    font-size: 0.85rem;
-  }
-  .features {
-    padding-top: 5rem;
-  }
-  h2 {
-    margin: 0 0 1.5rem;
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
-  .grid {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  }
-  .card {
-    padding: 1.5rem;
-    transition: background var(--motion);
-  }
-  .card:hover {
-    background: var(--card-hover);
-  }
-  h3 {
-    margin: 0 0 0.5rem;
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    font-weight: 500;
-  }
-  .card p {
-    margin: 0;
-    color: var(--text-2);
-    font-size: 0.95rem;
-  }
-</style>
+<script>
+  import "./parallax";
+</script>

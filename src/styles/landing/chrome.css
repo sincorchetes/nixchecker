@@ -1,0 +1,122 @@
+/* The site header, the unofficial-tool bar and the footer. */
+.site-header {
+  width: min(1240px, calc(100% - 3rem));
+  height: 88px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.brand {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+}
+.brand span {
+  color: var(--accent-light);
+}
+.site-header nav {
+  display: flex;
+  gap: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.site-header nav a {
+  color: var(--text-2);
+  text-decoration: none;
+}
+.site-header nav a:hover {
+  color: var(--text);
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.lang-switch,
+.header-cta {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.lang-switch {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  height: 38px;
+  padding: 0 10px;
+  letter-spacing: 0.04em;
+}
+.header-cta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+}
+.lang-switch:hover,
+.header-cta:hover {
+  border-color: var(--line-strong);
+}
+
+.unofficial-bar {
+  padding: 0.5rem 1.25rem;
+  background: var(--info-bg);
+  border-block: 1px solid var(--info-line);
+  color: var(--info-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ---- footer ---- */
+.site-footer {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 2rem 2rem 2.6rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  color: var(--text-2);
+  font-size: 0.75rem;
+}
+.site-footer p {
+  margin: 0;
+}
+.site-footer .legal {
+  flex-basis: 100%;
+  text-align: center;
+  opacity: 0.85;
+}
+.footer-link {
+  color: var(--text);
+}
+
+@media (max-width: 800px) {
+  .site-header {
+    width: calc(100% - 2rem);
+    height: 72px;
+  }
+  .site-header nav,
+  .header-cta span {
+    display: none;
+  }
+  .header-cta {
+    padding: 0.55rem 0.75rem;
+  }
+  .site-footer {
+    flex-direction: column;
+    text-align: center;
+  }
+}

@@ -1,0 +1,129 @@
+/* The validator band, the "how it works" cards and the closing call to action. */
+.validator-section {
+  padding: 70px max(1.5rem, calc((100vw - 1240px) / 2)) 110px;
+  background: var(--surface);
+  border-block: 1px solid var(--border);
+}
+.validator-inner {
+  max-width: 62rem;
+  margin: 0 auto;
+}
+.section-heading {
+  margin-bottom: 2.1rem;
+}
+.section-heading.centered {
+  text-align: center;
+}
+.kicker {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--accent-light);
+}
+.section-heading h2,
+.final-cta h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4vw, 2.9rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+.section-heading p {
+  max-width: 34rem;
+  margin: 1rem 0 0;
+  color: var(--text-2);
+  line-height: 1.7;
+}
+.section-heading.centered p {
+  margin-inline: auto;
+}
+.how-section {
+  position: relative;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 110px 2rem;
+}
+.how-section > :not(.parallax-scene) {
+  position: relative;
+  z-index: 1;
+}
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.1rem;
+  margin-top: 3.2rem;
+}
+.feature-grid article {
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.feature-number {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font: 500 0.75rem var(--font-mono);
+}
+.feature-grid h3 {
+  margin: 1.75rem 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.feature-body {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+.final-cta {
+  max-width: 1176px;
+  margin: 0 auto 5rem;
+  padding: 3.4rem 3.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  background: var(--accent);
+  border-radius: var(--radius);
+  color: #fff;
+}
+.final-cta .kicker {
+  color: #fff;
+}
+.final-cta .primary-button {
+  background: #0a0a0c;
+  box-shadow: none;
+}
+.final-cta .primary-button:hover {
+  background: #000;
+}
+
+@media (max-width: 800px) {
+  .validator-section {
+    padding: 58px 1rem 72px;
+  }
+  .how-section {
+    padding: 72px 1.25rem;
+  }
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+  .feature-grid article {
+    padding: 1.6rem;
+  }
+  .final-cta {
+    margin: 0 1.25rem 3rem;
+    padding: 2.2rem 1.7rem;
+    display: block;
+  }
+  .final-cta .primary-button {
+    margin-top: 1.75rem;
+  }
+}

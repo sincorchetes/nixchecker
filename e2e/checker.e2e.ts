@@ -163,6 +163,23 @@ describe("checker", () => {
     expect(await page.$eval(".detected", (el) => el.textContent)).toContain("Home Manager");
   });
 
+  test("the parallax layers follow the scroll, and the header jumps to the validator", async () => {
+    await page.goto(url());
+    const first = () => page.$eval(".plx", (el) => (el as HTMLElement).style.transform);
+    const before = await first();
+    await page.evaluate(() => window.scrollTo(0, 700));
+    await page.waitForFunction(
+      (was) => (document.querySelector(".plx") as HTMLElement).style.transform !== was,
+      {},
+      before,
+    );
+    expect(await first()).not.toBe(before);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.click(".header-cta");
+    await page.waitForFunction(() => location.hash === "#validador");
+    expect(await page.$eval(".lang-switch", (el) => el.textContent)).toContain("EN");
+  });
+
   test("works in English", async () => {
     await page.goto(url("/en/"));
     await validate("{ services.openssh.enabel = true; }");

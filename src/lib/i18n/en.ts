@@ -4,16 +4,14 @@ export const en: Record<MessageKey, string> = {
   "site.title": "nixchecker · Nix file validator",
   "site.description":
     "Paste your flake.nix or Nix configuration and validate it against the official NixOS, Home Manager, disko and flake documentation. Unofficial and open source.",
-  "nav.language": "Español",
+  "nav.language": "ES",
   "nav.languageLabel": "Switch to Spanish",
   "nav.source": "Source code",
+  "nav.main": "Main navigation",
 
-  "hero.eyebrow": "Unofficial project · Open source",
-  "hero.title": "Validate your Nix before you rebuild.",
+  "hero.eyebrow": "Static analysis, nothing uploaded",
   "hero.subtitle":
     "Paste your flake.nix or configuration and check every option against the official NixOS, Home Manager, disko and flake documentation.",
-  "hero.unofficial":
-    "nixchecker is not an official project and is not affiliated with the NixOS Foundation, Home Manager or disko.",
 
   "checker.label": "Your Nix file",
   "checker.placeholder": "{ config, pkgs, ... }:\n{\n  services.openssh.enable = true;\n}",
@@ -74,7 +72,7 @@ export const en: Record<MessageKey, string> = {
   "diag.hidden-option":
     "“{path}” is not in the documentation: it may be deprecated, renamed or internal.",
 
-  "features.title": "Built for everyday Nix",
+  "features.title": "An analysis, not an evaluation.",
   "features.docs.title": "Against the official docs",
   "features.docs.body":
     "Options are checked against the NixOS, Home Manager and disko catalogs and the flake format.",
@@ -89,4 +87,25 @@ export const en: Record<MessageKey, string> = {
     "Unofficial project: not affiliated with or endorsed by the NixOS Foundation, Home Manager or disko.",
   "footer.ai": "Built with the help of AI. Always review the results before applying changes.",
   "footer.license": "Free software under GPL v3.0 or later.",
+  "nav.validator": "Validator",
+  "nav.how": "How it works",
+  "nav.cta": "Validate now",
+  "bar.unofficial":
+    "Unofficial tool: not affiliated with, endorsed or maintained by the NixOS, Home Manager or disko projects.",
+  "hero.titleA": "Validate your Nix.",
+  "hero.titleB": "Before you rebuild.",
+  "hero.cta": "Start validating",
+  "hero.note1": "100% in your browser",
+  "hero.note2": "No accounts, no server",
+  "hero.note3": "NixOS · Home Manager · disko · flakes",
+  "validator.kicker": "Validator",
+  "validator.title": "Paste your Nix. Check every line.",
+  "validator.lead": "Results show up right here. Nothing is sent anywhere.",
+  "features.kicker": "Simple by design",
+  "features.lead": "The same file always gives the same results.",
+  "cta.kicker": "Your configuration, checked",
+  "cta.title1": "Fewer mistakes.",
+  "cta.title2": "More rebuilding.",
+  "cta.button": "Validate my Nix",
+  "footer.tagline": "Made for the Nix community. Your code never leaves the browser.",
 };

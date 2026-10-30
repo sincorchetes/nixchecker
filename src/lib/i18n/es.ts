@@ -4,16 +4,14 @@ export const es = {
   "site.title": "nixchecker · Validador de archivos Nix",
   "site.description":
     "Pega tu flake.nix o configuración de Nix y valídala contra la documentación oficial de NixOS, Home Manager, disko y flakes. No oficial y de código abierto.",
-  "nav.language": "English",
+  "nav.language": "EN",
   "nav.languageLabel": "Cambiar a inglés",
   "nav.source": "Código fuente",
+  "nav.main": "Navegación principal",
 
-  "hero.eyebrow": "Proyecto no oficial · Código abierto",
-  "hero.title": "Valida tu Nix antes de reconstruir.",
+  "hero.eyebrow": "Análisis estático, sin enviar nada",
   "hero.subtitle":
     "Pega tu flake.nix o tu configuración y comprueba cada opción contra la documentación oficial de NixOS, Home Manager, disko y flakes.",
-  "hero.unofficial":
-    "nixchecker no es un proyecto oficial y no está afiliado a la Fundación NixOS, Home Manager ni disko.",
 
   "checker.label": "Tu archivo Nix",
   "checker.placeholder": "{ config, pkgs, ... }:\n{\n  services.openssh.enable = true;\n}",
@@ -73,7 +71,7 @@ export const es = {
   "diag.hidden-option":
     "«{path}» no aparece en la documentación: puede estar obsoleta, renombrada o ser interna.",
 
-  "features.title": "Hecho para el día a día con Nix",
+  "features.title": "Un análisis, no una evaluación.",
   "features.docs.title": "Contra la documentación oficial",
   "features.docs.body":
     "Las opciones se comprueban con los catálogos de NixOS, Home Manager, disko y el formato de flakes.",
@@ -88,6 +86,28 @@ export const es = {
     "Proyecto no oficial: no está afiliado ni respaldado por la Fundación NixOS, Home Manager ni disko.",
   "footer.ai": "Hecho con ayuda de IA. Revisa siempre los resultados antes de aplicar cambios.",
   "footer.license": "Software libre bajo GPL v3.0 o posterior.",
+
+  "nav.validator": "Validador",
+  "nav.how": "Cómo funciona",
+  "nav.cta": "Validar ahora",
+  "bar.unofficial":
+    "Herramienta no oficial: no está afiliada, respaldada ni mantenida por el proyecto NixOS, Home Manager ni disko.",
+  "hero.titleA": "Valida tu Nix.",
+  "hero.titleB": "Antes de reconstruir.",
+  "hero.cta": "Empezar a validar",
+  "hero.note1": "100 % en tu navegador",
+  "hero.note2": "Sin cuentas ni servidor",
+  "hero.note3": "NixOS · Home Manager · disko · flakes",
+  "validator.kicker": "Validador",
+  "validator.title": "Pega tu Nix. Revisa cada línea.",
+  "validator.lead": "Los resultados aparecen aquí mismo. Nada se envía a ningún sitio.",
+  "features.kicker": "Simple por diseño",
+  "features.lead": "El mismo archivo da siempre los mismos resultados.",
+  "cta.kicker": "Tu configuración, revisada",
+  "cta.title1": "Menos errores.",
+  "cta.title2": "Más reconstruir.",
+  "cta.button": "Validar mi Nix",
+  "footer.tagline": "Hecho para la comunidad Nix. Tu código nunca sale del navegador.",
 } as const;
 
 export type MessageKey = keyof typeof es;

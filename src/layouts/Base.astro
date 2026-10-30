@@ -1,5 +1,8 @@
 ---
 import "../styles/global.css";
+import "../styles/landing/chrome.css";
+import "../styles/landing/hero.css";
+import "../styles/landing/sections.css";
 import { type Lang, messages } from "../lib/i18n";
 import { withBase } from "../lib/site";
 
@@ -13,6 +16,7 @@ const other: Lang = lang === "es" ? "en" : "es";
 const base = import.meta.env.BASE_URL;
 const path = (l: Lang) => withBase(base, l === "es" ? "" : "en/");
 // Absolute, as search engines expect for canonical and alternate links.
+const source = "https://github.com/sincorchetes/nixchecker";
 const href = (l: Lang) => new URL(path(l), Astro.site).href;
 ---
 
@@ -40,70 +44,34 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
     <link rel="icon" href={withBase(base, "favicon.svg")} type="image/svg+xml" />
   </head>
   <body>
-    <header class="wrap top">
+    <header class="site-header">
       <a class="brand" href={path(lang)}>nix<span>checker</span></a>
-      <nav>
-        <a href="https://github.com/sincorchetes/nixchecker" rel="noopener">{m["nav.source"]}</a>
-        <a class="pill" href={path(other)} hreflang={other} lang={other} title={m["nav.languageLabel"]}>
-          {m["nav.language"]}
-        </a>
+      <nav aria-label={m["nav.main"]}>
+        <a href="#validador">{m["nav.validator"]}</a>
+        <a href="#como-funciona">{m["nav.how"]}</a>
       </nav>
+      <div class="header-actions">
+        <a class="lang-switch" href={path(other)} hreflang={other} lang={other} title={m["nav.languageLabel"]}>
+          {m["nav.language"]}<span class="sr-only"> · {m["nav.languageLabel"]}</span>
+        </a>
+        <a class="header-cta" href="#validador">{m["nav.cta"]} <span aria-hidden="true">↗</span></a>
+      </div>
     </header>
+
+    <div class="unofficial-bar" role="note">{m["bar.unofficial"]}</div>
 
     <slot />
 
-    <footer class="wrap foot">
-      <p>{m["footer.unofficial"]}</p>
-      <p>{m["footer.ai"]}</p>
-      <p>{m["footer.license"]}</p>
+    <footer class="site-footer">
+      <a class="brand" href={path(lang)}>nix<span>checker</span></a>
+      <p>{m["footer.tagline"]}</p>
+      <p class="legal">{m["footer.unofficial"]}</p>
+      <p class="legal">
+        {m["footer.license"]} · <a class="footer-link" href={source} rel="noopener">{m["nav.source"]}</a> ·
+        <a class="footer-link" href="https://sincorchetes.tech" rel="author noopener">sincorchetes.tech</a>
+      </p>
+      <p class="legal">{m["footer.ai"]}</p>
     </footer>
   </body>
 </html>
 
-<style>
-  .top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-block: 1.25rem;
-  }
-  .brand {
-    font-family: var(--font-display);
-    font-size: 1.35rem;
-    font-weight: 600;
-    color: var(--text);
-    text-decoration: none;
-    letter-spacing: -0.02em;
-  }
-  .brand span {
-    color: var(--accent-light);
-  }
-  nav {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    font-size: 0.9rem;
-  }
-  nav a {
-    color: var(--text-2);
-    text-decoration: none;
-  }
-  nav a:hover {
-    color: var(--text);
-  }
-  .pill {
-    padding: 0.3rem 0.8rem;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-  }
-  .foot {
-    padding-block: 3rem 2.5rem;
-    margin-top: 4rem;
-    border-top: 1px solid var(--border);
-    color: var(--text-3);
-    font-size: 0.85rem;
-  }
-  .foot p {
-    margin: 0.25rem 0;
-  }
-</style>

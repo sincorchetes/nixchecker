@@ -9,13 +9,19 @@
   --border: rgba(255, 255, 255, 0.08);
   --text: #f0f0f0;
   --text-2: #9ea3b0;
-  --text-3: #5e6475;
+  --text-3: #858b9c;
   --accent: #5e6ad2;
   --accent-light: #8e98ff;
   --accent-soft: rgba(94, 106, 210, 0.15);
   --error: #ff7b8a;
   --warning: #f5c36b;
   --ok: #6ee7a8;
+  --surface: #121216;
+  --line-strong: rgba(255, 255, 255, 0.22);
+  --glow: rgba(94, 106, 210, 0.32);
+  --info-bg: rgba(94, 106, 210, 0.14);
+  --info-line: rgba(142, 152, 255, 0.3);
+  --info-text: #d3d7ff;
   --motion: 0.15s;
   --radius: 20px;
   --radius-sm: 12px;
@@ -33,12 +39,18 @@
     --border: rgba(10, 10, 12, 0.1);
     --text: #14141a;
     --text-2: #4a4f5e;
-    --text-3: #7a8091;
+    --text-3: #5b6173;
     --accent-light: #4a55c0;
     --accent-soft: rgba(94, 106, 210, 0.12);
     --error: #c92a3e;
     --warning: #946200;
     --ok: #12804c;
+    --surface: #f1f1f5;
+    --line-strong: rgba(10, 10, 12, 0.28);
+    --glow: rgba(94, 106, 210, 0.2);
+    --info-bg: rgba(94, 106, 210, 0.1);
+    --info-line: rgba(74, 85, 192, 0.3);
+    --info-text: #2f3a9a;
     color-scheme: light;
   }
 }
@@ -51,13 +63,13 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
-  background:
-    radial-gradient(60rem 30rem at 50% -10%, var(--accent-soft), transparent 70%), var(--bg);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   line-height: 1.6;
@@ -72,6 +84,16 @@ a {
 :focus-visible {
   outline: 2px solid var(--accent-light);
   outline-offset: 2px;
+}
+
+/* Text for screen readers only: it joins the visible label in the accessible name. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .wrap {
