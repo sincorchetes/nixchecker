@@ -128,3 +128,13 @@ describe("calls that cannot work", () => {
     expect(codes('{ a = "x" ++ [ 2 ]; }')).toContain("concat-non-list");
   });
 });
+
+describe("merged sets", () => {
+  test("options inside a literal set merged with `//` are checked like any other", () => {
+    const src = 'f: { services = f // { openssh.enable = "yes"; }; }';
+    expect(run(src).diagnostics).toMatchObject([
+      { code: "type-mismatch", params: { path: "services.openssh.enable" } },
+    ]);
+    expect(codes("f: { networking.hostName = f // { }; }")).toEqual(["type-mismatch"]);
+  });
+});

@@ -1,8 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import { docUrl, TARGETS } from "./catalog";
+import { docUrl, TARGETS, type Target } from "./catalog";
 import { fixtures } from "./catalog/fixtures";
 import { EXAMPLE } from "./example";
-import { analyze, detectTarget, resolveTarget, type TargetChoice, validate } from "./validate";
+import {
+  analyze,
+  bestReport,
+  candidateTargets,
+  detectTarget,
+  type Report,
+  resolveTarget,
+  type TargetChoice,
+  validate,
+} from "./validate";
 
 const run = (src: string, choice: TargetChoice = "auto") => validate(src, choice, fixtures);
 const codes = (src: string, choice?: TargetChoice) =>
@@ -191,5 +200,33 @@ describe("docUrl", () => {
       validate("{ services.openssh.enabel = true; }", "nixos", fixtures, "26.05").diagnostics[0]
         ?.docUrl,
     ).toContain("channel=26.05");
+  });
+});
+
+describe("choosing the target", () => {
+  test("a chosen target, or a signal in the file, is the only candidate", () => {
+    const of = (src: string, choice: TargetChoice = "auto") =>
+      candidateTargets(analyze(src), choice);
+    expect(of("{ services.openssh.enable = true; }", "home-manager")).toEqual(["home-manager"]);
+    expect(of("{ inputs.x.url = 1; }")).toEqual(["flake"]);
+    expect(of("{ home.username = 1; }")).toEqual(["home-manager"]);
+  });
+
+  test("with no signal, NixOS and Home Manager are both candidates, and the fewest errors wins", () => {
+    const analysis = analyze("{ programs.zsh.enable = true; }");
+    expect(candidateTargets(analysis, "auto")).toEqual(["nixos", "home-manager"]);
+    const report = (target: Target, errors: number): Report => ({
+      target,
+      diagnostics: Array.from({ length: errors }, () => ({
+        severity: "error",
+        code: "unknown-option",
+        line: 1,
+        col: 1,
+        params: {},
+      })),
+    });
+    expect(bestReport([report("nixos", 3), report("home-manager", 0)]).target).toBe("home-manager");
+    expect(bestReport([report("nixos", 1), report("home-manager", 1)]).target).toBe("nixos");
+    expect(bestReport([report("nixos", 0)]).target).toBe("nixos");
   });
 });

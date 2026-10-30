@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { fixtures } from "./fixtures";
 import {
+  addRoots,
   buildTree,
   candidates,
   childrenOf,
@@ -74,4 +75,12 @@ test("a partial node does not list its children", () => {
   expect(childrenOf(partial, ["a"])).toEqual(["b", "c"]);
   (partial.kids.get("a") as { partial?: boolean }).partial = true;
   expect(childrenOf(partial, ["a"])).toEqual([]);
+});
+
+test("addRoots makes the roots known, without overwriting what is there", () => {
+  const roots = buildTree([{ path: "a.b", type: "bool", segs: ["a", "b"] }]);
+  addRoots(roots, ["a", "z"]);
+  expect([...roots.kids.keys()]).toEqual(["a", "z"]);
+  expect(roots.kids.get("a")?.kids.has("b")).toBe(true);
+  expect(roots.kids.get("z")?.visible).toBe(true);
 });

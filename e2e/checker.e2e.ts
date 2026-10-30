@@ -115,13 +115,15 @@ describe("checker", () => {
       const [, rest] = r.url().split("/catalog/");
       if (rest) files.push(rest);
     });
-    await validate('{ home.stateVersion = "24.11"; }');
-    expect(files).toEqual(["home-manager-26.05/index.json", "home-manager-26.05/home.json"]);
+    // disko is not used by any earlier test, so nothing of it is cached yet.
+    await validate("{ disko.devices = { }; }");
+    expect(files).toEqual(["disko/index.json", "disko/disko.json"]);
   });
 
   test("validates against the chosen release", async () => {
-    const src = "{ programs.atuin.enable = true; }";
-    await validate(src);
+    // Fixed to NixOS: left on auto, `programs.atuin` would be found in Home Manager instead.
+    await page.select("#target", "nixos");
+    await validate("{ programs.atuin.enable = true; }");
     expect(await summary()).toContain("good");
     // Changing the release re-validates by itself, against another catalog.
     await page.$eval("#results", (el) => el.replaceChildren());
@@ -133,6 +135,7 @@ describe("checker", () => {
       "channel=25.11",
     );
     await page.select("#version", "26.05");
+    await page.select("#target", "auto");
   });
 
   test("numbers the lines, marks the ones with problems and tracks the cursor", async () => {
@@ -152,6 +155,12 @@ describe("checker", () => {
     expect(await page.$$eval("#gutter .ln", (els) => els.length)).toBe(5);
     expect(await page.$$eval("#gutter .ln.error", (els) => els.length)).toBe(0);
     expect(await page.$eval("#cursor", (el) => el.textContent)).toBe("Línea 3, columna 1");
+  });
+
+  test("picks Home Manager for a file that only makes sense there", async () => {
+    await validate('{ programs.zsh.initContent = ""; programs = lib.mkMerge [ ]; }');
+    expect(await summary()).toContain("good");
+    expect(await page.$eval(".detected", (el) => el.textContent)).toContain("Home Manager");
   });
 
   test("works in English", async () => {

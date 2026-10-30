@@ -1,3 +1,5 @@
+import type { Analysis, Diagnostic, Report, TargetChoice } from "./analysis";
+import { analyze, resolveTarget } from "./analysis";
 import { docUrl, type IndexedOption, type OptionTree, type Target, type Version } from "./catalog";
 import {
   candidates,
@@ -7,89 +9,20 @@ import {
   knownPrefix,
   siblings,
 } from "./catalog/tree";
-import { findMistakes } from "./nix/mistakes";
-import { type Problem, parse } from "./nix/parse";
-import { type Assignment, scan } from "./nix/scan";
+import type { Assignment } from "./nix/scan";
 import { closest, distance } from "./suggest";
 
-export type TargetChoice = Target | "auto";
-
-export type DiagnosticCode =
-  | Problem["code"]
-  | "undefined-variable"
-  | "not-callable-list"
-  | "not-callable-string"
-  | "not-callable-number"
-  | "list-plus"
-  | "concat-non-list"
-  | "nothing-to-check"
-  | "unknown-option"
-  | "type-mismatch"
-  | "deprecated"
-  | "hidden-option";
-
-export interface Diagnostic {
-  severity: "error" | "warning";
-  code: DiagnosticCode;
-  line: number;
-  col: number;
-  /** Values for the `{placeholders}` of the message template `diag.<code>`. */
-  params: Record<string, string>;
-  suggestion?: string;
-  /** What the catalog offers where the path goes wrong, nearest to what was written first. */
-  options?: string[];
-  docUrl?: string;
-}
-
-export interface Report {
-  target: Target;
-  diagnostics: Diagnostic[];
-}
-
-/** What can be learned from the source alone, before any catalog is loaded. */
-export interface Analysis {
-  syntax: Diagnostic[];
-  assignments: Assignment[];
-}
-
-export function analyze(source: string): Analysis {
-  const { ast, problems, lexical } = parse(source);
-  const syntax: Diagnostic[] = problems.map((p) => ({ severity: "error", ...p }));
-  // An unterminated string or comment garbles what follows, so nothing is read after one.
-  const { assignments, undefinedNames } =
-    ast && !lexical ? scan(ast) : { assignments: [], undefinedNames: [] };
-  for (const { name, line, col } of undefinedNames) {
-    syntax.push({ severity: "error", code: "undefined-variable", line, col, params: { name } });
-  }
-  // Calls that cannot work, found anywhere in the file (a flake's `outputs` included).
-  for (const { code, name, line, col } of ast && !lexical ? findMistakes(ast) : []) {
-    syntax.push({ severity: "error", code, line, col, params: { name } });
-  }
-  // A file with no attribute set to read (e.g. a bare function call): say so instead of
-  // reporting a clean bill of health for a file nothing was checked in.
-  if (ast && syntax.length === 0 && assignments.length === 0) {
-    syntax.push({
-      severity: "warning",
-      code: "nothing-to-check",
-      line: ast.line,
-      col: ast.col,
-      params: {},
-    });
-  }
-  return { syntax, assignments };
-}
-
-/** Guesses what kind of file it is from the top-level attributes. */
-export function detectTarget(assignments: Assignment[]): Target {
-  const roots = new Set(assignments.map((a) => a.path[0]));
-  if (roots.has("inputs") || roots.has("outputs") || roots.has("nixConfig")) return "flake";
-  if (roots.has("disko")) return "disko";
-  if (roots.has("home")) return "home-manager";
-  return "nixos";
-}
-
-export const resolveTarget = (analysis: Analysis, choice: TargetChoice): Target =>
-  choice === "auto" ? detectTarget(analysis.assignments) : choice;
+export {
+  type Analysis,
+  analyze,
+  candidateTargets,
+  type Diagnostic,
+  type DiagnosticCode,
+  detectTarget,
+  type Report,
+  resolveTarget,
+  type TargetChoice,
+} from "./analysis";
 
 // Closest known path to `path`, with `*` filled in from what the user wrote.
 function suggest(tree: OptionTree, path: string[], known: number): string | undefined {
@@ -241,4 +174,12 @@ export function validate(
   const analysis = analyze(source);
   const target = resolveTarget(analysis, choice);
   return check(analysis, target, catalogs[target], version);
+}
+
+const errorsIn = (report: Report) =>
+  report.diagnostics.filter((d) => d.severity === "error").length;
+
+/** Of the reports for each candidate target, the one with the fewest errors (the first on a tie). */
+export function bestReport(reports: Report[]): Report {
+  return reports.reduce((best, next) => (errorsIn(next) < errorsIn(best) ? next : best));
 }

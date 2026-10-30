@@ -86,3 +86,26 @@ describe("scan", () => {
     expect(undefinedIn("{ a = lib.mkDefault ena; }")).toEqual(["ena"]);
   });
 });
+
+describe("scan: merged sets", () => {
+  const paths = (src: string) =>
+    scanned(src).assignments.map((a) => `${a.path.join(".")}:${a.kind}`);
+
+  test("reads the literal sets on either side of `//`, and calls the merge a set", () => {
+    expect(paths("{ p = lib.genAttrs xs f // { a.enable = true; b = { c = 1; }; }; }")).toEqual([
+      "p:attrs",
+      "p.a.enable:bool",
+      "p.b:attrs",
+      "p.b.c:int",
+    ]);
+    expect(paths("{ p = ({ a = 1; } // x) // { b = 2; }; }")).toEqual([
+      "p:attrs",
+      "p.a:int",
+      "p.b:int",
+    ]);
+  });
+
+  test("a merge with no literal set is a set but says nothing about what it holds", () => {
+    expect(paths("{ p = a // b; q = rec { x = 1; } // c; }")).toEqual(["p:attrs", "q:attrs"]);
+  });
+});

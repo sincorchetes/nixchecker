@@ -42,6 +42,18 @@ describe("generated catalogs (public/catalog)", () => {
     expect(DEFAULT_VERSION).toBe(VERSIONS[0]);
   });
 
+  test("a file that only names a root does not make it look unknown", async () => {
+    const src = "{ programs = lib.mkMerge [ ]; services = lib.mkMerge [ ]; }";
+    const analysis = analyze(src);
+    const paths = analysis.assignments.map((a) => a.path);
+    const catalog = await loadCatalog("home-manager", "26.05", "/", paths, disk);
+    expect(check(analysis, "home-manager", catalog.tree, "26.05").diagnostics).toEqual([]);
+    // And a typo of a root can still be suggested without loading anything of it.
+    const typo = analyze("{ progrms = 1; }");
+    const report = check(typo, "home-manager", catalog.tree, "26.05");
+    expect(report.diagnostics[0]?.suggestion).toBe("programs");
+  });
+
   test("renames come from the module sources, not only from the overlay", async () => {
     const nixos = await read("nixos-unstable");
     expect(nixos.entries.find((e) => e.path === "boot.cleanTmpDir")?.renamedTo).toBe(

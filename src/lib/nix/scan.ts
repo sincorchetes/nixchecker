@@ -85,6 +85,21 @@ function calledName(fn: Expr): string | undefined {
   return undefined;
 }
 
+/**
+ * The bindings of every literal set that makes up `value`: the set itself, or the sets on either
+ * side of `//` (whose keys all end up in the result). Undefined when `value` is neither, so
+ * nothing is said about what it holds. `rec` sets stay opaque.
+ */
+function literalSets(value: Expr): Bind[][] | undefined {
+  if (value.t === "paren") return literalSets(value.inner);
+  if (value.t === "set") return value.rec ? undefined : [value.binds];
+  if (value.t === "binary" && value.op === "//") {
+    const sides = [literalSets(value.left), literalSets(value.right)];
+    return sides.some(Boolean) ? sides.flatMap((side) => side ?? []) : undefined;
+  }
+  return undefined;
+}
+
 interface Classified {
   kind: ValueKind;
   value?: string;
@@ -109,7 +124,8 @@ function classify(e: Expr): Classified {
       return { kind: e.op === "!" ? "bool" : "other" };
     case "binary":
       if (BOOLEAN_OPERATORS.has(e.op)) return { kind: "bool" };
-      return { kind: e.op === "++" ? "list" : "other" };
+      if (e.op === "++") return { kind: "list" };
+      return { kind: e.op === "//" ? "attrs" : "other" };
     case "app": {
       const fn = calledName(e.fn);
       if (fn && WRAPPERS.has(fn)) return classify(e.arg);
@@ -144,9 +160,10 @@ export function scan(ast: Expr): { assignments: Assignment[]; undefinedNames: Un
       const path = [...prefix, ...bind.path.map((part) => part.name ?? "*")];
       const at = { line: first.line, col: first.col };
       const { value } = bind;
-      if (value.t === "set" && !value.rec) {
+      const sets = literalSets(value);
+      if (sets) {
         assignments.push({ path, kind: "attrs", ...at });
-        scanSet(path, value.binds, scope);
+        for (const binds of sets) scanSet(path, binds, scope);
         continue;
       }
       const { name, ...kind } = classify(value);

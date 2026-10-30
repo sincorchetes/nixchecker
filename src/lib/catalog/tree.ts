@@ -134,3 +134,13 @@ export function childrenOf(at: OptionTree, path: string[]): string[] {
   }
   return [...names].sort();
 }
+
+/**
+ * Makes sure every root exists in the tree. With sharded catalogs a file that only names a root
+ * (`programs = ...`) loads none of its shards, and the root would look unknown.
+ */
+export function addRoots(at: OptionTree, names: string[]): void {
+  for (const name of names) {
+    if (!at.kids.has(name)) at.kids.set(name, { visible: true, kids: new Map() });
+  }
+}

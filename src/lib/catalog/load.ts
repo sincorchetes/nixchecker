@@ -1,5 +1,5 @@
 import { planner, shardFile } from "./shard";
-import { addEntries, emptyTree, type OptionTree } from "./tree";
+import { addEntries, addRoots, emptyTree, type OptionTree } from "./tree";
 import type { CatalogIndex, OptionEntry, OptionRow, Target } from "./types";
 import { catalogName, type Version } from "./versions";
 
@@ -60,6 +60,10 @@ export async function loadCatalog(
   const here = state;
   const index = await here.index;
   here.catalog.source = index.source;
+  addRoots(
+    here.catalog.tree,
+    index.keys.map((key) => key.split("~")[0] as string),
+  );
   here.plan ??= planner(index);
   const plan = here.plan;
 
