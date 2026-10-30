@@ -9,3 +9,4 @@ devenv.local.yaml
 .direnv/
 coverage/
 sonar-project.properties
+.scannerwork/
