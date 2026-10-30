@@ -121,9 +121,57 @@ export function scan(
     }
   };
 
-  const scalar = (): Pick<Assignment, "kind" | "value" | "ref"> => {
-    const first = tokens[pos] as Token | undefined;
-    const alone = isPunct(tokens[pos + 1], ";") || isPunct(tokens[pos + 1], "}");
+  // Does the expression starting at `at` have one of the operators that always yield a boolean at
+  // its top level (`!`, `&&`, `||`, `==`, `!=`)? Not when `if`, `let`, `with` or a lambda could hide it.
+  const isBoolean = (at: number): boolean => {
+    if (isPunct(tokens[at], "!") && !isPunct(tokens[at + 1], "=")) return true;
+    let depth = 0;
+    let found = false;
+    for (let n = at; n < tokens.length; n++) {
+      const token = tokens[n] as Token;
+      if (
+        token.kind === "ident" &&
+        ["if", "let", "with", "assert", "inherit"].includes(token.text)
+      ) {
+        return false;
+      }
+      if (token.kind !== "punct") continue;
+      if ("{[(".includes(token.text)) depth++;
+      else if ("}])".includes(token.text)) {
+        if (depth === 0) break;
+        depth--;
+      } else if (depth === 0) {
+        if (token.text === ";") break;
+        if (token.text === ":") return false;
+        const next = tokens[n + 1]?.text;
+        const pair = token.text + (next ?? "");
+        if (["&&", "||", "==", "!="].includes(pair) && isPunct(tokens[n + 1], pair[1] as string)) {
+          found = true;
+        }
+      }
+    }
+    return found;
+  };
+
+  // `mkDefault x` and the like give the option the type of `x`: look through them.
+  const WRAPPERS = ["mkDefault", "mkForce", "mkOverride"];
+  const unwrap = (at: number): number => {
+    const lib = isWord(tokens[at], "lib") && isPunct(tokens[at + 1], ".");
+    const name = tokens[at + (lib ? 2 : 0)];
+    if (name?.kind !== "ident" || !WRAPPERS.includes(name.text)) return at;
+    const after = at + (lib ? 3 : 1);
+    // `mkOverride 50 x` takes a priority first.
+    return unwrap(
+      name.text === "mkOverride" && tokens[after]?.kind === "number" ? after + 1 : after,
+    );
+  };
+
+  const scalar = (from = pos): Pick<Assignment, "kind" | "value" | "ref"> => {
+    const at = unwrap(from);
+    const first = tokens[at] as Token | undefined;
+    const alone = isPunct(tokens[at + 1], ";") || isPunct(tokens[at + 1], "}");
+    if (isBoolean(at)) return { kind: "bool" };
+    if (first?.kind === "string" && alone && first.interpolated) return { kind: "str" };
     if (first?.kind === "ident" && alone && (first.text === "true" || first.text === "false")) {
       return { kind: "bool" };
     }

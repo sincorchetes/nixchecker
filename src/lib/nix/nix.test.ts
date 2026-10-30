@@ -86,7 +86,7 @@ describe("scan", () => {
       tokenize('{ a = true; b = "s"; c = 3; d = [ 1 ]; e = 1.5; f = "x${y}"; g = true && x; }')
         .tokens,
     ).map((a) => a.kind);
-    expect(kinds).toEqual(["bool", "str", "int", "list", "other", "other", "other"]);
+    expect(kinds).toEqual(["bool", "str", "int", "list", "other", "str", "bool"]);
     expect(first('{ a = "s"; }')?.value).toBe("s");
   });
 
@@ -138,5 +138,39 @@ describe("scan: a `;` lost in the middle of a set", () => {
     expect(found("{\n  a = let\n    x = 1;\n  in x;\n}").problems).toEqual([]);
     expect(found("{\n  a = if b\n    == c then 1 else 2;\n}").problems).toEqual([]);
     expect(found("{\n  a = [\n    1\n  ];\n  b = 2;\n}").problems).toEqual([]);
+  });
+});
+
+describe("scan: kinds of simple expressions", () => {
+  const kind = (value: string) => scan(tokenize(`{ a = ${value}; }`).tokens)[0]?.kind;
+
+  test("looks through mkDefault, mkForce and mkOverride", () => {
+    expect(kind("lib.mkDefault true")).toBe("bool");
+    expect(kind("mkForce [ 1 ]")).toBe("list");
+    expect(kind("lib.mkOverride 50 5")).toBe("int");
+    expect(kind('lib.mkDefault "x"')).toBe("str");
+    expect(kind("lib.mkDefault { x = 1; }")).toBe("other");
+  });
+
+  test("knows what always yields a boolean", () => {
+    expect(kind("!config.x.enable")).toBe("bool");
+    expect(kind("a && b")).toBe("bool");
+    expect(kind("a || (b && c)")).toBe("bool");
+    expect(kind("x == y")).toBe("bool");
+    expect(kind("x != y")).toBe("bool");
+  });
+
+  test("does not guess when something could hide the type", () => {
+    expect(kind("if c then a == b else 1")).toBe("other");
+    expect(kind("let x = 1; in x == 1")).toBe("other");
+    expect(kind("x: x == 1")).toBe("other");
+    expect(kind("f (a == b)")).toBe("other");
+    expect(kind("a & b")).toBe("other");
+    expect(kind("[ (a == b) ]")).toBe("list");
+  });
+
+  test("an interpolated string is a string", () => {
+    expect(kind('"x-${y}"')).toBe("str");
+    expect(kind('"x-${y}" + z')).toBe("other");
   });
 });

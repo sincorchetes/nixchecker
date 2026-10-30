@@ -236,3 +236,23 @@ describe("missing semicolons", () => {
     expect(codes("{ services.openssh.enable = true; }")).toEqual([]);
   });
 });
+
+describe("expression types", () => {
+  test("checks the value under mkDefault and friends", () => {
+    expect(codes('{ networking.firewall.enable = lib.mkDefault "yes"; }')).toEqual([
+      "type-mismatch",
+    ]);
+    expect(codes("{ networking.firewall.enable = lib.mkForce false; }")).toEqual([]);
+  });
+
+  test("a boolean expression is not a string or a list", () => {
+    expect(codes("{ x }: { networking.hostName = !x; }")).toEqual(["type-mismatch"]);
+    expect(codes("{ x }: { networking.firewall.enable = !x; }")).toEqual([]);
+    expect(codes("{ x, y }: { networking.firewall.enable = x == y; }")).toEqual([]);
+  });
+
+  test("an interpolated string where a boolean goes is an error, and fits a string", () => {
+    expect(codes('{ x }: { networking.firewall.enable = "a-${x}"; }')).toEqual(["type-mismatch"]);
+    expect(codes('{ x }: { networking.hostName = "a-${x}"; }')).toEqual([]);
+  });
+});
