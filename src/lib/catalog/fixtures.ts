@@ -13,7 +13,8 @@ export const fixtures: Record<Target, OptionTree> = {
   nixos: index([
     opt("networking.hostName", "str"),
     opt("networking.firewall.enable", "bool"),
-    opt("networking.firewall.allowedTCPPorts", "list"),
+    opt("networking.firewall.allowedTCPPorts", "list", { values: ["int"] }),
+    opt("mixed.value", "mix", { values: ["int", "str"] }),
     opt("services.openssh.enable", "bool"),
     opt("services.openssh.ports", "list"),
     opt("services.openssh.settings", "attrs"),

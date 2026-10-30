@@ -41,9 +41,37 @@ describe("mapType", () => {
     expect(type("one of true, false")).toBe("bool");
   });
 
-  test("does not guess for alternatives or unknown types", () => {
-    expect(type("(attribute set of string) or list of string")).toBe("any");
-    expect(type("string or boolean")).toBe("any");
+  test("reads alternatives as the kinds they allow", () => {
+    expect(mapType("signed integer or string")).toEqual({ type: "mix", values: ["int", "str"] });
+    expect(mapType("null or (boolean or signed integer)")).toEqual({
+      type: "mix",
+      values: ["bool", "int"],
+    });
+    expect(mapType("(attribute set of string) or list of string")).toEqual({
+      type: "mix",
+      values: ["attrs", "list"],
+    });
+    expect(mapType("string or (list of string)")).toEqual({ type: "mix", values: ["str", "list"] });
+    expect(mapType('signed integer or value "auto" (singular enum)')).toEqual({
+      type: "mix",
+      values: ["int", "str"],
+    });
+  });
+
+  test("keeps the kind of the elements of a list", () => {
+    expect(mapType("list of string")).toEqual({ type: "list", values: ["str"] });
+    expect(mapType("list of (string or signed integer)")).toEqual({
+      type: "list",
+      values: ["str", "int"],
+    });
+    expect(
+      mapType("list of 16 bit unsigned integer; between 0 and 65535 (both inclusive)"),
+    ).toEqual({ type: "list", values: ["int"] });
+    expect(mapType("list of package")).toEqual({ type: "list" });
+  });
+
+  test("does not guess for unknown types or alternatives it cannot read", () => {
+    expect(type("string or package")).toBe("any");
     expect(type("package")).toBe("any");
     expect(type("nixpkgs config")).toBe("any");
     expect(type("(a) or (b)")).toBe("any");
@@ -109,6 +137,22 @@ describe("convert", () => {
       },
     );
     expect(entries.find((e) => e.path === "a.c")?.type).toBe("attrs");
+  });
+});
+
+describe("convert coerced options", () => {
+  test("an option that converts its value is not checked against its documented type", () => {
+    const entries = convert({ "a.b": { type: "string" }, "a.c": { type: "string" } }, [], {}, [
+      "a.b",
+    ]);
+    expect(entries.map((e) => [e.path, e.type])).toEqual([
+      ["a.b", "any"],
+      ["a.c", "str"],
+    ]);
+    const group = convert({ "g.<name>": { type: "attribute set of (submodule)" } }, [], {}, [
+      "g.<name>",
+    ]);
+    expect(group[0]?.type).toBe("attrs");
   });
 });
 

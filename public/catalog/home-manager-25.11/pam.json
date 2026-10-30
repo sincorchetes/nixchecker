@@ -1,1 +1,1 @@
-[["pam.sessionVariables","attrs"],["pam.yubico.authorizedYubiKeys.ids","list"],["pam.yubico.authorizedYubiKeys.path","str"]]
+[["pam.sessionVariables","attrs"],["pam.yubico.authorizedYubiKeys.ids","list",["str"]],["pam.yubico.authorizedYubiKeys.path","str"]]

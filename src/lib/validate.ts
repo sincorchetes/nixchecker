@@ -47,6 +47,13 @@ function skipReason(entry: IndexedOption, a: Assignment): SkipCause | undefined 
 const isGroup = (tree: OptionTree, path: string[]): boolean =>
   knownPrefix(tree, path) === path.length;
 
+// A list written out in full whose elements are of a kind its option does not take.
+function wrongElements(entry: IndexedOption, a: Assignment): string | undefined {
+  const allowed = entry.values;
+  const wrong = allowed && a.items?.some((kind) => kind !== "other" && !allowed.includes(kind));
+  return wrong ? `list of ${allowed.join(" | ")}` : undefined;
+}
+
 function typeMismatch(entry: IndexedOption, a: Assignment): string | undefined {
   const { type } = entry;
   if (a.kind === "other" || type === "any" || type === "hidden") return undefined;
@@ -54,8 +61,11 @@ function typeMismatch(entry: IndexedOption, a: Assignment): string | undefined {
     const ok = a.kind === "str" && (a.value === undefined || entry.values?.includes(a.value));
     return ok ? undefined : `enum(${entry.values?.join(" | ")})`;
   }
-  // The manuals describe the final type of coercing types, so an int may be valid for a string.
-  if (type === "str" && a.kind === "int") return undefined;
+  if (type === "mix") {
+    const kinds = entry.values ?? [];
+    return kinds.includes(a.kind) ? undefined : kinds.join(" | ");
+  }
+  if (type === "list" && a.kind === "list") return wrongElements(entry, a);
   const expected = type === "set" ? "attrs" : type;
   return expected === a.kind ? undefined : expected;
 }

@@ -3,6 +3,7 @@ export type Target = "nixos" | "home-manager" | "disko" | "flake";
 /**
  * - `attrs`: a free-form set; any path below it is accepted.
  * - `set`: a set whose children are all listed in the catalog (e.g. `users.users.<name>`).
+ * - `mix`: takes a value of any of the kinds in `values` (`signed integer or string`).
  * - `any`: a type the manuals cannot describe precisely; nothing about it is checked, and
  *   any path below it is accepted.
  * - `hidden`: exists upstream but is hidden from the manuals (alias, renamed or removed);
@@ -16,6 +17,7 @@ export type OptionType =
   | "attrs"
   | "set"
   | "enum"
+  | "mix"
   | "any"
   | "hidden";
 
@@ -23,7 +25,7 @@ export interface OptionEntry {
   /** Dotted path; `*` stands for any attribute name (submodules, attrsOf). */
   path: string;
   type: OptionType;
-  /** Allowed values when `type` is "enum". */
+  /** Allowed values for "enum"; the allowed kinds for "mix" and for the elements of a "list". */
   values?: string[];
   /** Set when the option was renamed: validating it yields a deprecation warning. */
   renamedTo?: string;

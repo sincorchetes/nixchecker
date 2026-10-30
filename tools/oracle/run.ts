@@ -8,12 +8,7 @@ import { judgeOurs } from "./ours";
 
 // Where we are knowingly looser than Nix, with the reason.
 const KNOWN = new Set<string>([
-  // We read an option of type `str` as also taking a number, because the manuals show the final
-  // type of coercing types (`either str int`); Nix refuses a number for a plain string.
-  "{ time.timeZone = 3; }",
-  // The elements of a list are not checked, only that it is a list.
-  '{ networking.firewall.allowedTCPPorts = [ "ssh" ]; }',
-  "{ nix.settings.max-jobs = [ 4 ]; }",
+  // No gaps are known right now. An entry would be a module, with the reason we are looser than Nix.
 ]);
 
 type Judged = { unknown: boolean; typeError: boolean };

@@ -10,6 +10,8 @@ export interface Assignment {
   kind: ValueKind;
   /** Raw content of a plain string value, used to check enums. */
   value?: string;
+  /** The kind of each element of a list written out in full. */
+  items?: ValueKind[];
 }
 
 /** A name used as a whole value (`a = foo;`) that nothing in scope defines. */
@@ -103,6 +105,7 @@ function literalSets(value: Expr): Bind[][] | undefined {
 interface Classified {
   kind: ValueKind;
   value?: string;
+  items?: ValueKind[];
   /** Set when the value is a lone name, to check that it is defined. */
   name?: Extract<Expr, { t: "ident" }>;
 }
@@ -116,7 +119,7 @@ function classify(e: Expr): Classified {
     case "num":
       return { kind: e.float ? "other" : "int" };
     case "list":
-      return { kind: "list" };
+      return { kind: "list", items: e.items.map((item) => classify(item).kind) };
     case "ident":
       if (e.name === "true" || e.name === "false") return { kind: "bool" };
       return { kind: "other", name: e };
