@@ -184,7 +184,7 @@ export function lex(src: string): { tokens: Token[]; errors: LexError[] } {
           PATH_REST.lastIndex = i;
           const rest = PATH_REST.exec(src)?.[0] ?? "";
           step(rest.length);
-          whole += "${…}" + rest;
+          whole += `\${…}${rest}`;
         }
         text = whole;
         const isPath = text.startsWith("<") || (text.includes("/") && !text.includes(":"));
