@@ -76,6 +76,7 @@ export function check(
     };
   });
   const reported = new Set<string>();
+  let unchecked = 0;
 
   // Renamed and hidden options still work (or fail) upstream: warn, do not error.
   const warnIfOutdated = (
@@ -109,6 +110,8 @@ export function check(
     // An entry above this path that cannot be checked any deeper (free-form set, opaque
     // type, or an alias whose children are unknown).
     const owner = findOwner(tree, a.path);
+    // Dynamic values and free-form places are read but not verified.
+    if (owner || (exact && a.kind === "other")) unchecked++;
 
     if (exact) {
       const expected = typeMismatch(exact, a);
@@ -162,7 +165,7 @@ export function check(
   }
 
   diagnostics.sort((x, y) => x.line - y.line || x.col - y.col);
-  return { target, diagnostics };
+  return { target, diagnostics, coverage: { total: analysis.assignments.length, unchecked } };
 }
 
 /** Synchronous convenience over `analyze` + `check`, for callers that already hold the catalogs. */

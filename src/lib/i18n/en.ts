@@ -36,6 +36,7 @@ export const en: Record<MessageKey, string> = {
   "result.summary": "{errors} errors · {warnings} warnings",
   "result.detected": "Target: {target}",
   "result.catalog": "Catalog: {source}",
+  "result.coverage": "{checked} of {total} assignments checked",
   "result.loadError": "Could not load the catalog. Check your connection and try again.",
   "result.line": "Line {line}, column {col}",
   "result.suggest": "Did you mean {suggestion}?",

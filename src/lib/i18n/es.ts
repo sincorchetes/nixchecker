@@ -35,6 +35,7 @@ export const es = {
   "result.summary": "{errors} errores · {warnings} avisos",
   "result.detected": "Objetivo: {target}",
   "result.catalog": "Catálogo: {source}",
+  "result.coverage": "{checked} de {total} asignaciones comprobadas",
   "result.loadError": "No se pudo cargar el catálogo. Revisa tu conexión e inténtalo de nuevo.",
   "result.line": "Línea {line}, columna {col}",
   "result.suggest": "¿Quisiste decir {suggestion}?",

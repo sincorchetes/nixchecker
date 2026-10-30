@@ -35,6 +35,8 @@ export interface Diagnostic {
 export interface Report {
   target: Target;
   diagnostics: Diagnostic[];
+  /** Assignments read, and those whose value or place the catalog could not check. */
+  coverage: { total: number; unchecked: number };
 }
 
 /** What can be learned from the source alone, before any catalog is loaded. */

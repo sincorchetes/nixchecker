@@ -18,11 +18,19 @@ const codes = (src: string, choice?: TargetChoice) =>
   run(src, choice).diagnostics.map((d) => d.code);
 
 describe("validate", () => {
+  test("counts the assignments it could not check", () => {
+    const { coverage } = run(
+      "{ x }: { networking.hostName = x; networking.useDHCP = true; foo.bar = 1; }",
+    );
+    expect(coverage.total).toBe(3);
+    expect(coverage.unchecked).toBe(1);
+  });
+
   test("accepts a correct NixOS module", () => {
     const report = run(
       '{ pkgs, ... }: { services.openssh = { enable = true; ports = [ 22 ]; }; networking.hostName = "x"; }',
     );
-    expect(report).toEqual({ target: "nixos", diagnostics: [] });
+    expect(report).toMatchObject({ target: "nixos", diagnostics: [] });
   });
 
   test("flags unknown options with a suggestion and docs link", () => {
@@ -114,7 +122,7 @@ describe("validate", () => {
   test("validates enums for disko, with free-form content", () => {
     const ok = `{ disko.devices.disk.main = { type = "disk"; device = "/dev/sda";
       content = { type = "gpt"; partitions.root = { size = "100%"; content = { type = "filesystem"; format = "ext4"; mountpoint = "/"; }; }; }; }; }`;
-    expect(run(ok)).toEqual({ target: "disko", diagnostics: [] });
+    expect(run(ok)).toMatchObject({ target: "disko", diagnostics: [] });
     expect(codes('{ disko.devices.disk.main.content.type = "nope"; }')).toEqual(["type-mismatch"]);
     expect(codes("{ disko.devices.disk.main.content.type = 1; }")).toEqual(["type-mismatch"]);
     expect(codes("{ x }: { disko.devices.disk.main.content.type = x; }")).toEqual([]);
@@ -128,7 +136,7 @@ describe("validate", () => {
       inputs.hm = { url = "github:nix-community/home-manager"; inputs.nixpkgs.follows = "nixpkgs"; };
       outputs = { self, nixpkgs }: { packages = {}; };
     }`;
-    expect(run(flake)).toEqual({ target: "flake", diagnostics: [] });
+    expect(run(flake)).toMatchObject({ target: "flake", diagnostics: [] });
     expect(codes('{ outputs = x: {}; descripton = "a"; }')).toEqual(["unknown-option"]);
   });
 
@@ -217,6 +225,7 @@ describe("choosing the target", () => {
     expect(candidateTargets(analysis, "auto")).toEqual(["nixos", "home-manager"]);
     const report = (target: Target, errors: number): Report => ({
       target,
+      coverage: { total: 0, unchecked: 0 },
       diagnostics: Array.from({ length: errors }, () => ({
         severity: "error",
         code: "unknown-option",

@@ -64,6 +64,7 @@ export function showReport(view: ReportView, report: Report, catalogSource: stri
   const errors = report.diagnostics.filter((d) => d.severity === "error").length;
   const warnings = report.diagnostics.length - errors;
   const total = report.diagnostics.length;
+  const { coverage } = report;
 
   results.replaceChildren();
   const head = el("div", "head");
@@ -76,7 +77,14 @@ export function showReport(view: ReportView, report: Report, catalogSource: stri
     el(
       "span",
       "detected",
-      `${tr("result.detected", { target: tr(`target.${report.target}`) })} · ${tr("result.catalog", { source: catalogSource })}`,
+      [
+        tr("result.detected", { target: tr(`target.${report.target}`) }),
+        tr("result.catalog", { source: catalogSource }),
+        tr("result.coverage", {
+          checked: coverage.total - coverage.unchecked,
+          total: coverage.total,
+        }),
+      ].join(" · "),
     ),
   );
   results.append(head);
