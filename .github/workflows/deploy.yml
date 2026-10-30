@@ -4,8 +4,8 @@ name: Deploy to GitHub Pages
 # published site fresh).
 #
 # Optional settings (Settings → Secrets and variables → Actions → Variables):
-#   PAGES_SITE  site origin; defaults to https://<owner>.github.io (or your custom domain)
-#   PAGES_BASE  base path; defaults to /<repository>/, or / if the repository is <user>.github.io
+#   PAGES_SITE  site origin; defaults to https://nixchecker.sincorchetes.tech
+#   PAGES_BASE  base path; defaults to / (use /<repository>/ when publishing without the custom domain)
 on:
   push:
     branches: [main]
@@ -36,8 +36,8 @@ jobs:
       - uses: ./.github/actions/setup-devenv
       - run: devenv shell -- site-build
         env:
-          SITE: ${{ vars.PAGES_SITE || format('https://{0}.github.io', github.repository_owner) }}
-          BASE: ${{ vars.PAGES_BASE || (endsWith(github.event.repository.name, '.github.io') && '/' || format('/{0}', github.event.repository.name)) }}
+          SITE: ${{ vars.PAGES_SITE || 'https://nixchecker.sincorchetes.tech' }}
+          BASE: ${{ vars.PAGES_BASE || '/' }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

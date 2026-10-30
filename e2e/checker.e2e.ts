@@ -1,9 +1,10 @@
 // Browser tests: they drive the built site (`dist/`) in a real Chrome, so they need
 // `bun run build` first and a Chrome binary (CHROME_BIN, or google-chrome on the PATH).
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import puppeteer, { type Browser, type Page } from "puppeteer-core";
 
-let server: Bun.Subprocess;
+let server: ReturnType<typeof Bun.serve>;
 let browser: Browser;
 let page: Page;
 const port = 4100 + Math.floor(Math.random() * 500);
@@ -22,20 +23,19 @@ async function validate(source: string) {
 }
 
 beforeAll(async () => {
-  server = Bun.spawn(["bun", "server/serve.ts"], {
-    env: { ...process.env, PORT: String(port) },
-    stdout: "ignore",
+  // Serves `dist/` the way GitHub Pages does: `/x/` is `/x/index.html`.
+  const root = join(import.meta.dir, "..", "dist");
+  server = Bun.serve({
+    port,
+    async fetch(request) {
+      const path = decodeURIComponent(new URL(request.url).pathname);
+      const file = Bun.file(join(root, path.endsWith("/") ? `${path}index.html` : path));
+      const inside = file.name?.startsWith(root);
+      return inside && (await file.exists())
+        ? new Response(file)
+        : new Response("Not found", { status: 404 });
+    },
   });
-  for (let n = 0; n < 50; n++) {
-    if (
-      await fetch(url()).then(
-        (r) => r.ok,
-        () => false,
-      )
-    )
-      break;
-    await Bun.sleep(100);
-  }
   browser = await puppeteer.launch({
     executablePath:
       process.env.CHROME_BIN ?? Bun.which("google-chrome") ?? Bun.which("chromium") ?? "",
@@ -48,7 +48,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await browser?.close();
-  server?.kill();
+  server?.stop(true);
 });
 
 describe("checker", () => {

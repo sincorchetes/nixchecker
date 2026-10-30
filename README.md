@@ -43,7 +43,7 @@ pins generate, and a daily canary regenerates them from the latest upstream and 
 ## Stack
 
 Astro, Bun and TypeScript, with everything run through [devenv](https://devenv.sh). The site is
-bilingual (Spanish and English). It is deployed to Railway as a static site.
+bilingual (Spanish and English). It is a static site published with GitHub Pages.
 
 ## Development
 
@@ -56,13 +56,17 @@ devenv test             # lint, types, unit tests (100% line coverage gate) and 
 Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `e2e` (browser tests of the
 built site, needs Chrome), `secrets` (gitleaks) and `sonar`.
 
-## Deployment (Railway)
+## Deployment (GitHub Pages)
 
-Railway builds the `Dockerfile` and runs `server/serve.ts`, which serves `dist/` on `$PORT`.
-No environment variables are required. The production site is
-<https://nixchecker.sincorchetes.tech>: add that custom domain to the Railway service and point a
-`CNAME` record at the target Railway shows. Canonical and alternate links use it by default;
-set `SITE` and `BASE` to build for another origin (the GitHub Pages workflow does).
+Merging into `main` runs `deploy.yml`, which builds the site and publishes it to GitHub Pages at
+<https://nixchecker.sincorchetes.tech> (`public/CNAME` carries the custom domain). One-time setup:
+
+1. Settings → Pages → Source: **GitHub Actions**, and set the custom domain there too.
+2. DNS: a `CNAME` record for `nixchecker` pointing at `sincorchetes.github.io`.
+3. Enable "Enforce HTTPS" once the certificate is issued.
+
+Builds default to that origin; set the repository variables `PAGES_SITE` and `PAGES_BASE` to publish
+elsewhere (for example under `/<repository>/` without a custom domain).
 
 ## License
 

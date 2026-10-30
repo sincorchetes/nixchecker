@@ -24,6 +24,12 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
     <title>{m["site.title"]}</title>
     <meta name="description" content={m["site.description"]} />
     <meta name="robots" content="index, follow" />
+    <!-- Pages cannot send headers, so the policy rides in a meta tag. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
     <meta property="og:title" content={m["site.title"]} />
     <meta property="og:description" content={m["site.description"]} />
     <meta property="og:url" content={href(lang)} />

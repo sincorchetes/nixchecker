@@ -17,7 +17,7 @@
   scripts.fix.exec = "biome check --write .";
   scripts.unit.exec = "bun test";
   scripts.site-build.exec = "bun install --frozen-lockfile && bun run build";
-  scripts.start.exec = "bun run start";
+  scripts.start.exec = "bun run start"; # previews the built site
   # Drives the built site (`dist/`) in Chrome: run `site-build` first. CHROME_BIN overrides the binary.
   scripts.e2e.exec = "bun install --frozen-lockfile && bun test -c e2e/bunfig.toml ./e2e/checker.e2e.ts";
   # Regenerates public/catalog/ from the pinned upstream projects (needs Nix); `--update` moves the pins first.
@@ -29,7 +29,7 @@
   scripts.sonar.exec = ''
     ${pkgs.sonar-scanner-cli}/bin/sonar-scanner \
       -Dsonar.projectKey=nixchecker \
-      -Dsonar.sources=src,server,tools \
+      -Dsonar.sources=src,tools \
       -Dsonar.tests=e2e \
       -Dsonar.exclusions='**/*.test.ts,public/catalog/**' \
       -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info

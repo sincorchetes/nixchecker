@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "start": "bun server/serve.ts",
+    "start": "astro preview",
     "check": "astro check",
     "test": "bun test"
   },
