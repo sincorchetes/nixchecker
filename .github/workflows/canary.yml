@@ -1,8 +1,9 @@
 name: Catalog canary
 
 # Every day, regenerates the catalogs from the latest nixpkgs, Home Manager and disko and runs the tests
-# against them. If an upstream change breaks what nixchecker expects (an option moved, a type changed, the
-# renames stopped being readable), it opens an issue. Nothing is committed: this only reports.
+# and the parser checks (the corpus, and the differential run over every file) against them. If an
+# upstream change breaks what nixchecker expects (an option moved, a type changed, the renames stopped
+# being readable, a new syntax), it opens an issue. Nothing is committed: this only reports.
 on:
   schedule:
     - cron: '0 6 * * *'
@@ -15,12 +16,16 @@ jobs:
   latest:
     name: Latest upstream
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-devenv
       - run: devenv shell -- catalog --update
       - run: devenv shell -- unit
+      - name: The parser accepts the latest nixpkgs and Home Manager
+        run: devenv shell -- corpus
+      - name: The parser agrees with the official one on every file, damaged
+        run: devenv shell -- differential 1
 
   report:
     name: Report failures
