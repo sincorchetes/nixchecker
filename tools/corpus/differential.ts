@@ -1,7 +1,7 @@
 // Compares our parser with the official one (`nix-instantiate --parse`) on damaged copies of real
 // files: for each, both must agree on whether the text is valid Nix. A sample of the corpus keeps
 // it quick; the seed makes every run damage the same way.
-//   bun tools/corpus/differential.ts [step]   (needs Nix; `devenv shell -- differential`)
+//   bun tools/corpus/differential.ts [step] [seed]   (needs Nix; `devenv shell -- differential`)
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -15,7 +15,7 @@ const MAX_BYTES = 40_000;
 const SYMBOLS = "{}[]()\";'=.$:@,?";
 
 // A small deterministic generator (mulberry32).
-let state = 0x2545f491;
+let state = Number(process.argv[3] ?? 0x2545f491);
 const random = () => {
   state = (state + 0x6d2b79f5) | 0;
   let t = Math.imul(state ^ (state >>> 15), 1 | state);
@@ -24,12 +24,30 @@ const random = () => {
 };
 const pick = (n: number) => Math.floor(random() * n);
 
+// Words, single symbols and runs of whitespace: damage that respects the shape of the text.
+const pieces = (s: string): string[] => s.match(/\w+|[^\w\s]|\s+/g) ?? [];
+const words = (s: string): number[] => pieces(s).flatMap((p, i) => (/\S/.test(p) ? [i] : []));
+const viaPieces =
+  (change: (p: string[], at: number) => void) =>
+  (s: string): string => {
+    const p = pieces(s);
+    const at = words(s)[pick(words(s).length)];
+    if (at !== undefined) change(p, at);
+    return p.join("");
+  };
+
 const damage: Array<(s: string) => string> = [
   (s) => s.slice(0, pick(s.length)), // cut off
   (s) => {
     const i = pick(s.length);
     return s.slice(0, i) + s.slice(i + 1); // lose a character
   },
+  viaPieces((p, at) => p.splice(at, 1)), // lose a whole token
+  viaPieces((p, at) => p.splice(at, 0, p[at] as string)), // say a token twice
+  viaPieces((p, at) => {
+    const next = p.findIndex((x, i) => i > at && /\S/.test(x));
+    if (next > 0) [p[at], p[next]] = [p[next] as string, p[at] as string]; // swap neighbors
+  }),
   (s) => {
     const i = pick(s.length);
     return s.slice(0, i) + (SYMBOLS[pick(SYMBOLS.length)] ?? "") + s.slice(i); // add a symbol
@@ -61,6 +79,7 @@ for (const root of await sourceRoots()) {
   }
 }
 
+if (cases.length === 0) throw new Error("no files to damage: are the sources readable?");
 const disagreements: string[] = [];
 let next = 0;
 await Promise.all(

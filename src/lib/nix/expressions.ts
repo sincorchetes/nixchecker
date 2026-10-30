@@ -87,6 +87,7 @@ export abstract class Expressions extends Cursor {
     while (this.tok && !this.isP("}")) {
       if (this.isP("...")) {
         this.next();
+        break; // nothing may follow it but the closing brace
       } else {
         const t = this.tok;
         if (t.kind !== "ident") this.unexpected();

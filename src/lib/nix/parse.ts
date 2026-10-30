@@ -64,7 +64,10 @@ class Parser extends Expressions {
         this.expectP(")", open);
       }
       const names: string[] = [];
-      while (this.tok?.kind === "ident" || this.tok?.kind === "string") {
+      while (
+        this.tok?.kind === "string" ||
+        (this.tok?.kind === "ident" && !KEYWORDS.has(this.tok.text))
+      ) {
         const t = this.next();
         names.push(t.kind === "string" ? (t.value ?? "*") : t.text);
       }
@@ -159,8 +162,11 @@ function interpolationProblems(interpolations: Interpolation[]): Problem[] {
 }
 
 /** Parses Nix source. The tree can be partial when there are problems: broken bindings are left out. */
+const strayProblems = (stray: Array<{ line: number; col: number }>): Problem[] =>
+  stray.map((at) => ({ code: "syntax-unexpected", params: { found: "/" }, ...at }));
+
 export function parse(source: string): { ast?: Expr; problems: Problem[]; lexical: boolean } {
-  const { tokens, errors, interpolations } = lex(source);
+  const { tokens, errors, interpolations, stray } = lex(source);
   if (tokens.length === 0 && errors.length === 0) return { problems: [], lexical: false };
   const parser = new Parser(tokens);
   const ast = parser.parseProgram();
@@ -168,6 +174,10 @@ export function parse(source: string): { ast?: Expr; problems: Problem[]; lexica
   // A string or comment left open garbles everything after it: report only that.
   const problems: Problem[] = lexical
     ? errors.map((e) => ({ ...e, params: {} }))
-    : withoutAftershocks([...parser.problems, ...interpolationProblems(interpolations)]);
+    : withoutAftershocks([
+        ...parser.problems,
+        ...interpolationProblems(interpolations),
+        ...strayProblems(stray),
+      ]);
   return { ...(ast && { ast }), problems, lexical };
 }

@@ -19,14 +19,14 @@
   scripts.site-build.exec = "bun install --frozen-lockfile && bun run build";
   scripts.start.exec = "bun run start"; # previews the built site
   # Drives the built site (`dist/`) in Chrome: run `site-build` first. CHROME_BIN overrides the binary.
-  scripts.e2e.exec = "bun install --frozen-lockfile && bun test -c e2e/bunfig.toml ./e2e/checker.e2e.ts";
+  scripts.e2e.exec = "bun install --frozen-lockfile && bun test -c e2e/bunfig.toml ./e2e/*.e2e.ts";
   # Regenerates public/catalog/ from the pinned upstream projects (needs Nix); `--update` moves the pins first.
   scripts.catalog.exec = ''bun tools/catalog/build.ts "$@"'';
   # Looks for secrets across the whole git history (gitleaks).
   # Every .nix file in nixpkgs and Home Manager must parse: they are all valid, so a problem is a parser bug.
   scripts.corpus.exec = "bun tools/corpus/run.ts";
   # Damaged copies of those files: our parser and `nix-instantiate --parse` must agree on each one.
-  # An optional argument is the sampling step (default 40: one file in 40, three damages each).
+  # An optional argument is the sampling step (default 40: one file in 40, six damages each); a second one is the seed.
   scripts.differential.exec = "bun tools/corpus/differential.ts \"$@\"";
   scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --no-banner --redact --verbose";
   # Sends the code and coverage (coverage/lcov.info, written by `unit`) to SonarQube.

@@ -55,10 +55,13 @@ export function lex(src: string): {
   tokens: Token[];
   errors: LexError[];
   interpolations: Interpolation[];
+  /** Where a path is followed right away by another `/` (`./a//b`), which Nix rejects. */
+  stray: Array<{ line: number; col: number }>;
 } {
   const tokens: Token[] = [];
   const errors: LexError[] = [];
   const interpolations: Interpolation[] = [];
+  const stray: Array<{ line: number; col: number }> = [];
   let nesting = 0;
   let i = 0;
   let line = 1;
@@ -223,12 +226,14 @@ export function lex(src: string): {
         }
         text = whole;
         const isPath = text.startsWith("<") || (text.includes("/") && !text.includes(":"));
-        if (isPath) push({ kind: "path", text });
-        else if (/^[A-Za-z_]/.test(text) && !text.includes(":")) push({ kind: "ident", text });
+        if (isPath) {
+          push({ kind: "path", text });
+          if (text.endsWith("/") && src[i] === "/") stray.push({ line, col });
+        } else if (/^[A-Za-z_]/.test(text) && !text.includes(":")) push({ kind: "ident", text });
         else if (/^[0-9.]/.test(text)) push({ kind: "number", text, float: /[.eE]/.test(text) });
         else push({ kind: "path", text }); // a URI such as `https://example.org`
       }
     }
   }
-  return { tokens, errors, interpolations };
+  return { tokens, errors, interpolations, stray };
 }

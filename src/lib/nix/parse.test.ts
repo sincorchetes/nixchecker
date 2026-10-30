@@ -139,4 +139,13 @@ describe("parse: problems", () => {
     expect(codes("a.''b''")).toEqual(["syntax-unexpected"]);
     expect(codes('a."b"')).toEqual([]);
   });
+
+  test("what Nix rejects around paths, formals and inherit", () => {
+    expect(problems("import ./a//b")[0]).toEqual(["syntax-unexpected", 1, 12, { found: "/" }]);
+    expect(codes("a //b")).toEqual([]);
+    expect(codes("{ a, ..., }: a")).not.toEqual([]);
+    expect(codes("{ a, ... }: a")).toEqual([]);
+    expect(codes("{ inherit (x) a if b; }")).not.toEqual([]);
+    expect(codes('{ inherit a "b"; }')).toEqual([]);
+  });
 });
