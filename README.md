@@ -25,6 +25,9 @@ Limits to know about:
   sources (about 750 for NixOS); the ones that were removed rather than renamed, and the ones
   hidden without a replacement, get a generic warning.
 
+The NixOS and Home Manager catalogs exist per release (26.05, 25.11 and unstable), chosen with the
+version selector; disko and flakes have one catalog each.
+
 Validation runs entirely in the browser: your configuration is never uploaded. The catalogs are
 sharded (`public/catalog/<target>/`): the browser downloads a small index plus only the shards for
 the options your file mentions, typically 20-30 KB gzipped for NixOS instead of the whole catalog
@@ -37,7 +40,8 @@ devenv shell -- catalog   # needs Nix; rewrites public/catalog/
 devenv shell -- catalog --update   # first moves the pinned upstream versions to the latest
 ```
 
-Versions are pinned in `tools/catalog/flake.lock`. CI checks that the committed catalogs are what the
+Versions are pinned in `tools/catalog/flake.lock`; a new release is a new input pair in `flake.nix` plus an entry in
+`src/lib/catalog/versions.ts`. CI checks that the committed catalogs are what the
 pins generate, and a daily canary regenerates them from the latest upstream and runs the tests.
 
 ## Stack

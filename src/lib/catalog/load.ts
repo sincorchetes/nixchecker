@@ -1,6 +1,7 @@
 import { planner, shardFile } from "./shard";
 import { addEntries, emptyTree, type OptionTree } from "./tree";
-import type { CatalogIndex, OptionEntry, OptionRow } from "./types";
+import type { CatalogIndex, OptionEntry, OptionRow, Target } from "./types";
+import { catalogName, type Version } from "./versions";
 
 export interface IndexedOption extends OptionEntry {
   segs: string[];
@@ -42,12 +43,13 @@ async function getJson<T>(fetcher: typeof fetch, url: string): Promise<T> {
  * it; a failed download is not kept, so the next run retries.
  */
 export async function loadCatalog(
-  target: string,
+  target: Target,
+  version: Version,
   base: string,
   paths: string[][],
   fetcher: typeof fetch = fetch,
 ): Promise<Catalog> {
-  const dir = `${base}catalog/${target}/`;
+  const dir = `${base}catalog/${catalogName(target, version)}/`;
   let state = states.get(dir);
   if (!state) {
     const index = getJson<CatalogIndex>(fetcher, `${dir}index.json`);

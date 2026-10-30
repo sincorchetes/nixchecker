@@ -1,4 +1,4 @@
-import { docUrl, type IndexedOption, type OptionTree, type Target } from "./catalog";
+import { docUrl, type IndexedOption, type OptionTree, type Target, type Version } from "./catalog";
 import {
   candidates,
   childrenOf,
@@ -153,7 +153,12 @@ function available(tree: OptionTree, path: string[], known: number, written?: st
 }
 
 /** Checks an analyzed file against the options of `target`. */
-export function check(analysis: Analysis, target: Target, tree: OptionTree): Report {
+export function check(
+  analysis: Analysis,
+  target: Target,
+  tree: OptionTree,
+  version?: Version,
+): Report {
   // An assignment cut short (`gnome.`, `services.openssh`) still gets what the catalog can offer.
   const diagnostics = analysis.syntax.map((d): Diagnostic => {
     if (d.code !== "syntax-incomplete") return d;
@@ -163,7 +168,7 @@ export function check(analysis: Analysis, target: Target, tree: OptionTree): Rep
     return {
       ...d,
       ...(options.length > 0 && { options }),
-      docUrl: docUrl(target, d.params.path),
+      docUrl: docUrl(target, d.params.path, version),
     };
   });
   const reported = new Set<string>();
@@ -180,7 +185,7 @@ export function check(analysis: Analysis, target: Target, tree: OptionTree): Rep
         code: "deprecated",
         ...at,
         params: { path, replacement: entry.renamedTo },
-        docUrl: docUrl(target, entry.renamedTo),
+        docUrl: docUrl(target, entry.renamedTo, version),
       });
     } else if (entry.type === "hidden") {
       diagnostics.push({
@@ -188,7 +193,7 @@ export function check(analysis: Analysis, target: Target, tree: OptionTree): Rep
         code: "hidden-option",
         ...at,
         params: { path },
-        docUrl: docUrl(target, path),
+        docUrl: docUrl(target, path, version),
       });
     }
   };
@@ -209,7 +214,7 @@ export function check(analysis: Analysis, target: Target, tree: OptionTree): Rep
           code: "type-mismatch",
           ...at,
           params: { path, expected, got: a.kind },
-          docUrl: docUrl(target, exact.path),
+          docUrl: docUrl(target, exact.path, version),
         });
       }
       warnIfOutdated(exact, path, at);
@@ -230,7 +235,7 @@ export function check(analysis: Analysis, target: Target, tree: OptionTree): Rep
             code: "type-mismatch",
             ...at,
             params: { path, expected: "attrs", got: a.kind },
-            docUrl: docUrl(target),
+            docUrl: docUrl(target, undefined, version),
           });
         }
         continue;
@@ -247,7 +252,7 @@ export function check(analysis: Analysis, target: Target, tree: OptionTree): Rep
         params: { path },
         ...(suggestion && { suggestion }),
         ...(options.length > 0 && { options }),
-        docUrl: docUrl(target, suggestion ?? path),
+        docUrl: docUrl(target, suggestion ?? path, version),
       });
     }
   }
@@ -261,8 +266,9 @@ export function validate(
   source: string,
   choice: TargetChoice,
   catalogs: Record<Target, OptionTree>,
+  version?: Version,
 ): Report {
   const analysis = analyze(source);
   const target = resolveTarget(analysis, choice);
-  return check(analysis, target, catalogs[target]);
+  return check(analysis, target, catalogs[target], version);
 }

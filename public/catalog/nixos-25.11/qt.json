@@ -1,0 +1,1 @@
+[["qt.enable","bool"],["qt.platformTheme","enum",["gnome","gtk2","kde","lxqt","qt5ct"]],["qt.style","enum",["adwaita","adwaita-dark","adwaita-highcontrast","adwaita-highcontrastinverse","bb10bright","bb10dark","breeze","cde","cleanlooks","gtk2","kvantum","motif","plastique"]]]

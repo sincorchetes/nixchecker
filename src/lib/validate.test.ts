@@ -188,6 +188,13 @@ describe("docUrl", () => {
     ]);
     expect(docUrl("home-manager", "programs.git.enable")).toEndWith("#opt-programs.git.enable");
     expect(docUrl("home-manager", "a.*.b")).toEndWith("#opt-a._name_.b");
+    expect(docUrl("nixos", "services.openssh", "25.11")).toBe(
+      "https://search.nixos.org/options?channel=25.11&query=services.openssh",
+    );
+    expect(
+      validate("{ services.openssh.enabel = true; }", "nixos", fixtures, "26.05").diagnostics[0]
+        ?.docUrl,
+    ).toContain("channel=26.05");
   });
 });
 

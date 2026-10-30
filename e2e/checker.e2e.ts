@@ -116,7 +116,23 @@ describe("checker", () => {
       if (rest) files.push(rest);
     });
     await validate('{ home.stateVersion = "24.11"; }');
-    expect(files).toEqual(["home-manager/index.json", "home-manager/home.json"]);
+    expect(files).toEqual(["home-manager-26.05/index.json", "home-manager-26.05/home.json"]);
+  });
+
+  test("validates against the chosen release", async () => {
+    const src = "{ programs.atuin.enable = true; }";
+    await validate(src);
+    expect(await summary()).toContain("good");
+    // Changing the release re-validates by itself, against another catalog.
+    await page.$eval("#results", (el) => el.replaceChildren());
+    await page.select("#version", "25.11");
+    await page.waitForSelector("#results .summary");
+    expect(await summary()).toContain("bad");
+    expect((await messages())[0]).toContain("programs.atuin.enable");
+    expect(await page.$eval(".diag .docs", (el) => (el as HTMLAnchorElement).href)).toContain(
+      "channel=25.11",
+    );
+    await page.select("#version", "26.05");
   });
 
   test("works in English", async () => {

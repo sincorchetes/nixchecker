@@ -1,5 +1,5 @@
 ---
-import { TARGETS } from "../lib/catalog";
+import { DEFAULT_VERSION, TARGETS, VERSIONS } from "../lib/catalog";
 import { type Lang, messages } from "../lib/i18n";
 import { withBase } from "../lib/site";
 
@@ -37,6 +37,12 @@ const client = Object.fromEntries(
         {TARGETS.map((t) => <option value={t}>{m[`target.${t}`]}</option>)}
       </select>
     </label>
+    <label class="target">
+      <span>{m["checker.version"]}</span>
+      <select id="version" title={m["checker.versionHint"]}>
+        {VERSIONS.map((v) => <option value={v} selected={v === DEFAULT_VERSION}>{v}</option>)}
+      </select>
+    </label>
     <div class="actions">
       <button type="button" class="btn" id="clear">{m["checker.clear"]}</button>
       <button type="button" class="btn" id="example">{m["checker.example"]}</button>
@@ -49,7 +55,7 @@ const client = Object.fromEntries(
 </section>
 
 <script>
-  import { loadCatalog } from "../lib/catalog";
+  import { loadCatalog, type Version } from "../lib/catalog";
   import { EXAMPLE } from "../lib/example";
   import { applyAll, applyFix, wordAt } from "../lib/fix";
   import { format } from "../lib/i18n";
@@ -58,8 +64,9 @@ const client = Object.fromEntries(
   const root = document.querySelector<HTMLElement>("#checker");
   const source = document.querySelector<HTMLTextAreaElement>("#source");
   const target = document.querySelector<HTMLSelectElement>("#target");
+  const version = document.querySelector<HTMLSelectElement>("#version");
   const results = document.querySelector<HTMLElement>("#results");
-  if (root?.dataset.messages && source && target && results) {
+  if (root?.dataset.messages && source && target && version && results) {
     const text = JSON.parse(root.dataset.messages) as Record<string, string>;
     const tr = (key: string, params?: Record<string, string | number>) =>
       format(text[key] ?? key, params);
@@ -101,6 +108,7 @@ const client = Object.fromEntries(
         results.setAttribute("aria-busy", "true");
         catalog = await loadCatalog(
           kind,
+          version.value as Version,
           root.dataset.base ?? "/",
           analysis.assignments.map((a) => a.path),
         );
@@ -112,7 +120,7 @@ const client = Object.fromEntries(
       }
       if (current !== run) return;
 
-      const report = check(analysis, kind, catalog.tree);
+      const report = check(analysis, kind, catalog.tree, version.value as Version);
       const errors = report.diagnostics.filter((d) => d.severity === "error").length;
       const warnings = report.diagnostics.length - errors;
 
@@ -178,6 +186,7 @@ const client = Object.fromEntries(
     // Results describe the text as it was when validated: dim them as soon as it changes.
     source.addEventListener("input", () => results.setAttribute("data-stale", ""));
     target.addEventListener("change", render);
+    version.addEventListener("change", render);
     document.querySelector("#validate")?.addEventListener("click", render);
     document.querySelector("#example")?.addEventListener("click", () => {
       source.value = EXAMPLE;

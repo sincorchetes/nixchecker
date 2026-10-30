@@ -18,6 +18,8 @@ export const en: Record<MessageKey, string> = {
   "checker.label": "Your Nix file",
   "checker.placeholder": "{ config, pkgs, ... }:\n{\n  services.openssh.enable = true;\n}",
   "checker.target": "Target",
+  "checker.version": "Version",
+  "checker.versionHint": "NixOS and Home Manager release to validate against",
   "checker.validate": "Validate",
   "checker.example": "Load example",
   "checker.clear": "Clear",

@@ -18,6 +18,8 @@ export const es = {
   "checker.label": "Tu archivo Nix",
   "checker.placeholder": "{ config, pkgs, ... }:\n{\n  services.openssh.enable = true;\n}",
   "checker.target": "Objetivo",
+  "checker.version": "Versión",
+  "checker.versionHint": "Versión de NixOS y de Home Manager contra la que se valida",
   "checker.validate": "Validar",
   "checker.example": "Cargar ejemplo",
   "checker.clear": "Limpiar",

@@ -1,0 +1,1 @@
+[["sound.enable","hidden"],["sound.enableOSSEmulation","bool","hardware.alsa.enableOSSEmulation"],["sound.extraConfig","str","hardware.alsa.config"],["sound.mediaKeys","hidden"]]

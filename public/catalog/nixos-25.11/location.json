@@ -1,0 +1,1 @@
+[["location.latitude","any"],["location.longitude","any"],["location.provider","enum",["manual","geoclue2"]]]
