@@ -48,6 +48,9 @@ Limits to know about:
   sources (about 750 for NixOS); the ones that were removed rather than renamed, and the ones
   hidden without a replacement, get a generic warning.
 
+`public/catalog/manifest.json` records the revision each catalog was generated from and the hash of
+every file in it; a test checks that the files are the ones it lists.
+
 The NixOS and Home Manager catalogs exist per release (26.05, 25.11 and unstable), chosen with the
 version selector; disko and flakes have one catalog each.
 

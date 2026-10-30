@@ -86,14 +86,34 @@ async function build(attr: string, overlay: Overlay) {
   return convert(options, hidden, { ...overlay, renamed }, shapes);
 }
 
-async function write(name: string, source: string, entries: ReturnType<typeof convert>) {
+// What each catalog was made from and the hash of every file in it, so a copy can be checked.
+const manifest: Record<
+  string,
+  { source: string; revisions: Record<string, string>; files: Record<string, string> }
+> = {};
+const sha256 = (text: string) => new Bun.CryptoHasher("sha256").update(text).digest("hex");
+
+async function write(
+  name: string,
+  source: string,
+  entries: ReturnType<typeof convert>,
+  nodes: string[] = [],
+) {
   const { index, shards } = toShards(source, entries);
   const dir = join(outDir, name);
   await mkdir(dir, { recursive: true });
-  await Bun.write(join(dir, "index.json"), `${JSON.stringify(index)}\n`);
-  for (const [key, rows] of Object.entries(shards)) {
-    await Bun.write(join(dir, shardFile(key)), `${JSON.stringify(rows)}\n`);
-  }
+  const files: Record<string, string> = {};
+  const put = async (file: string, data: unknown) => {
+    const text = `${JSON.stringify(data)}\n`;
+    await Bun.write(join(dir, file), text);
+    files[file] = sha256(text);
+  };
+  await put("index.json", index);
+  for (const [key, rows] of Object.entries(shards)) await put(shardFile(key), rows);
+  const revisions = Object.fromEntries(
+    nodes.map((n) => [n, lock.nodes[n]?.locked?.rev ?? "unknown"]),
+  );
+  manifest[name] = { source, revisions, files: Object.fromEntries(Object.entries(files).sort()) };
   console.log(`${name}: ${entries.length} options in ${index.keys.length} shards (${source})`);
 }
 
@@ -109,12 +129,24 @@ for (const version of VERSIONS) {
     catalogName("nixos", version),
     label(nixosLabel, nixpkgs),
     await build(`nixos-${release}`, overlays.nixos),
+    [nixpkgs],
   );
   await write(
     catalogName("home-manager", version),
     label(hmLabel, homeManager),
     await build(`home-manager-${release}`, overlays["home-manager"]),
+    [homeManager, nixpkgs],
   );
 }
-await write("disko", label("disko", "disko"), await build("disko", overlays.disko));
+await write("disko", label("disko", "disko"), await build("disko", overlays.disko), [
+  "disko",
+  "nixpkgs",
+]);
 await write("flake", "Nix manual · flake format", convert({}, [], overlays.flake));
+
+// The revisions are the pins of tools/catalog/flake.lock, whose own hash is recorded too.
+const lockText = await Bun.file(join(flakeDir, "flake.lock")).text();
+await Bun.write(
+  join(outDir, "manifest.json"),
+  `${JSON.stringify({ lock: sha256(lockText), catalogs: manifest }, null, 1)}\n`,
+);

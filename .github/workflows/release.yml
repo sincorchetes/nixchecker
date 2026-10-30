@@ -25,7 +25,7 @@ jobs:
     permissions:
       contents: write # to create the Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: ./.github/actions/setup-devenv
       - run: devenv shell -- site-build
         env:
@@ -36,7 +36,7 @@ jobs:
           name="nixchecker-site-${GITHUB_REF_NAME//\//-}"
           (cd dist && zip -qr "../$name.zip" .)
           echo "ASSET=$name.zip" >> "$GITHUB_ENV"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-site
           path: ${{ env.ASSET }}
