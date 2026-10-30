@@ -16,7 +16,9 @@ It reports unknown options with "did you mean" suggestions and the options avail
 value types, renamed options, options hidden from the manuals, and names that are not defined.
 
 The parser is checked against every `.nix` file of nixpkgs and Home Manager (about 49,000), all of
-which must parse without a problem: `devenv shell -- corpus`, also run by CI.
+which must parse without a problem: `devenv shell -- corpus`, also run by CI. A second check damages
+sampled files (cuts, a lost character, a stray symbol) and requires our parser and the official
+`nix-instantiate --parse` to agree on whether each one is valid: `devenv shell -- differential`.
 
 Limits to know about:
 
@@ -61,7 +63,7 @@ devenv test             # lint, types, unit tests (100% line coverage gate) and 
 ```
 
 Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `corpus` (the parser against nixpkgs and
-Home Manager), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
+Home Manager), `differential` (the parser against the official one on damaged files), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
 `sonar`.
 
 ## Deployment (GitHub Pages)

@@ -10,8 +10,17 @@ export interface Token {
   endCol: number;
   /** Strings: the text, when it has no `${...}`; undefined otherwise. */
   value?: string;
+  /** Strings: written between two single quotes (`'' ... ''`) instead of double quotes. */
+  indented?: boolean;
   /** Numbers: written with a fraction or exponent. */
   float?: boolean;
+}
+
+/** The source of a `${ ... }` inside a string, and where it starts, so it can be parsed apart. */
+export interface Interpolation {
+  text: string;
+  line: number;
+  col: number;
 }
 
 export interface LexError {
@@ -42,9 +51,15 @@ interface Text {
 const ESCAPES: Record<string, string> = { n: "\n", t: "\t", r: "\r" };
 
 /** Splits Nix source into tokens, dropping whitespace and comments. */
-export function lex(src: string): { tokens: Token[]; errors: LexError[] } {
+export function lex(src: string): {
+  tokens: Token[];
+  errors: LexError[];
+  interpolations: Interpolation[];
+} {
   const tokens: Token[] = [];
   const errors: LexError[] = [];
+  const interpolations: Interpolation[] = [];
+  let nesting = 0;
   let i = 0;
   let line = 1;
   let col = 1;
@@ -74,6 +89,8 @@ export function lex(src: string): { tokens: Token[]; errors: LexError[] } {
   // Skips a `${ ... }`, which may hold nested strings and braces. `i` points at the `$`.
   const skipInterpolation = () => {
     step(2);
+    const inner = { line, col, from: i };
+    nesting++;
     let depth = 1;
     while (i < src.length && depth > 0) {
       if (src[i] === '"') {
@@ -91,6 +108,11 @@ export function lex(src: string): { tokens: Token[]; errors: LexError[] } {
         step();
       }
     }
+    nesting--;
+    // Only the outermost one is kept: parsing it parses whatever is nested in it.
+    if (nesting === 0 && depth === 0) {
+      interpolations.push({ text: src.slice(inner.from, i - 1), line: inner.line, col: inner.col });
+    }
   };
 
   // Both readers assume `i` is at the opening quote(s) and return the text between, or
@@ -104,6 +126,10 @@ export function lex(src: string): { tokens: Token[]; errors: LexError[] } {
         const next = src[i] ?? "";
         if (value !== undefined) value += ESCAPES[next] ?? next;
         step();
+      } else if (src.startsWith("$$", i)) {
+        // `$${` is the text `$${`: the first dollar sign takes the second along.
+        if (value !== undefined) value += "$$";
+        step(2);
       } else if (src.startsWith("${", i)) {
         value = undefined;
         skipInterpolation();
@@ -128,6 +154,10 @@ export function lex(src: string): { tokens: Token[]; errors: LexError[] } {
       } else if (src.startsWith("''", i)) {
         step(2);
         return { value, closed: true };
+      } else if (src.startsWith("$$", i)) {
+        // `$${` is the text `$${`: the first dollar sign takes the second along.
+        if (value !== undefined) value += "$$";
+        step(2);
       } else if (src.startsWith("${", i)) {
         value = undefined;
         skipInterpolation();
@@ -157,7 +187,12 @@ export function lex(src: string): { tokens: Token[]; errors: LexError[] } {
     } else if (ch === '"' || src.startsWith("''", i)) {
       const { value, closed } = ch === '"' ? skipQuoted() : skipIndented();
       if (closed)
-        push({ kind: "string", text: value ?? "", ...(value !== undefined && { value }) });
+        push({
+          kind: "string",
+          text: value ?? "",
+          ...(value !== undefined && { value }),
+          ...(ch !== '"' && { indented: true }),
+        });
       else errors.push({ code: "syntax-unterminated-string", ...at });
     } else {
       // The longest of path, URI, number and identifier wins, as in Nix's own lexer.
@@ -195,5 +230,5 @@ export function lex(src: string): { tokens: Token[]; errors: LexError[] } {
       }
     }
   }
-  return { tokens, errors };
+  return { tokens, errors, interpolations };
 }

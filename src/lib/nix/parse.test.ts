@@ -116,4 +116,27 @@ describe("parse: problems", () => {
     expect(result.lexical).toBe(true);
     expect(result.problems.map((p) => p.code)).toEqual(["syntax-unterminated-string"]);
   });
+
+  test("parses what is inside the interpolations of strings", () => {
+    expect(codes('{ a = "x ${b.c} y"; }')).toEqual([]);
+    expect(codes("{ a = ''$${a b}''; }")).toEqual([]);
+    expect(codes('{ a = "$${a b}"; }')).toEqual([]);
+    expect(problems('{ a = "x ${b..c}"; }')[0]?.slice(1, 3)).toEqual([1, 14]);
+    expect(codes("{ a = ''\n  ${ foo ) }\n''; }")).toEqual(["syntax-unbalanced"]);
+    expect(problems("{ a = ''\n  x\n  ${ y\n   ) }''; }")[0]?.slice(1, 3)).toEqual([4, 4]);
+    expect(codes('{ a = "${ "${b@}" }"; }')).not.toEqual([]);
+  });
+
+  test("an empty interpolation is reported", () => {
+    expect(problems('{ a = "${}"; }')[0]).toEqual(["syntax-unexpected", 1, 10, { found: "}" }]);
+  });
+
+  test("keywords and indented strings are not attribute names", () => {
+    expect(codes("a.in")).toEqual(["syntax-unexpected"]);
+    expect(codes("a ? in")).toEqual(["syntax-unexpected"]);
+    expect(codes("{ if = 1; }")).toEqual(["syntax-unexpected"]);
+    expect(codes("{ a.if = 1; }")).toEqual(["syntax-incomplete"]);
+    expect(codes("a.''b''")).toEqual(["syntax-unexpected"]);
+    expect(codes('a."b"')).toEqual([]);
+  });
 });

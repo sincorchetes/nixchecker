@@ -25,6 +25,9 @@
   # Looks for secrets across the whole git history (gitleaks).
   # Every .nix file in nixpkgs and Home Manager must parse: they are all valid, so a problem is a parser bug.
   scripts.corpus.exec = "bun tools/corpus/run.ts";
+  # Damaged copies of those files: our parser and `nix-instantiate --parse` must agree on each one.
+  # An optional argument is the sampling step (default 40: one file in 40, three damages each).
+  scripts.differential.exec = "bun tools/corpus/differential.ts \"$@\"";
   scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --no-banner --redact --verbose";
   # Sends the code and coverage (coverage/lcov.info, written by `unit`) to SonarQube.
   # Needs SONAR_HOST_URL and SONAR_TOKEN; the project settings are passed here, never committed.

@@ -55,6 +55,8 @@ jobs:
         run: git diff --exit-code --stat -- public/catalog
       - name: The parser accepts every .nix file of nixpkgs and Home Manager
         run: devenv shell -- corpus
+      - name: The parser agrees with the official one on damaged files
+        run: devenv shell -- differential
 
   build:
     name: Build

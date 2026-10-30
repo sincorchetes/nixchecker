@@ -2,7 +2,7 @@ import type { AttrPart, Bind, Expr } from "./ast";
 import type { Problem } from "./cursor";
 import { Bail, CLOSERS, KEYWORDS } from "./cursor";
 import { Expressions } from "./expressions";
-import { lex, type Token } from "./lex";
+import { type Interpolation, lex, type Token } from "./lex";
 
 export type { Problem } from "./cursor";
 
@@ -103,10 +103,10 @@ class Parser extends Expressions {
     const parts: AttrPart[] = [];
     for (;;) {
       const t = this.tok;
-      if (t?.kind === "ident" && !(binding && KEYWORDS.has(t.text) && parts.length === 0)) {
+      if (t?.kind === "ident" && !KEYWORDS.has(t.text)) {
         this.next();
         parts.push({ name: t.text, ...this.at(t) });
-      } else if (t?.kind === "string") {
+      } else if (t?.kind === "string" && !t.indented) {
         this.next();
         parts.push({ ...(t.value !== undefined && { name: t.value }), ...this.at(t) });
       } else if (t && this.isP("${")) {
@@ -143,9 +143,24 @@ const withoutAftershocks = (problems: Problem[]): Problem[] => {
   return rest.length > 0 ? rest : problems;
 };
 
+// The problems inside the `${ ... }` of strings, found by parsing each one as its own expression.
+function interpolationProblems(interpolations: Interpolation[]): Problem[] {
+  return interpolations.flatMap((inner) =>
+    // `${}` holds no expression: the closing brace is what was not expected.
+    (inner.text.trim() === ""
+      ? [{ code: "syntax-unexpected" as const, params: { found: "}" }, line: 1, col: 1 }]
+      : parse(inner.text).problems
+    ).map((p) => ({
+      ...p,
+      line: inner.line + p.line - 1,
+      col: p.line === 1 ? inner.col + p.col - 1 : p.col,
+    })),
+  );
+}
+
 /** Parses Nix source. The tree can be partial when there are problems: broken bindings are left out. */
 export function parse(source: string): { ast?: Expr; problems: Problem[]; lexical: boolean } {
-  const { tokens, errors } = lex(source);
+  const { tokens, errors, interpolations } = lex(source);
   if (tokens.length === 0 && errors.length === 0) return { problems: [], lexical: false };
   const parser = new Parser(tokens);
   const ast = parser.parseProgram();
@@ -153,6 +168,6 @@ export function parse(source: string): { ast?: Expr; problems: Problem[]; lexica
   // A string or comment left open garbles everything after it: report only that.
   const problems: Problem[] = lexical
     ? errors.map((e) => ({ ...e, params: {} }))
-    : withoutAftershocks(parser.problems);
+    : withoutAftershocks([...parser.problems, ...interpolationProblems(interpolations)]);
   return { ...(ast && { ast }), problems, lexical };
 }
