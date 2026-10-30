@@ -15,8 +15,6 @@ const KNOWN = new Set<string>([
   // A string type renamed in its module (`kernelParam`) is only known by its new name, and a type that
   // wraps an unlisted name stays unchecked; building its original name back is not always possible.
   '{ boot.kernelParams = [ "quiet" 5 ]; }',
-  // The values of an attribute set whose elements have a type (`attrsOf`) are not checked yet.
-  '{ home.sessionVariables.EDITOR = [ "vim" ]; }',
   // What a disko `content` holds depends on its `type`; the catalog only knows it is a free-form set.
   '{ disko.devices.disk.main = { type = "disk"; device = "/dev/sda"; content = { type = "gpt"; partitions.root = { size = "100%"; content = { type = "filesystem"; format = "ext4"; mountpoin = "/"; }; }; }; }; }',
 ]);

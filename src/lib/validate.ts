@@ -1,4 +1,4 @@
-import type { Analysis, Diagnostic, Report, SkipCause, Skipped, TargetChoice } from "./analysis";
+import type { Analysis, Diagnostic, Report, Skipped, TargetChoice } from "./analysis";
 import { analyze, resolveTarget } from "./analysis";
 import { docUrl, type IndexedOption, type OptionTree, type Target, type Version } from "./catalog";
 import {
@@ -9,9 +9,9 @@ import {
   knownPrefix,
   siblings,
 } from "./catalog/tree";
-import type { Assignment } from "./nix/scan";
 import { byName } from "./sort";
 import { closest, distance } from "./suggest";
+import { isGroup, ownerReason, skipReason, typeMismatch, valueMismatch } from "./typecheck";
 
 export {
   type Analysis,
@@ -32,62 +32,6 @@ function suggest(tree: OptionTree, path: string[], known: number): string | unde
   const found =
     closest(written, siblings(tree, path, known)) ?? closest(written, candidates(tree, path));
   return found === written ? undefined : found;
-}
-
-/** Why the catalog entry cannot judge this value, if it cannot: dynamic, `any`, or interpolated. */
-function skipReason(entry: IndexedOption, a: Assignment): SkipCause | undefined {
-  if (a.kind === "other") return "dynamic";
-  if (entry.type === "hidden") return "hidden";
-  if (entry.type === "any") return "any";
-  const interpolated = entry.type === "enum" && a.kind === "str" && a.value === undefined;
-  return interpolated ? "interpolated" : undefined;
-}
-
-// A path that is a known group of options (`services.openssh`) rather than an option itself.
-const isGroup = (tree: OptionTree, path: string[]): boolean =>
-  knownPrefix(tree, path) === path.length;
-
-// A list written out in full whose elements are of a kind its option does not take.
-function wrongElements(entry: IndexedOption, a: Assignment): string | undefined {
-  const allowed = entry.values;
-  const wrong = allowed && a.items?.some((kind) => kind !== "other" && !allowed.includes(kind));
-  return wrong ? `list of ${allowed.join(" | ")}` : undefined;
-}
-
-const describeKind = (kind: string): string =>
-  kind.startsWith("enum:")
-    ? `enum(${(JSON.parse(kind.slice(5)) as string[]).join(" | ")})`
-    : kind.replace(":", " of ").replace("+", " or ");
-
-// A value against alternatives: `list:str+int` is a list of strings or integers, `list` any list.
-function mixMismatch(kinds: string[], a: Assignment): string | undefined {
-  const fits = (kind: string) => {
-    if (kind.startsWith("enum:")) {
-      const values = JSON.parse(kind.slice("enum:".length)) as string[];
-      return a.kind === "str" && (a.value === undefined || values.includes(a.value));
-    }
-    if (a.kind !== "list" || !kind.startsWith("list")) return kind === a.kind;
-    const elements = kind.slice("list:".length).split("+");
-    return (
-      kind === "list" ||
-      !a.items ||
-      a.items.every((item) => item === "other" || elements.includes(item))
-    );
-  };
-  return kinds.some(fits) ? undefined : kinds.map(describeKind).join(" | ");
-}
-
-function typeMismatch(entry: IndexedOption, a: Assignment): string | undefined {
-  const { type } = entry;
-  if (a.kind === "other" || type === "any" || type === "hidden") return undefined;
-  if (type === "enum") {
-    const ok = a.kind === "str" && (a.value === undefined || entry.values?.includes(a.value));
-    return ok ? undefined : `enum(${entry.values?.join(" | ")})`;
-  }
-  if (type === "mix") return mixMismatch(entry.values ?? [], a);
-  if (type === "list" && a.kind === "list") return wrongElements(entry, a);
-  const expected = type === "set" ? "attrs" : type;
-  return expected === a.kind ? undefined : expected;
 }
 
 // The options the catalog offers after the first `known` segments, nearest to `written` first.
@@ -157,7 +101,7 @@ export function check(
     // Read but not verified: a dynamic value, an opaque option, or a place with no structure.
     const cause = exact
       ? skipReason(exact, a)
-      : (owner && (owner.type === "hidden" ? "hidden" : "free-form")) ||
+      : (owner && ownerReason(owner, a)) ||
         (a.kind === "other" && isGroup(tree, a.path) ? "dynamic" : undefined);
     if (cause) skipped.push({ cause, path, line: a.line, col: a.col });
 
@@ -174,7 +118,18 @@ export function check(
       }
       warnIfOutdated(exact, path, at);
     } else if (owner) {
-      // Nothing below can be checked, but an outdated owner is worth saying once.
+      // What an `attrsOf` holds can be checked one level down, though the option has no entry there.
+      const expected = valueMismatch(owner, a);
+      if (expected) {
+        diagnostics.push({
+          severity: "error",
+          code: "type-mismatch",
+          ...at,
+          params: { path, expected, got: a.kind },
+          docUrl: docUrl(target, owner.path, version),
+        });
+      }
+      // Nothing deeper can be checked, but an outdated owner is worth saying once.
       const ownerPath = a.path.slice(0, owner.segs.length).join(".");
       if (!reported.has(ownerPath)) {
         reported.add(ownerPath);

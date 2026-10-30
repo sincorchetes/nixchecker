@@ -1,5 +1,5 @@
 import { byName } from "../sort";
-import { fromShape, type Shape } from "./shape";
+import { elementsOf, fromShape, type Shape } from "./shape";
 import type { OptionEntry, OptionRow, OptionType } from "./types";
 
 /** An option as rendered in `options.json` by `nixosOptionsDoc`. */
@@ -92,7 +92,10 @@ export function convert(
     const shape = shapes[name];
     const mapped = (shape && fromShape(shape)) || mapType(option.type);
     if (mapped.type === "container") containers.add(path);
-    const { type, values } = mapped;
+    // What the values of an `attrsOf` may be, to check what is written below the option.
+    const elements = shape && elementsOf(shape);
+    const free = mapped.type === "container" || mapped.type === "attrs";
+    const { type, values } = free && elements ? { ...mapped, values: elements } : mapped;
     entries.set(path, {
       path,
       type: type === "container" ? "attrs" : type,
@@ -130,7 +133,14 @@ export function convert(
   }
   for (const path of containers) {
     const entry = entries.get(path) as OptionEntry;
-    if (parents.has(path)) entries.set(path, { ...entry, type: "set" });
+    // A strict set lists what it holds: the kinds of values of its keys do not apply.
+    if (parents.has(path)) {
+      entries.set(path, {
+        path,
+        type: "set",
+        ...(entry.renamedTo && { renamedTo: entry.renamedTo }),
+      });
+    }
   }
   return [...entries.values()].sort((a, b) => byName(a.path, b.path));
 }

@@ -63,7 +63,12 @@ export function findExact(at: OptionTree, path: string[], i = 0): IndexedOption 
 export function findOwner(at: OptionTree, path: string[], i = 0): IndexedOption | undefined {
   if (i >= path.length) return undefined;
   const { entry } = at;
-  if (entry && (entry.type === "attrs" || entry.type === "any" || entry.type === "hidden")) {
+  // A `mix` that may be an attribute set takes any key as well.
+  const open = entry?.type === "mix" && entry.values?.includes("attrs");
+  if (
+    entry &&
+    (open || entry.type === "attrs" || entry.type === "any" || entry.type === "hidden")
+  ) {
     return entry;
   }
   for (const next of step(at, path[i] as string)) {

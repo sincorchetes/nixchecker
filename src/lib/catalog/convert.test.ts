@@ -111,6 +111,26 @@ describe("convert", () => {
   });
 });
 
+describe("convert attribute sets of something", () => {
+  test("a free-form one keeps the kinds of its values, a strict one does not", () => {
+    const options = {
+      "env.vars": { type: "attribute set of string" },
+      "env.free": { type: "open submodule of (JSON value)" },
+      "users.<name>": { type: "attribute set of (submodule)" },
+      "users.<name>.shell": { type: "string" },
+    };
+    const shapes = {
+      "env.vars": [["m", "s"]],
+      "env.free": [["m", "s"]],
+      "users.<name>": [["m", "a"]],
+    } as never;
+    const byPath = Object.fromEntries(convert(options, [], {}, shapes).map((e) => [e.path, e]));
+    expect(byPath["env.vars"]).toMatchObject({ type: "attrs", values: ["str"] });
+    expect(byPath["env.free"]).toMatchObject({ type: "attrs", values: ["str"] });
+    expect(byPath["users.*"]).toEqual({ path: "users.*", type: "set" });
+  });
+});
+
 describe("convert names", () => {
   test("a name the manuals quoted is written plainly", () => {
     const entries = convert({ 'a."passdb pam".<name>.b': { type: "string" } });

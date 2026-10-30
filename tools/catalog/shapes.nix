@@ -2,7 +2,9 @@
 # sentences of the manuals. The shape of a type is a list of alternatives, one of which a value must be:
 #   "b" "i" "s" "a"        a bool, an integer, a string, an attribute set
 #   [ "l" <alt>... ]       a list whose elements are one of the alternatives
+#   [ "m" <alt>... ]       an attribute set whose values are one of the alternatives (`attrsOf`)
 #   [ "e" "x" "y" ]        one of these strings
+#   "f"                    a float (no value we read is one, so it never tells anything)
 #   "?"                    something that cannot be told apart (a float, a package, anything...)
 { lib }:
 let
@@ -22,6 +24,17 @@ let
       "positiveInt"
     ] then
       [ "i" ]
+    else if named "float" then
+      [ "f" ]
+    else if lib.any named [
+      "numberBetween"
+      "numberNonnegative"
+      "numberPositive"
+    ] then
+      [
+        "i"
+        "f"
+      ]
     else if lib.any named [
       "str"
       "nonEmptyStr"
@@ -57,6 +70,8 @@ let
       walk (depth + 1) nested.finalType ++ walk (depth + 1) nested.coercedType
     else if t.name == "listOf" || t.name == "nonEmptyListOf" then
       [ ([ "l" ] ++ walk (depth + 1) nested.elemType) ]
+    else if t.name == "attrsOf" || t.name == "lazyAttrsOf" then
+      [ ([ "m" ] ++ walk (depth + 1) nested.elemType) ]
     else if t.name == "enum" && lib.all lib.isString values then
       [ ([ "e" ] ++ values) ]
     else if t.name == "enum" && lib.all lib.isInt values then

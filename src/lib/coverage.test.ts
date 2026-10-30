@@ -33,4 +33,10 @@ describe("coverage", () => {
     expect(causes('{ disko.devices.disk.main.content.type = "${x}"; }')).toEqual(["interpolated"]);
     expect(causes('{ disko.devices.disk.main.content.extra = "y"; }')).toEqual(["free-form"]);
   });
+
+  test("a key of an attribute set of something is read, one level down", () => {
+    const causes = (src: string) => run(src).coverage.skipped.map((s) => s.cause);
+    expect(causes('{ env.vars.A = "x"; }')).toEqual([]);
+    expect(causes("{ env.vars.A.b = 1; }")).toEqual(["free-form"]);
+  });
 });

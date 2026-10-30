@@ -48,4 +48,18 @@ describe("value types", () => {
     expect(codes("{ mixed.value = 5; }")).toEqual([]);
     expect(codes("{ mixed.value = [ ]; }")).toEqual(["type-mismatch"]);
   });
+
+  test("a type that may be an attribute set takes any key below it", () => {
+    expect(codes('{ mixed.free = "a"; mixed.free.k = 1; }')).toEqual([]);
+    expect(codes("{ mixed.free = [ ]; }")).toEqual(["type-mismatch"]);
+  });
+
+  test("the values of an attribute set of something are checked one level down", () => {
+    expect(codes('{ env.vars.A = "x"; env.vars.B = 5; }')).toEqual([]);
+    expect(codes("{ env.vars.A = [ ]; }")).toEqual(["type-mismatch"]);
+    expect(codes("{ env.vars = { A = true; B = 1; }; }")).toEqual(["type-mismatch"]);
+    expect(codes("{ x, ... }: { env.vars.A = x; }")).toEqual([]);
+    // Deeper than the values themselves there is nothing to read.
+    expect(codes("{ env.vars.A.b = [ ]; }")).toEqual([]);
+  });
 });

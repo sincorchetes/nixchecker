@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { fromShape } from "./shape";
+import { elementsOf, fromShape } from "./shape";
 
 describe("fromShape", () => {
   test("single scalars and attribute sets", () => {
@@ -56,5 +56,30 @@ describe("fromShape", () => {
     expect(fromShape(["b", "i", "?", "s", "a"])).toEqual({ type: "any" });
     // Alone, it is for the manuals to describe.
     expect(fromShape(["?"])).toBeUndefined();
+  });
+
+  test("reads the values of an attribute set of something", () => {
+    expect(elementsOf([["m", "s", "i"]])).toEqual(["str", "int"]);
+    expect(elementsOf([["m", ["l", "s"], ["e", "a"], ["m", "s"]]])).toEqual([
+      "list:str",
+      'enum:["a"]',
+      "attrs",
+    ]);
+    expect(elementsOf([["m", "?"]])).toBeUndefined();
+    expect(elementsOf(["s"])).toBeUndefined();
+    expect(elementsOf(["s", ["m", "s"]])).toBeUndefined();
+    // As a list element, or on its own, it is an attribute set.
+    expect(fromShape([["l", ["m", "s"]]])).toEqual({ type: "list", values: ["attrs"] });
+    expect(fromShape([["m", "s"]])).toBeUndefined();
+    expect(fromShape(["s", ["m", "s"]])).toEqual({ type: "mix", values: ["str", "attrs"] });
+  });
+
+  test("a float adds nothing, as no float is ever read as a value", () => {
+    expect(fromShape(["i", "f"])).toEqual({ type: "int" });
+    expect(fromShape(["f"])).toBeUndefined();
+    expect(fromShape([["l", "f", "s"]])).toEqual({ type: "list", values: ["str"] });
+    expect(fromShape([["l", "f"]])).toEqual({ type: "list" });
+    expect(elementsOf([["m", "s", "f"]])).toEqual(["str"]);
+    expect(elementsOf([["m", "f"]])).toBeUndefined();
   });
 });
