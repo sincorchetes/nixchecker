@@ -44,7 +44,7 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
       <a class="brand" href={path(lang)}>nix<span>checker</span></a>
       <nav>
         <a href="https://github.com/sincorchetes/nixchecker" rel="noopener">{m["nav.source"]}</a>
-        <a class="pill" href={path(other)} hreflang={other} lang={other} aria-label={m["nav.languageLabel"]}>
+        <a class="pill" href={path(other)} hreflang={other} lang={other} title={m["nav.languageLabel"]}>
           {m["nav.language"]}
         </a>
       </nav>
