@@ -15,6 +15,8 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("networking.firewall.enable", "bool"),
     opt("networking.firewall.allowedTCPPorts", "list", { values: ["int"] }),
     opt("mixed.value", "mix", { values: ["int", "str"] }),
+    opt("mixed.text", "mix", { values: ["str", "list:str"] }),
+    opt("mixed.jobs", "mix", { values: ["int", 'enum:["auto"]'] }),
     opt("services.openssh.enable", "bool"),
     opt("services.openssh.ports", "list"),
     opt("services.openssh.settings", "attrs"),

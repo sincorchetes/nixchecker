@@ -54,6 +54,29 @@ function wrongElements(entry: IndexedOption, a: Assignment): string | undefined 
   return wrong ? `list of ${allowed.join(" | ")}` : undefined;
 }
 
+const describeKind = (kind: string): string =>
+  kind.startsWith("enum:")
+    ? `enum(${(JSON.parse(kind.slice(5)) as string[]).join(" | ")})`
+    : kind.replace(":", " of ").replace("+", " or ");
+
+// A value against alternatives: `list:str+int` is a list of strings or integers, `list` any list.
+function mixMismatch(kinds: string[], a: Assignment): string | undefined {
+  const fits = (kind: string) => {
+    if (kind.startsWith("enum:")) {
+      const values = JSON.parse(kind.slice("enum:".length)) as string[];
+      return a.kind === "str" && (a.value === undefined || values.includes(a.value));
+    }
+    if (a.kind !== "list" || !kind.startsWith("list")) return kind === a.kind;
+    const elements = kind.slice("list:".length).split("+");
+    return (
+      kind === "list" ||
+      !a.items ||
+      a.items.every((item) => item === "other" || elements.includes(item))
+    );
+  };
+  return kinds.some(fits) ? undefined : kinds.map(describeKind).join(" | ");
+}
+
 function typeMismatch(entry: IndexedOption, a: Assignment): string | undefined {
   const { type } = entry;
   if (a.kind === "other" || type === "any" || type === "hidden") return undefined;
@@ -61,10 +84,7 @@ function typeMismatch(entry: IndexedOption, a: Assignment): string | undefined {
     const ok = a.kind === "str" && (a.value === undefined || entry.values?.includes(a.value));
     return ok ? undefined : `enum(${entry.values?.join(" | ")})`;
   }
-  if (type === "mix") {
-    const kinds = entry.values ?? [];
-    return kinds.includes(a.kind) ? undefined : kinds.join(" | ");
-  }
+  if (type === "mix") return mixMismatch(entry.values ?? [], a);
   if (type === "list" && a.kind === "list") return wrongElements(entry, a);
   const expected = type === "set" ? "attrs" : type;
   return expected === a.kind ? undefined : expected;

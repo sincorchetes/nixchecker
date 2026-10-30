@@ -64,7 +64,7 @@ devenv test             # lint, types, unit tests (100% line coverage gate) and 
 
 Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `corpus` (the parser against nixpkgs and
 Home Manager), `differential` (the parser against the official one on damaged files), `oracle` (the validator against
-the real NixOS module system), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
+the real NixOS module system, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
 `sonar`.
 
 ## Deployment (GitHub Pages)

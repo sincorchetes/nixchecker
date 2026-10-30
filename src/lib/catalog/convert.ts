@@ -1,4 +1,5 @@
 import { byName } from "../sort";
+import { fromShape, type Shape } from "./shape";
 import type { OptionEntry, OptionRow, OptionType } from "./types";
 
 /** An option as rendered in `options.json` by `nixosOptionsDoc`. */
@@ -17,35 +18,6 @@ export interface Overlay {
 interface Mapped {
   type: OptionType | "container";
   values?: string[];
-}
-
-// The kinds of value a catalog can tell apart.
-const KINDS = new Set(["bool", "int", "str", "list", "attrs"]);
-
-// The kinds an alternative or an element can be, when the description gives them away.
-function kindsOf(description: string): string[] | undefined {
-  // `value "auto" (singular enum)`: one fixed string.
-  if (/^value ".*" \(singular enum\)$/.test(description)) return ["str"];
-  const { type, values } = mapType(description);
-  if (type === "container") return ["attrs"];
-  if (type === "mix") return values;
-  return KINDS.has(type) ? [type] : undefined;
-}
-
-// Splits "A or B or (C or D)" at the top level.
-function alternatives(s: string): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let from = 0;
-  for (let i = 0; i < s.length; i++) {
-    if (s[i] === "(") depth++;
-    else if (s[i] === ")") depth--;
-    else if (depth === 0 && s.startsWith(" or ", i)) {
-      parts.push(s.slice(from, i));
-      from = i + 4;
-    }
-  }
-  return [...parts, s.slice(from)];
 }
 
 // Text of `s` outside any parentheses.
@@ -79,19 +51,11 @@ export function mapType(description: string): Mapped {
     if (values.every((v) => v === "true" || v === "false")) return { type: "bool" };
     return { type: "enum", values };
   }
-  // "A or B": a value must be one of them; with an alternative we cannot read, nothing is checked.
-  if (flat.includes(" or ")) {
-    const kinds = alternatives(text).map((alt) => kindsOf(unwrap(alt.trim())));
-    return kinds.every(Boolean)
-      ? { type: "mix", values: [...new Set(kinds.flat() as string[])] }
-      : { type: "any" };
-  }
+  // "A or B": the manuals cannot tell which one a given value must be, so do not guess.
+  if (flat.includes(" or ")) return { type: "any" };
   if (flat === "boolean") return { type: "bool" };
   // Containers and lists come first: "list of integer" must not read as an integer.
-  if (/^(non-empty )?list of/.test(flat)) {
-    const elements = kindsOf(unwrap(text.replace(/^(non-empty )?list of /, "").trim()));
-    return { type: "list", ...(elements && { values: elements }) };
-  }
+  if (/^(non-empty )?list of/.test(flat)) return { type: "list" };
   // An open submodule takes any key, wherever the text mentions it ("DAG of open submodule of ...").
   if (/open submodule/.test(text)) return { type: "attrs" };
   if (
@@ -105,7 +69,8 @@ export function mapType(description: string): Mapped {
 }
 
 // `<[^<>]+>` and not `<[^>]+>`: a stray `<` must not make the match rescan the rest of the name.
-const normalize = (name: string) => name.replace(/<[^<>]+>/g, "*");
+// Names the manuals had to quote (`":pleroma"`) are written plainly, as the parser reads them.
+const normalize = (name: string) => name.replace(/<[^<>]+>/g, "*").replace(/"([^".]*)"/g, "$1");
 
 /**
  * Builds catalog entries from the manuals' `options.json`, the names of hidden options and
@@ -116,19 +81,18 @@ export function convert(
   options: Record<string, RawOption>,
   hidden: string[] = [],
   overlay: Overlay = {},
-  coerced: string[] = [],
+  shapes: Record<string, Shape> = {},
 ): OptionEntry[] {
-  const converting = new Set(coerced.map(normalize));
   const entries = new Map<string, OptionEntry>();
   const containers = new Set<string>();
 
   for (const [name, option] of Object.entries(options)) {
     const path = normalize(name);
-    const mapped = mapType(option.type);
+    // The real type from Nix when it tells something; the sentence of the manuals otherwise.
+    const shape = shapes[name];
+    const mapped = (shape && fromShape(shape)) || mapType(option.type);
     if (mapped.type === "container") containers.add(path);
-    // An option that converts what it is given takes more than its documented type says.
-    const { type, values } =
-      converting.has(path) && mapped.type !== "container" ? { type: "any" as const } : mapped;
+    const { type, values } = mapped;
     entries.set(path, {
       path,
       type: type === "container" ? "attrs" : type,

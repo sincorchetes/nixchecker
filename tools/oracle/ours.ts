@@ -14,7 +14,7 @@ export interface Ours extends Verdict {
 
 export async function judgeOurs(source: string): Promise<Ours> {
   const analysis = analyze(source);
-  const paths = analysis.assignments.filter((a) => a.kind !== "attrs").map((a) => a.path);
+  const paths = analysis.assignments.map((a) => a.path);
   const catalog = await loadCatalog(
     "nixos",
     "unstable",

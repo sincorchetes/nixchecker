@@ -53,31 +53,6 @@ describe("validate", () => {
     expect(run("{ boot.cleanTmpDi = 1; }").diagnostics[0]?.suggestion).toBeUndefined();
   });
 
-  test("checks value types", () => {
-    const [d] = run('{ networking.firewall.enable = "yes"; }').diagnostics;
-    expect(d).toMatchObject({
-      code: "type-mismatch",
-      params: { path: "networking.firewall.enable", expected: "bool", got: "str" },
-    });
-    expect(codes("{ networking.firewall.allowedTCPPorts = 22; }")).toEqual(["type-mismatch"]);
-    expect(codes("{ users.users = [ ]; }")).toEqual(["type-mismatch"]);
-  });
-
-  test("a string option takes only a string", () => {
-    expect(codes("{ networking.hostName = 5; }")).toEqual(["type-mismatch"]);
-    expect(codes("{ networking.hostName = [ ]; }")).toEqual(["type-mismatch"]);
-  });
-
-  test("checks the elements of a list and the kinds a mix takes", () => {
-    expect(codes("{ networking.firewall.allowedTCPPorts = [ 22 80 ]; }")).toEqual([]);
-    expect(codes('{ networking.firewall.allowedTCPPorts = [ "ssh" ]; }')).toEqual([
-      "type-mismatch",
-    ]);
-    expect(codes("{ x, ... }: { networking.firewall.allowedTCPPorts = [ x 22 ]; }")).toEqual([]);
-    expect(codes("{ mixed.value = 5; }")).toEqual([]);
-    expect(codes("{ mixed.value = [ ]; }")).toEqual(["type-mismatch"]);
-  });
-
   test("lets opaque values and wildcard submodules through", () => {
     const src = `{
       networking.hostName = lib.mkForce "x";

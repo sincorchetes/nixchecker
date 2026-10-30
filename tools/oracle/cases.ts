@@ -72,7 +72,15 @@ export const CASES: string[] = [
   '{ nix.settings.trusted-users = [ "root" ]; }',
   '{ nix.settings.trusted-users = "root"; }',
   '{ systemd.services.demo.wantedBy = "multi-user.target"; }',
+  '{ systemd.services.demo.startAt = "daily"; }',
+  '{ systemd.services.demo.startAt = [ "daily" "weekly" ]; }',
+  "{ systemd.services.demo.startAt = [ 1 ]; }",
+  "{ systemd.services.demo.startAt = 5; }",
+  "{ systemd.services.demo.startAt = true; }",
+  '{ nix.settings.max-jobs = "many"; }',
+  "{ nix.settings.max-jobs = true; }",
   // values we cannot judge
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: this is Nix interpolation
   '{ config, ... }: { networking.hostName = "a${toString 1}"; }',
   "{ pkgs, ... }: { services.openssh.enable = pkgs.stdenv.isLinux; }",
   '{ lib, ... }: { services.openssh.enable = lib.mkForce "no"; }',

@@ -80,10 +80,10 @@ async function build(attr: string, overlay: Overlay) {
   if ((await proc.exited) !== 0) throw new Error(`nix build ${attr} failed`);
   const options = await Bun.file(join(out, "options.json")).json();
   const hidden = await Bun.file(join(out, "hidden.json")).json();
-  const coerced = await Bun.file(join(out, "coerced.json")).json();
+  const shapes = await Bun.file(join(out, "shapes.json")).json();
   // What was written by hand wins over what was read from the sources.
   const renamed = { ...(await renamesIn(join(out, "src"))), ...overlay.renamed };
-  return convert(options, hidden, { ...overlay, renamed }, coerced);
+  return convert(options, hidden, { ...overlay, renamed }, shapes);
 }
 
 async function write(name: string, source: string, entries: ReturnType<typeof convert>) {
