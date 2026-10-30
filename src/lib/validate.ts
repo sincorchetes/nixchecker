@@ -33,6 +33,17 @@ function suggest(tree: OptionTree, path: string[], known: number): string | unde
   return found === written ? undefined : found;
 }
 
+/** Whether the catalog entry can say anything about this value: not a dynamic one, not `any`. */
+const verifies = (entry: IndexedOption, a: Assignment): boolean =>
+  a.kind !== "other" &&
+  entry.type !== "any" &&
+  entry.type !== "hidden" &&
+  !(entry.type === "enum" && a.value === undefined);
+
+// A path that is a known group of options (`services.openssh`) rather than an option itself.
+const isGroup = (tree: OptionTree, path: string[]): boolean =>
+  knownPrefix(tree, path) === path.length;
+
 function typeMismatch(entry: IndexedOption, a: Assignment): string | undefined {
   const { type } = entry;
   if (a.kind === "other" || type === "any" || type === "hidden") return undefined;
@@ -111,7 +122,9 @@ export function check(
     // type, or an alias whose children are unknown).
     const owner = findOwner(tree, a.path);
     // Dynamic values and free-form places are read but not verified.
-    if (owner || (exact && a.kind === "other")) unchecked++;
+    if (exact ? !verifies(exact, a) : owner || (a.kind === "other" && isGroup(tree, a.path))) {
+      unchecked++;
+    }
 
     if (exact) {
       const expected = typeMismatch(exact, a);

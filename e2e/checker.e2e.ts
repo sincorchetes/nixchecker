@@ -64,6 +64,12 @@ describe("checker", () => {
     expect(await summary()).toContain("good");
   });
 
+  test("shows how many assignments could be checked", async () => {
+    await validate("{ x, ... }: { networking.hostName = x; networking.useDHCP = true; }");
+    const detected = await page.$eval(".detected", (el) => el.textContent ?? "");
+    expect(detected).toMatch(/1 de 2 asignaciones comprobadas/);
+  });
+
   test("does not validate while typing, and dims stale results", async () => {
     await page.type("#source", " ");
     expect(await page.$eval("#results", (el) => el.hasAttribute("data-stale"))).toBe(true);

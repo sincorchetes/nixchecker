@@ -18,12 +18,17 @@ const codes = (src: string, choice?: TargetChoice) =>
   run(src, choice).diagnostics.map((d) => d.code);
 
 describe("validate", () => {
-  test("counts the assignments it could not check", () => {
-    const { coverage } = run(
-      "{ x }: { networking.hostName = x; networking.useDHCP = true; foo.bar = 1; }",
-    );
-    expect(coverage.total).toBe(3);
-    expect(coverage.unchecked).toBe(1);
+  test("counts only what the catalog could not verify", () => {
+    const unchecked = (src: string) => run(src).coverage.unchecked;
+    expect(
+      unchecked("{ x }: { networking.hostName = x; networking.useDHCP = true; foo.bar = 1; }"),
+    ).toBe(1);
+    expect(unchecked("{ services.openssh = lib.mkIf x { enable = true; }; }")).toBe(1);
+    expect(unchecked("{ outputs = {}; }")).toBe(1);
+    const disko = (type: string) => `{ disko.devices.disk.main.content.type = ${type}; }`;
+    expect(unchecked(disko('"gpt"'))).toBe(0);
+    expect(unchecked(disko('"nope"'))).toBe(0);
+    expect(unchecked(disko('"${x}"'))).toBe(1);
   });
 
   test("accepts a correct NixOS module", () => {
