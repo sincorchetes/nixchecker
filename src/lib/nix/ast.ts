@@ -30,7 +30,7 @@ export type Expr = Pos &
     | { t: "select"; base: Expr; path: AttrPart[]; fallback?: Expr }
     | { t: "unary"; op: "!" | "-"; arg: Expr }
     | { t: "binary"; op: string; left: Expr; right: Expr }
-    | { t: "if"; cond: Expr; then: Expr; else: Expr }
+    | { t: "if"; cond: Expr; consequent: Expr; alternate: Expr }
     | { t: "with"; env: Expr; body: Expr }
     | { t: "assert"; cond: Expr; body: Expr }
     | { t: "paren"; inner: Expr }

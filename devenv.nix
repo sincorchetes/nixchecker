@@ -28,13 +28,18 @@
   scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --no-banner --redact --verbose";
   # Sends the code and coverage (coverage/lcov.info, written by `unit`) to SonarQube.
   # Needs SONAR_HOST_URL and SONAR_TOKEN; the project settings are passed here, never committed.
+  # Coverage is measured on src/lib; the interface and the tools are exercised by `e2e` and `corpus`.
+  # The two message dictionaries repeat the same keys by design, so they are left out of duplication.
   scripts.sonar.exec = ''
     ${pkgs.sonar-scanner-cli}/bin/sonar-scanner \
       -Dsonar.projectKey=nixchecker \
       -Dsonar.sources=src,tools \
       -Dsonar.tests=e2e \
       -Dsonar.exclusions='**/*.test.ts,public/catalog/**' \
-      -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+      -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+      -Dsonar.coverage.exclusions='src/components/**,src/pages/**,src/layouts/**,tools/**' \
+      -Dsonar.cpd.exclusions='src/lib/i18n/**' \
+      "$@"
   '';
 
   enterTest = ''

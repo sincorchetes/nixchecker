@@ -45,9 +45,9 @@ export abstract class Expressions extends Cursor {
         this.next();
         const cond = this.expr();
         this.expectK("then");
-        const then = this.expr();
+        const consequent = this.expr();
         this.expectK("else");
-        return { t: "if", cond, then, else: this.expr(), ...pos };
+        return { t: "if", cond, consequent, alternate: this.expr(), ...pos };
       }
       if (!KEYWORDS.has(t.text) && (this.isP(":", this.peek()) || this.isP("@", this.peek()))) {
         return this.lambda(pos);

@@ -1,3 +1,4 @@
+import { byName } from "../sort";
 import { closest } from "../suggest";
 import { toRow } from "./convert";
 import type { CatalogIndex, OptionEntry, OptionRow } from "./types";
@@ -55,9 +56,9 @@ export function toShards(
         add(`${root}~${bucketOf(segs[1] as string, buckets)}`, entry);
       }
     }
-    split[root] = { names: [...names].sort(), buckets };
+    split[root] = { names: [...names].sort(byName), buckets };
   }
-  return { index: { source, keys: Object.keys(shards).sort(), split }, shards };
+  return { index: { source, keys: Object.keys(shards).sort(byName), split }, shards };
 }
 
 /**

@@ -62,19 +62,21 @@ if (root?.dataset.messages && source && target && version && results && gutter &
     const report = bestReport(reports);
     const catalog = catalogs[kinds.indexOf(report.target)] as (typeof catalogs)[number];
     editor.mark(report.diagnostics);
-    showReport({ source, results, tr, rerun: render }, report, catalog.source);
+    showReport({ source, results, tr, rerun: validate }, report, catalog.source);
   };
 
-  target.addEventListener("change", render);
-  version.addEventListener("change", render);
-  query("#validate")?.addEventListener("click", render);
+  // `void`: the handlers start a validation and have nothing to wait for.
+  const validate = () => void render();
+  target.addEventListener("change", validate);
+  version.addEventListener("change", validate);
+  query("#validate")?.addEventListener("click", validate);
   query("#example")?.addEventListener("click", () => {
     source.value = EXAMPLE;
-    render();
+    validate();
   });
   query("#clear")?.addEventListener("click", () => {
     source.value = "";
-    render();
+    validate();
   });
-  render();
+  validate();
 }

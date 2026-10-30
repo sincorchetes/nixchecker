@@ -141,8 +141,8 @@ export function findMistakes(ast: Expr): Mistake[] {
         return;
       case "if":
         walk(e.cond, env);
-        walk(e.then, env);
-        walk(e.else, env);
+        walk(e.consequent, env);
+        walk(e.alternate, env);
         return;
       case "with":
         walk(e.env, env);

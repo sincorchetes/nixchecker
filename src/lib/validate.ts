@@ -10,6 +10,7 @@ import {
   siblings,
 } from "./catalog/tree";
 import type { Assignment } from "./nix/scan";
+import { byName } from "./sort";
 import { closest, distance } from "./suggest";
 
 export {
@@ -50,7 +51,7 @@ const OPTIONS_SHOWN = 8;
 function available(tree: OptionTree, path: string[], known: number, written?: string): string[] {
   const names = childrenOf(tree, path.slice(0, known));
   const ranked = written
-    ? [...names].sort((a, b) => distance(written, a) - distance(written, b) || (a < b ? -1 : 1))
+    ? [...names].sort((a, b) => distance(written, a) - distance(written, b) || byName(a, b))
     : names;
   return ranked.slice(0, OPTIONS_SHOWN);
 }
@@ -181,5 +182,8 @@ const errorsIn = (report: Report) =>
 
 /** Of the reports for each candidate target, the one with the fewest errors (the first on a tie). */
 export function bestReport(reports: Report[]): Report {
-  return reports.reduce((best, next) => (errorsIn(next) < errorsIn(best) ? next : best));
+  return reports.reduce(
+    (best, next) => (errorsIn(next) < errorsIn(best) ? next : best),
+    reports[0] as Report,
+  );
 }

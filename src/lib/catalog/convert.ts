@@ -1,3 +1,4 @@
+import { byName } from "../sort";
 import type { OptionEntry, OptionRow, OptionType } from "./types";
 
 /** An option as rendered in `options.json` by `nixosOptionsDoc`. */
@@ -66,7 +67,8 @@ export function mapType(description: string): Mapped {
   return { type: "any" };
 }
 
-const normalize = (name: string) => name.replace(/<[^>]+>/g, "*");
+// `<[^<>]+>` and not `<[^>]+>`: a stray `<` must not make the match rescan the rest of the name.
+const normalize = (name: string) => name.replace(/<[^<>]+>/g, "*");
 
 /**
  * Builds catalog entries from the manuals' `options.json`, the names of hidden options and
@@ -124,7 +126,7 @@ export function convert(
     const entry = entries.get(path) as OptionEntry;
     if (parents.has(path)) entries.set(path, { ...entry, type: "set" });
   }
-  return [...entries.values()].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  return [...entries.values()].sort((a, b) => byName(a.path, b.path));
 }
 
 /** Serializes an entry into the compact row format. */

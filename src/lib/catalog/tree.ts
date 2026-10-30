@@ -1,3 +1,4 @@
+import { byName } from "../sort";
 import type { IndexedOption } from "./load";
 
 /** One path segment of the option tree; `*` children stand for any attribute name. */
@@ -132,7 +133,7 @@ export function childrenOf(at: OptionTree, path: string[]): string[] {
     if (node.partial) continue;
     for (const [name, kid] of node.kids) if (name !== "*" && kid.visible) names.add(name);
   }
-  return [...names].sort();
+  return [...names].sort(byName);
 }
 
 /**
