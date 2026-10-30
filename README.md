@@ -59,7 +59,10 @@ built site, needs Chrome), `secrets` (gitleaks) and `sonar`.
 ## Deployment (Railway)
 
 Railway builds the `Dockerfile` and runs `server/serve.ts`, which serves `dist/` on `$PORT`.
-No environment variables are required.
+No environment variables are required. The production site is
+<https://nixchecker.sincorchetes.tech>: add that custom domain to the Railway service and point a
+`CNAME` record at the target Railway shows. Canonical and alternate links use it by default;
+set `SITE` and `BASE` to build for another origin (the GitHub Pages workflow does).
 
 ## License
 
