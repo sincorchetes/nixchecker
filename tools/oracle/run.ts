@@ -3,6 +3,7 @@
 // hand-written cases, and modules generated from a sample of the catalog, counted as false positives
 // and as wrong values let through.
 //   bun tools/oracle/run.ts [options to sample] [seed] [all]   (needs Nix; `devenv shell -- oracle`)
+// ORACLE_MISSES=1 lists every wrong value we let through.
 import { VERSIONS, type Version } from "../../src/lib/catalog/versions";
 import { diskoRoot, releaseRoots } from "../corpus/sources";
 import { CASES } from "./cases";
@@ -22,7 +23,7 @@ const KNOWN = new Set<string>([
 const SAMPLE = Number(process.argv[2] ?? 40);
 const SEED = Number(process.argv[3] ?? 1);
 // The share of wrong values Nix rejects that we may let through (what is not checked is not wrong).
-const MAX_MISSED = 0.15;
+const MAX_MISSED = 0.08;
 
 // `all` runs every release the site has catalogs for; the default is the development branch.
 const RELEASES: readonly Version[] = process.argv[4] === "all" ? VERSIONS : ["unstable"];
@@ -105,6 +106,7 @@ for (const { kind, version, cases, catalog } of TARGETS) {
       problems.push(`  ${name}: false positive (we reject, Nix takes it): ${source}`);
     } else if (real.typeError && !ours.typeError) {
       missed++;
+      if (process.env.ORACLE_MISSES) console.log(`  miss ${name}: ${source}`);
     }
   });
   await oracle.close();
