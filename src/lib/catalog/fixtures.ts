@@ -18,6 +18,8 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("mixed.free", "mix", { values: ["str", "attrs"] }),
     opt("env.vars", "attrs", { values: ["str", "int"] }),
     opt("mixed.text", "mix", { values: ["str", "list:str"] }),
+    opt("files.root", "path"),
+    opt("files.either", "mix", { values: ["path", "int"] }),
     opt("mixed.jobs", "mix", { values: ["int", 'enum:["auto"]'] }),
     opt("services.openssh.enable", "bool"),
     opt("services.openssh.ports", "list"),

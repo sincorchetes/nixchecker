@@ -1,6 +1,7 @@
 # Describes the real type of every option, read from Nix's own type objects instead of from the
 # sentences of the manuals. The shape of a type is a list of alternatives, one of which a value must be:
 #   "b" "i" "s" "a"        a bool, an integer, a string, an attribute set
+#   "p"                    an absolute path (a string starting with "/", or a path literal)
 #   [ "l" <alt>... ]       a list whose elements are one of the alternatives
 #   [ "m" <alt>... ]       an attribute set whose values are one of the alternatives (`attrsOf`)
 #   [ "e" "x" "y" ]        one of these strings
@@ -35,12 +36,13 @@ let
         "i"
         "f"
       ]
+    else if t.name == "path" then
+      [ "p" ]
     else if lib.any named [
       "str"
       "nonEmptyStr"
       "singleLineStr"
       "separatedString"
-      "path"
       "passwdEntry"
     ] then
       [ "s" ]

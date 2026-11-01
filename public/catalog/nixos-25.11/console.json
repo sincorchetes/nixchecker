@@ -1,1 +1,1 @@
-[["console.colors","list",["str"]],["console.earlySetup","bool"],["console.enable","bool"],["console.extraTTYs","hidden"],["console.font","str"],["console.keyMap","str"],["console.packages","list"],["console.useXkbConfig","bool"]]
+[["console.colors","list",["str"]],["console.earlySetup","bool"],["console.enable","bool"],["console.extraTTYs","hidden"],["console.font","mix",["str","path"]],["console.keyMap","mix",["str","path"]],["console.packages","list"],["console.useXkbConfig","bool"]]

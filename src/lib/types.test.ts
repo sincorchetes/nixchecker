@@ -22,6 +22,17 @@ describe("value types", () => {
     expect(codes("{ networking.hostName = [ ]; }")).toEqual(["type-mismatch"]);
   });
 
+  test("an absolute path starts with a slash", () => {
+    expect(codes('{ files.root = "/etc/x"; }')).toEqual([]);
+    expect(codes("{ files.root = ./x; }")).toEqual([]);
+    expect(codes('{ files.root = "${x}/y"; }')).toEqual([]);
+    expect(codes('{ files.root = "x"; }')).toEqual(["type-mismatch"]);
+    expect(codes("{ files.root = 5; }")).toEqual(["type-mismatch"]);
+    expect(codes('{ files.either = "/a"; }')).toEqual([]);
+    expect(codes('{ files.either = "a"; }')).toEqual(["type-mismatch"]);
+    expect(codes("{ files.either = 3; }")).toEqual([]);
+  });
+
   test("an alternative that is a list keeps the kind of its elements", () => {
     expect(codes('{ mixed.text = "a"; }')).toEqual([]);
     expect(codes('{ mixed.text = [ "a" "b" ]; }')).toEqual([]);

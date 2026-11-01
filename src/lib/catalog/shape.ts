@@ -19,7 +19,7 @@ export interface Shaped {
   values?: string[];
 }
 
-const KIND: Record<string, string> = { b: "bool", i: "int", s: "str", a: "attrs" };
+const KIND: Record<string, string> = { b: "bool", i: "int", s: "str", a: "attrs", p: "path" };
 
 const ELEMENT: Record<string, string> = { e: "str", m: "attrs", l: "list" };
 
@@ -28,7 +28,10 @@ const ELEMENT: Record<string, string> = { e: "str", m: "attrs", l: "list" };
 function elementKinds(all: Alt[]): string[] | undefined {
   const alts = withoutFloats(all);
   if (alts.length === 0) return undefined;
-  const kinds = alts.map((alt) => (Array.isArray(alt) ? ELEMENT[alt[0] as string] : KIND[alt]));
+  // As list elements a path is checked as a string: only the option itself is held to a leading "/".
+  const kinds = alts.map((alt) =>
+    Array.isArray(alt) ? ELEMENT[alt[0] as string] : alt === "p" ? "str" : KIND[alt],
+  );
   return kinds.every(Boolean) ? [...new Set(kinds as string[])] : undefined;
 }
 

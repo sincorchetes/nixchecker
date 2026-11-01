@@ -3,6 +3,7 @@ export type Target = "nixos" | "home-manager" | "disko" | "flake";
 /**
  * - `attrs`: a free-form set; any path below it is accepted.
  * - `set`: a set whose children are all listed in the catalog (e.g. `users.users.<name>`).
+ * - `path`: an absolute path; a string value must start with `/`.
  * - `mix`: takes a value of any of the kinds in `values` (`signed integer or string`).
  * - `any`: a type the manuals cannot describe precisely; nothing about it is checked, and
  *   any path below it is accepted.
@@ -17,6 +18,7 @@ export type OptionType =
   | "attrs"
   | "set"
   | "enum"
+  | "path"
   | "mix"
   | "any"
   | "hidden";

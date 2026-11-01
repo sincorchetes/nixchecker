@@ -7,6 +7,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- A `path` option type: a string given to an absolute-path option must start with `/`.
+- `evaluate` accepts its options before or after the file; `.gitleaks.toml` scopes the secret-scan
+  exception for the catalog manifest hashes.
 - Validation of NixOS, Home Manager and disko files and flakes in the browser, against catalogs read
   from the official sources: unknown options with suggestions, wrong types, renamed and hidden
   options, undefined names and calls that cannot work, with line and column.

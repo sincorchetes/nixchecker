@@ -36,6 +36,10 @@ const describeKind = (kind: string): string =>
     ? `enum(${(JSON.parse(kind.slice(5)) as string[]).join(" | ")})`
     : kind.replace(":", " of ").replace("+", " or ");
 
+// An absolute path written as a string starts with a slash (an interpolation is not judged).
+const isAbsolute = (a: Assignment) =>
+  a.kind === "str" && (a.value === undefined || a.value.startsWith("/"));
+
 // A value against alternatives: `list:str+int` is a list of strings or integers, `list` any list.
 function mixMismatch(kinds: string[], a: Assignment): string | undefined {
   const fits = (kind: string) => {
@@ -43,6 +47,7 @@ function mixMismatch(kinds: string[], a: Assignment): string | undefined {
       const values = JSON.parse(kind.slice("enum:".length)) as string[];
       return a.kind === "str" && (a.value === undefined || values.includes(a.value));
     }
+    if (kind === "path") return isAbsolute(a);
     if (a.kind !== "list" || !kind.startsWith("list")) return kind === a.kind;
     const elements = kind.slice("list:".length).split("+");
     return (
@@ -68,6 +73,7 @@ export function typeMismatch(entry: IndexedOption, a: Assignment): string | unde
     const ok = a.kind === "str" && (a.value === undefined || entry.values?.includes(a.value));
     return ok ? undefined : `enum(${entry.values?.join(" | ")})`;
   }
+  if (type === "path") return isAbsolute(a) ? undefined : "absolute path";
   if (type === "mix") return mixMismatch(entry.values ?? [], a);
   if (type === "list" && a.kind === "list") return wrongElements(entry, a);
   const expected = type === "set" ? "attrs" : type;

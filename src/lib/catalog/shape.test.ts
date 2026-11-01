@@ -17,6 +17,13 @@ describe("fromShape", () => {
     expect(fromShape([["l", ["l", "s"]]])).toEqual({ type: "list", values: ["list"] });
   });
 
+  test("paths", () => {
+    expect(fromShape(["p"])).toEqual({ type: "path" });
+    expect(fromShape(["p", "i"])).toEqual({ type: "mix", values: ["path", "int"] });
+    // As list elements they are strings.
+    expect(fromShape([["l", "p"]])).toEqual({ type: "list", values: ["str"] });
+  });
+
   test("enums", () => {
     expect(fromShape([["e", "a", "b"]])).toEqual({ type: "enum", values: ["a", "b"] });
   });
