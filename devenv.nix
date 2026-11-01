@@ -35,7 +35,7 @@
   #   devenv shell -- evaluate my-config.nix --target nixos --release 26.05
   scripts.evaluate.exec = "bun tools/local/check.ts \"$@\"";
   scripts.oracle.exec = "bun tools/oracle/run.ts \"$@\"";
-  scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --no-banner --redact --verbose";
+  scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --config .gitleaks.toml --no-banner --redact --verbose";
   # Sends the code and coverage (coverage/lcov.info, written by `unit`) to SonarQube.
   # Needs SONAR_HOST_URL and SONAR_TOKEN; the project settings are passed here, never committed.
   # Coverage is measured on src/lib; the interface and the tools are exercised by `e2e` and `corpus`.

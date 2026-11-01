@@ -1,0 +1,9 @@
+# Extends the default rules. The catalog manifest records the SHA-256 hashes of the pinned upstream
+# sources; their entropy makes the generic API-key rule fire. That rule stays on everywhere else.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "SHA-256 hashes recorded in the generated catalog manifest"
+targetRules = ["generic-api-key"]
+paths = ['''^public/catalog/manifest\.json$''']
