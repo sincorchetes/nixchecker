@@ -79,3 +79,31 @@ describe("evaluate CLI (several files)", () => {
     expect(r.err).toContain("no .nix files");
   });
 });
+
+describe("evaluate CLI (formats)", () => {
+  test("JSON carries the coverage and where the catalog comes from", async () => {
+    const r = await run("--format", "json", "--static", join(dir, "bad.nix"), "--target", "nixos");
+    const json = JSON.parse(r.out);
+    expect(json.coverage).toEqual({ checked: 1, total: 1 });
+    expect(json.catalog.name).toMatch(/^nixos-/);
+    expect(json.catalog.source).toContain("nixpkgs");
+    expect(Object.keys(json.catalog.revisions).length).toBeGreaterThan(0);
+  });
+
+  test("SARIF places each finding in its file, line and column", async () => {
+    const r = await run("--format", "sarif", "--static", join(dir, "bad.nix"), "--target", "nixos");
+    const sarif = JSON.parse(r.out);
+    expect(sarif.version).toBe("2.1.0");
+    const [result] = sarif.runs[0].results;
+    expect(result).toMatchObject({ ruleId: "type-mismatch", level: "error" });
+    expect(result.locations[0].physicalLocation).toMatchObject({
+      artifactLocation: { uri: join(dir, "bad.nix") },
+      region: { startLine: 1, startColumn: 3 },
+    });
+    expect(r.code).toBe(1);
+  });
+
+  test("an unknown format is a usage error", async () => {
+    expect((await run("--format", "xml", join(dir, "good.nix"))).code).toBe(2);
+  });
+});

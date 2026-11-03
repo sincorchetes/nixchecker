@@ -30,12 +30,23 @@ devenv shell -- evaluate my-config.nix --target nixos --release 26.05
 ```
 
 It prints the static findings and then what Nix itself says, each marked by how sure it is
-(`syntax`, `static check`, `confirmed by Nix`), and exits with 1 when something is an error. Files
-named in `imports` are read from where they are, so a configuration split over several files works.
-`--target` is `nixos`, `home-manager` or `disko`; `--release` picks the pinned nixpkgs and Home
-Manager (or give `--nixpkgs DIR --home-manager DIR`); `--static` skips the evaluation and `--json`
-prints the findings as data. Nothing is uploaded: it all runs on your machine. Nix stops at the
-first error it meets, so fix it and run again to see the next. Flakes are not evaluated yet.
+(`syntax`, `static check`, `confirmed by Nix`), and exits with 1 when something is an error. When Nix
+accepts the module, the static findings it settles are dropped. Files named in `imports` are read from
+where they are, so a configuration split over several files works, and an error in an imported module
+names its file.
+
+- Name several files or directories (searched for `.nix` files) to check them in one run.
+- A `flake.nix` is evaluated with its own inputs: every `nixosConfigurations` and
+  `homeConfigurations` entry (it needs a `flake.lock`).
+- `--partial` is for a file that is part of a system, not all of it: only the options it sets are
+  read, so the assertions of a whole system (root file system, boot loader) do not get in the way.
+- `--target` is `nixos`, `home-manager` or `disko`; `--release` picks the pinned nixpkgs and Home
+  Manager (or give `--nixpkgs DIR --home-manager DIR`); `--static` skips the evaluation.
+- `--format json` (or `--json`) prints the findings as data, with the coverage and the revisions of
+  the catalog used; `--format sarif` prints SARIF 2.1.0 for code scanning annotations.
+
+Nothing is uploaded: it all runs on your machine. Nix stops at the first error it meets, so fix it and
+run again to see the next.
 
 Limits to know about:
 

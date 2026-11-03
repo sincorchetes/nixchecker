@@ -1,8 +1,9 @@
 // Checks one Nix file in two layers: the static analysis against the catalog of the release, and the
 // real evaluation of this machine's Nix, which settles what the analysis can only guess.
 import { join, resolve } from "node:path";
+import type { Target } from "../../src/lib/catalog";
 import { loadCatalog } from "../../src/lib/catalog/load";
-import type { Version } from "../../src/lib/catalog/versions";
+import { catalogName, type Version } from "../../src/lib/catalog/versions";
 import type { Finding } from "../../src/lib/evaluation";
 import { analyze, check, resolveTarget, type TargetChoice } from "../../src/lib/validate";
 import { diskoRoot, releaseRoots } from "../corpus/sources";
@@ -22,12 +23,21 @@ export interface Options {
   partial?: boolean | undefined;
 }
 
+/** Where the catalog a file was checked against comes from, as recorded when it was generated. */
+export interface Provenance {
+  name: string;
+  source: string;
+  revisions: Record<string, string>;
+}
+
 export interface Result {
   file: string;
   target: string;
   version: Version;
   evaluated: boolean;
-  coverage: string;
+  /** Assignments the static layer could judge, out of all of them. */
+  coverage: { checked: number; total: number };
+  catalog: Provenance;
   items: Located[];
 }
 
@@ -60,6 +70,12 @@ const optionPaths = (analysis: ReturnType<typeof analyze>): string[][] =>
     .map((a) => a.path)
     .filter((p) => !p.some((s) => s === "*" || s.startsWith("<")));
 
+async function provenance(name: string): Promise<Provenance> {
+  const manifest = await Bun.file(join(publicDir, "catalog", "manifest.json")).json();
+  const { source, revisions } = manifest.catalogs[name];
+  return { name, source, revisions };
+}
+
 export async function checkFile(file: string, o: Options): Promise<Result> {
   const analysis = analyze(await Bun.file(file).text());
   const target = resolveTarget(analysis, (o.target ?? "auto") as TargetChoice);
@@ -74,7 +90,7 @@ export async function checkFile(file: string, o: Options): Promise<Result> {
   const report = check(analysis, target, catalog.tree, o.version);
   let items: Located[] = report.diagnostics.map(fromDiagnostic);
   const { total, skipped } = report.coverage;
-  const coverage = `${total - skipped.length} of ${total} assignments checked statically.`;
+  const coverage = { checked: total - skipped.length, total };
 
   // The real evaluation, unless the text does not even parse. A flake brings its own inputs.
   const broken = items.some((i) => i.level === "syntax" && i.severity === "error");
@@ -92,5 +108,6 @@ export async function checkFile(file: string, o: Options): Promise<Result> {
     for (const finding of found) items.push(fromFinding(finding, analysis.assignments, file));
     items = reconcile(items, true).items;
   }
-  return { file, target, version: o.version, evaluated, coverage, items };
+  const origin = await provenance(catalogName(target as Target, o.version));
+  return { file, target, version: o.version, evaluated, coverage, catalog: origin, items };
 }

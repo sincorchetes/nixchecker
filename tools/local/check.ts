@@ -2,7 +2,8 @@
 // of the Nix on this machine, which settles what the analysis can only guess (imports, mkIf, merging,
 // priorities, assertions). Directories are searched for .nix files.
 //   bun tools/local/check.ts <file.nix|dir>... [--target nixos|home-manager|disko] [--release unstable|26.05|25.11]
-//        [--nixpkgs DIR] [--home-manager DIR] [--disko DIR] [--static] [--partial] [--json]
+//        [--nixpkgs DIR] [--home-manager DIR] [--disko DIR] [--static] [--partial] [--format text|json|sarif]
+//   --json is --format json. sarif is for code scanning (GitHub annotations).
 //   --partial: the file is part of a system, not all of it: read its options, skip the system assertions.
 // Without --nixpkgs (and --home-manager) the pinned sources of --release are built (needs Nix).
 import { parseArgs } from "node:util";
@@ -10,6 +11,7 @@ import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/v
 import { checkFile, type Result } from "./check-file";
 import { nixFiles } from "./files";
 import { printText } from "./report";
+import { toSarif } from "./sarif";
 
 const { values: opts, positionals } = parseArgs({
   args: process.argv.slice(2),
@@ -23,10 +25,17 @@ const { values: opts, positionals } = parseArgs({
     static: { type: "boolean" },
     partial: { type: "boolean" },
     json: { type: "boolean" },
+    format: { type: "string" },
   },
 });
 if (positionals.length === 0) {
   console.error("usage: check.ts <file.nix|dir>... [--target T] [--release V] [--static] [--json]");
+  process.exit(2);
+}
+// `--json` is `--format json`.
+const format = opts.format ?? (opts.json ? "json" : "text");
+if (!["text", "json", "sarif"].includes(format)) {
+  console.error("--format is one of text, json, sarif");
   process.exit(2);
 }
 const version = (opts.release ?? DEFAULT_VERSION) as Version;
@@ -53,13 +62,18 @@ for (const path of paths) {
 }
 
 // One file keeps the object a run always printed; several are a list of those objects.
-if (opts.json) {
-  const shown = results.map(({ coverage: _, ...result }) => result);
-  console.log(JSON.stringify(shown.length === 1 ? shown[0] : shown, null, 2));
-} else {
+if (format === "sarif") console.log(JSON.stringify(toSarif(results), null, 2));
+else if (format === "json")
+  console.log(JSON.stringify(results.length === 1 ? results[0] : results, null, 2));
+else {
   for (const r of results) {
     if (results.length > 1) console.log(`\n== ${r.file}`);
-    printText(r.items, r.coverage, r.evaluated || !!opts.static);
+    const { checked, total } = r.coverage;
+    printText(
+      r.items,
+      `${checked} of ${total} assignments checked statically.`,
+      r.evaluated || !!opts.static,
+    );
   }
 }
 process.exit(results.some((r) => r.items.some((i) => i.severity === "error")) ? 1 : 0);

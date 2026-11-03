@@ -24,6 +24,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - `evaluate` checks several files and directories in one run, evaluates the NixOS and Home Manager
   configurations of a flake with its own inputs, and takes `--partial` for a file that is part of a
   system (its options are read; the assertions of a whole system are skipped).
+- `evaluate --format json|sarif`: the JSON carries the coverage and the revisions of the catalog used;
+  SARIF feeds code scanning annotations.
 - The nested options of disko's disk layouts (partitions, `content`, subvolumes, datasets...) are read
   from disko's own serialized types instead of a hand-written overlay.
 
