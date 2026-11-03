@@ -14,6 +14,10 @@ export interface Assignment {
   items?: ValueKind[];
   /** The text of each element that is a plain string, for those a list has (the others are undefined). */
   itemValues?: Array<string | undefined>;
+  /** A set written out that cannot be a derivation (see `plainSet`): never what a package option takes. */
+  plain?: boolean;
+  /** The same, for each element of a list that has a set. */
+  itemPlain?: boolean[];
 }
 
 /** A name used as a whole value (`a = foo;`) that nothing in scope defines. */
@@ -104,11 +108,26 @@ function literalSets(value: Expr): Bind[][] | undefined {
   return undefined;
 }
 
+/**
+ * A set written out in the file that cannot be a derivation: Nix takes a set for one only when it says
+ * `type = "derivation"`, so a set with no `type` among keys it spells out (no `inherit`, no `rec`, no
+ * computed name) is not. `pkgs.hello // { ... }` is not such a set: what is on the other side is unknown.
+ */
+function plainSet(e: Expr): boolean {
+  if (e.t === "paren") return plainSet(e.inner);
+  if (e.t !== "set" || e.rec) return false;
+  return e.binds.every(
+    (b) => b.t !== "inherit" && b.path[0]?.name !== undefined && b.path[0].name !== "type",
+  );
+}
+
 interface Classified {
   kind: ValueKind;
   value?: string;
   items?: ValueKind[];
   itemValues?: Array<string | undefined>;
+  plain?: boolean;
+  itemPlain?: boolean[];
   /** Set when the value is a lone name, to check that it is defined. */
   name?: Extract<Expr, { t: "ident" }>;
 }
@@ -122,15 +141,22 @@ function classify(e: Expr): Classified {
     case "num":
       return { kind: e.float ? "other" : "int" };
     case "list": {
-      const parts = e.items.map(classify);
+      // A set in a list is judged only when it cannot be a derivation; any other set stays unjudged.
+      const parts = e.items.map(
+        (item): Classified => (plainSet(item) ? { kind: "attrs", plain: true } : classify(item)),
+      );
       return {
         kind: "list",
         items: parts.map((part) => part.kind),
         ...(parts.some((part) => part.kind === "str") && {
           itemValues: parts.map((part) => part.value),
         }),
+        ...(parts.some((part) => part.kind === "attrs") && {
+          itemPlain: parts.map((part) => part.plain === true),
+        }),
       };
     }
+
     case "ident":
       if (e.name === "true" || e.name === "false") return { kind: "bool" };
       return { kind: "other", name: e };
@@ -176,7 +202,7 @@ export function scan(ast: Expr): { assignments: Assignment[]; undefinedNames: Un
       const { value } = bind;
       const sets = literalSets(value);
       if (sets) {
-        assignments.push({ path, kind: "attrs", ...at });
+        assignments.push({ path, kind: "attrs", ...(plainSet(value) && { plain: true }), ...at });
         for (const binds of sets) scanSet(path, binds, scope);
         continue;
       }

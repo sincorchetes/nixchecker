@@ -99,3 +99,12 @@ describe("owner of a value below an attrsOf submodule", () => {
     expect(findOwner(kernels, path("k.x.other.a"))?.path).toBe("k");
   });
 });
+
+describe("owner of a value below an option that takes a package", () => {
+  test("a package may be a set with any keys, so what is written below is its", () => {
+    const tree = buildTree([
+      { path: "p.package", type: "mix", values: ["pkg"], segs: ["p", "package"] },
+    ]);
+    expect(findOwner(tree, path("p.package.name"))?.path).toBe("p.package");
+  });
+});

@@ -35,7 +35,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   system it runs on (the default is still its NixOS and Home Manager configurations).
 - The option type `package` is known to the validator: a number, a boolean, a list or any string that is
   not a path in the store is an error where a package (or a list of them) goes. Only a set, a name, a call
-  or a string with `${...}` in it, which could be one, is let through.
+  or a string with `${...}` in it, which could be one, is let through. A set written out is a package
+  only if it says `type = "derivation"`: `package = { }` is an error, `pkgs.hello // { ... }` is not.
 - disko's layouts are read down to six levels of `content`, and below each device only what its types
   declare exists (the manual described hooks under `nodev` that the module does not have).
 - `evaluate --partial` finds every wrong value of a file in one run, not only the first one Nix stops at:
@@ -77,6 +78,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Fixed
 
+- `assertions`, `warnings` and `meta` (`meta.doc`, `meta.maintainers`...), internal options that every module of
+  your own may set and that the manuals leave out, were reported as options that do not exist.
 - Options written under `config` (`config = { a.b = 1; }`, `config.a.b = 1;`) are the same options as without
   it: the page, `evaluate` and the language server check them, place them and complete them. They were
   left unchecked, and a finding of Nix about them had no line.
@@ -103,5 +106,5 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   attributes written below a list option are a type error.
 - Names with dots inside quotes (`services.akkoma.config.":pleroma"."Pleroma.Web.Endpoint".http.port`)
   are one attribute in the catalogs, as they are in the file, instead of being cut at every dot.
-- The oracle may miss at most 3 % of the wrong values (it was 7 %).
+- The oracle may miss at most 2 % of the wrong values (it was 7 %).
 - GitHub Actions are pinned by commit, and so is devenv.

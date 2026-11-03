@@ -22,13 +22,19 @@ const errors = (src: string) =>
   validate(src, "nixos", catalogs).diagnostics.map((d) => [d.code, d.params.expected]);
 
 describe("values for an option that takes packages", () => {
-  test("what can be a package is accepted: a name, a call, a set, a path in the store, a lone interpolation", () => {
+  test("what can be a package is accepted: a name, a call, a path in the store, a lone interpolation", () => {
     expect(
-      errors('{ env.packages = [ pkgs.git (pkgs.hello) { } "/nix/store/abc-x" "${pkgs.a}" ]; }'),
+      errors('{ env.packages = [ pkgs.git (pkgs.hello) "/nix/store/abc-x" "${pkgs.a}" ]; }'),
     ).toEqual([]);
     expect(errors("{ x.package = pkgs.git; }")).toEqual([]);
     expect(errors("{ x.package = null; }")).toEqual([]);
     expect(errors("{ many.a = pkgs.git; }")).toEqual([]);
+  });
+
+  test("a set is accepted when it could be a derivation: one that says so, or one added to another thing", () => {
+    expect(errors('{ x.package = { type = "derivation"; name = "x"; }; }')).toEqual([]);
+    expect(errors("{ x.package = pkgs.hello // { meta = { }; }; }")).toEqual([]);
+    expect(errors('{ env.packages = [ { type = "derivation"; } (pkgs.a // { }) ]; }')).toEqual([]);
   });
 
   test("a number, a boolean, a list or any other string is not a package", () => {
@@ -41,6 +47,12 @@ describe("values for an option that takes packages", () => {
     expect(errors("{ x.package = 5; }")).toEqual([["type-mismatch", "package"]]);
     expect(errors("{ x.package = [ pkgs.git ]; }")).toEqual([["type-mismatch", "package"]]);
     expect(errors('{ many.a = "git"; }')).toEqual([["type-mismatch", "package"]]);
+    // A set written out that does not say it is a derivation is not one.
+    expect(errors("{ x.package = { }; }")).toEqual([["type-mismatch", "package"]]);
+    expect(errors('{ x.package = { name = "x"; }; }')).toEqual([["type-mismatch", "package"]]);
+    expect(errors("{ env.packages = [ pkgs.git { } ]; }")).toEqual([
+      ["type-mismatch", "list of package"],
+    ]);
   });
 
   test("an option that takes a package or a string takes either", () => {

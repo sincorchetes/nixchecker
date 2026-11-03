@@ -15,7 +15,7 @@ describe("scan", () => {
       "{ pkgs }: let x = 1; in with pkgs; assert x == 1; ({ a.b = 1; c = { d = true; }; })";
     expect(scanned(src).assignments).toEqual([
       { path: ["a", "b"], kind: "int", line: 1, col: 54 },
-      { path: ["c"], kind: "attrs", line: 1, col: 63 },
+      { path: ["c"], kind: "attrs", plain: true, line: 1, col: 63 },
       { path: ["c", "d"], kind: "bool", line: 1, col: 69 },
     ]);
     expect(scanned("f { a = 1; }").assignments).toEqual([]);
@@ -125,5 +125,26 @@ describe("scan: the strings in a list", () => {
 
   test("a list with no strings has no texts", () => {
     expect(items("{ a = [ 1 true ]; }")).toEqual([["int", "bool"], undefined]);
+  });
+});
+
+describe("scan: a set that cannot be a derivation", () => {
+  const first = (src: string) => scanned(src).assignments[0];
+
+  test("a set written out with no type is plain; with a type, an inherit, a rec or a // it is not", () => {
+    expect(first("{ a = { x = 1; }; }")?.plain).toBe(true);
+    expect(first("{ a = ({ x = 1; }); }")?.plain).toBe(true);
+    expect(first('{ a = { type = "derivation"; }; }')?.plain).toBeUndefined();
+    expect(first("{ a = { inherit x; }; }")?.plain).toBeUndefined();
+    expect(first("{ a = pkgs.b // { x = 1; }; }")?.plain).toBeUndefined();
+    expect(first('{ a = { "${n}" = 1; }; }')?.plain).toBeUndefined();
+  });
+
+  test("in a list, only the elements that are plain sets say so", () => {
+    expect(first("{ a = [ { } pkgs.x { type = 1; } ]; }")).toMatchObject({
+      items: ["attrs", "other", "other"],
+      itemPlain: [true, false, false],
+    });
+    expect(first("{ a = [ 1 ]; }")?.itemPlain).toBeUndefined();
   });
 });

@@ -68,8 +68,9 @@ export function findOwner(at: OptionTree, path: string[], i = 0): IndexedOption 
     if (found) return found;
   }
   const { entry } = at;
-  // A `mix` that may be an attribute set takes any key as well.
-  const open = entry?.type === "mix" && entry.values?.includes("attrs");
+  // A `mix` that may be an attribute set takes any key as well, and so may a package (a derivation is a set).
+  const open =
+    entry?.type === "mix" && (entry.values?.includes("attrs") || entry.values?.includes("pkg"));
   const owns = open || entry?.type === "attrs" || entry?.type === "any" || entry?.type === "hidden";
   return owns ? entry : undefined;
 }
