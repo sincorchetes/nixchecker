@@ -23,7 +23,9 @@ const nixList = (paths: string[][]) =>
   `[ ${paths.map((p) => `[ ${p.map((s) => JSON.stringify(s)).join(" ")} ]`).join(" ")} ]`;
 
 async function run(expression: string, args: string[]): Promise<string> {
-  const proc = Bun.spawn(["nix-instantiate", "--eval", "--strict", "--json", ...args, expression], {
+  // The messages come as data (see `parseEvaluation`), not as text with colors and a trace.
+  const flags = ["--eval", "--strict", "--json", "--log-format", "internal-json"];
+  const proc = Bun.spawn(["nix-instantiate", ...flags, ...args, expression], {
     stdout: "ignore",
     stderr: "pipe",
   });

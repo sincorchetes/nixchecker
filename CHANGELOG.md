@@ -25,6 +25,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   configurations of a flake with its own inputs, and takes `--partial` for a file that is part of a
   system (its options are read; the assertions of a whole system are skipped).
 - The page validates by itself when the text rests for a moment (the button still validates at once).
+- `evaluate` asks Nix for its messages as data (`--log-format internal-json`) instead of cutting the text
+  at the last `error:`: no colors or trace to skip, and the definitions Nix lists (where the option is set,
+  and to what) and its "did you mean" are kept. Plain text is still read where Nix gives no data.
 - `evaluate --help`, `--version` and `--jobs`: every mistake in the command is one line with exit status 2,
   and several files are checked concurrently.
 - A flake with the packaged command line and language server: `nix run github:sincorchetes/nixchecker`

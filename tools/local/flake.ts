@@ -2,7 +2,13 @@
 import { dirname } from "node:path";
 import { type Finding, parseEvaluation } from "../../src/lib/evaluation";
 
-const FLAGS = ["--extra-experimental-features", "nix-command flakes", "--no-write-lock-file"];
+const FLAGS = [
+  "--extra-experimental-features",
+  "nix-command flakes",
+  "--no-write-lock-file",
+  "--log-format",
+  "internal-json",
+];
 
 // The derivation of a configuration only evaluates when every assertion of it holds.
 const DERIVATIONS = {
