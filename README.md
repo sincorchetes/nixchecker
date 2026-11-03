@@ -66,8 +66,10 @@ LSP client at it for `nix` files. Options go in `initializationOptions`:
 is certain (a misspelled option, a renamed one), the editor offers it as a quick fix, one small edit.
 It also completes option names from the catalog as you type them (after a `.`, at the start of a
 statement, and inside `x.y = { ... }`, with the type of each option), but not in values, strings or
-comments. On hover it shows the option's type, what it was renamed to, and a link to its official
-page (the catalogs keep no descriptions). It does not run Nix: use `evaluate` for that.
+comments. On hover it shows the option's type, what it was renamed to, its description, default and example, and
+a link to its official page. The catalogs keep no descriptions: they are read from the manuals' own
+options file the first time one is needed, which can take a while if Nix has to build it (the hover
+answers at once with what it knows, and says more once that is read). It does not run Nix: use `evaluate` for that.
 
 Without a clone: `nix run github:sincorchetes/nixchecker#lsp`, or `nixchecker-lsp` once installed with
 `nix profile install`. For example, in Neovim (checked with 0.12, from a clone):

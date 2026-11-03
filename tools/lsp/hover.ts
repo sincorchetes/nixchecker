@@ -1,7 +1,7 @@
-// What the catalog knows about the option under the cursor, as the editor shows it on hover. The
-// catalogs keep no descriptions (they would be most of their size), so it is the type, what the
-// option was renamed to, and the official page that has the rest.
-import { docUrl, loadCatalog } from "../../src/lib/catalog";
+// What is known about the option under the cursor, as the editor shows it on hover: its type and what it
+// was renamed to (from the catalog), and its description, default and example (from the manuals' own
+// options file, once that is read: see `docsOf`), with a link to the official page.
+import { docUrl, loadCatalog, type Target } from "../../src/lib/catalog";
 import { splitPath } from "../../src/lib/catalog/path";
 import { childrenOf, findExact } from "../../src/lib/catalog/tree";
 import type { Version } from "../../src/lib/catalog/versions";
@@ -9,6 +9,7 @@ import { checkText } from "../../src/lib/check-text";
 import type { TargetChoice } from "../../src/lib/validate";
 import { fromDisk } from "../local/static-layer";
 import { contextAt } from "./context";
+import { type Doc, describeDoc, docsOf } from "./docs";
 
 export interface Hover {
   /** Markdown for the editor to show. */
@@ -26,6 +27,7 @@ export async function hoverAt(
   offset: number,
   choice: string | undefined,
   version: Version,
+  docs: (target: Target, version: Version) => Map<string, Doc> | undefined = docsOf,
 ): Promise<Hover | undefined> {
   let start = offset;
   while (start > 0 && NAME.test(text[start - 1] as string)) start--;
@@ -55,6 +57,8 @@ export async function hoverAt(
     if (entry.renamedTo) lines.push(`Renamed: use \`${entry.renamedTo}\` instead.`);
     if (entry.type === "hidden")
       lines.push("Hidden upstream: it still works, but it is not documented.");
+    const doc = docs(target, version)?.get(entry.path);
+    if (doc) lines.push(...describeDoc(doc));
   } else {
     lines.push(`A group of ${below} options.`);
   }

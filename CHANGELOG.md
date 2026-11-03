@@ -46,6 +46,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   and several files are checked concurrently.
 - A flake with the packaged command line and language server: `nix run github:sincorchetes/nixchecker`
   and `nix run github:sincorchetes/nixchecker#lsp`, checked by `nix flake check` in CI.
+- The language server's hover also shows the description, default and example of an option, read from the
+  manuals' own options file when it is available.
 - `devenv shell -- lsp`: a Language Server that publishes the static findings as diagnostics in any editor,
   with the certain fixes (misspelled or renamed options) as quick fixes, completes option names from the catalog and shows the type of an option on hover.
 - The analysis runs in a Web Worker (in the page where one cannot start), and a service worker keeps
