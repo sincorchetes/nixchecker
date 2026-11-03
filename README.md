@@ -52,8 +52,10 @@ is reported in that file, at its line and column.
 - `--format json` (or `--json`) prints the findings as data, `{ "schemaVersion": 1, "results": [...] }` with one result per file, each
   with its coverage and the revisions of the catalog used; `--format sarif` prints SARIF 2.1.0 for code scanning annotations.
 
-Nothing is uploaded: it all runs on your machine. Nix stops at the first error it meets, so fix it and
-run again to see the next.
+Nothing is uploaded: it all runs on your machine. In a whole system Nix stops at the first error it meets, so fix it and
+run again to see the next; with `--partial` every wrong value of the file is found in one run (an
+option that does not exist is the exception: Nix reports those first, and together, and nothing else
+until they are fixed).
 
 ### In your editor
 

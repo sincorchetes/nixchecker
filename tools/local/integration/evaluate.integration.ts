@@ -24,6 +24,11 @@ beforeAll(async () => {
   // A module that imports another with a value of the wrong type in it.
   await write("child.nix", `{ ... }: {\n  networking.hostName = 5;\n}\n`);
   await write("parent.nix", `{ ... }: {\n  imports = [ ./child.nix ];\n}\n`);
+  // Two wrong values in one module: Nix stops at the first, and the report must have both.
+  await write(
+    "two-wrong.nix",
+    `{ ... }: {\n  networking.hostName = 5;\n  services.openssh.ports = "x";\n  services.openssh.enable = true;\n}\n`,
+  );
   await write("good.nix", `{ ... }: {\n  networking.hostName = "box";\n}\n`);
 });
 
@@ -101,6 +106,28 @@ describe("an error inside an imported file", () => {
         artifactLocation: { uri: join(dir, "child.nix") },
         region: { startLine: 2, startColumn: 3 },
       });
+    },
+    TIME,
+  );
+});
+
+describe("more than the first error", () => {
+  test(
+    "with --partial, every wrong value is confirmed by Nix in one run",
+    async () => {
+      const run = await evaluate(
+        "--format",
+        "json",
+        "--partial",
+        "--target",
+        "nixos",
+        join(dir, "two-wrong.nix"),
+      );
+      const confirmed = run.items.filter((i) => i.level === "evaluation");
+      expect(confirmed.map((i) => i.line)).toEqual([2, 3]);
+      expect(confirmed.map((i) => i.message).join("\n")).toContain("services.openssh.ports");
+      // What Nix confirmed is not also shown as a static guess at the same place.
+      expect(run.items.filter((i) => i.level === "static")).toEqual([]);
     },
     TIME,
   );

@@ -31,6 +31,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - When an option is set in several places of a file, `evaluate` picks the one whose value is what Nix
   printed (by its kind, and by its text for a string) and, if it still cannot tell, reports the other
   places too (`alternatives` in the JSON, related locations in SARIF) instead of choosing silently.
+- `evaluate --partial` finds every wrong value of a file in one run, not only the first one Nix stops at:
+  it asks which of the options the file sets fail to evaluate, and for the message of each of them.
 - `evaluate --help`, `--version` and `--jobs`: every mistake in the command is one line with exit status 2,
   and several files are checked concurrently.
 - A flake with the packaged command line and language server: `nix run github:sincorchetes/nixchecker`
