@@ -60,6 +60,17 @@ statement, and inside `x.y = { ... }`, with the type of each option), but not in
 comments. On hover it shows the option's type, what it was renamed to, and a link to its official
 page (the catalogs keep no descriptions). It does not run Nix: use `evaluate` for that.
 
+For example, in Neovim (checked with 0.12), from this repository:
+
+```lua
+vim.lsp.start({
+  name = "nixchecker",
+  cmd = { "devenv", "shell", "--", "lsp" },
+  root_dir = "/path/to/nixchecker",
+  init_options = { target = "nixos" },
+})
+```
+
 Limits to know about:
 
 - The page is static: nothing is evaluated, so values built with functions, `mkIf` or `let` are not
