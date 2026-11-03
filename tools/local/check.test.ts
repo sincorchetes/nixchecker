@@ -119,3 +119,30 @@ describe("evaluate CLI (target)", () => {
     expect(r.code).toBe(0);
   });
 });
+
+describe("evaluate CLI (help and mistakes)", () => {
+  test("--help and --version print and exit 0", async () => {
+    const help = await run("--help");
+    expect(help.code).toBe(0);
+    expect(help.out).toContain("Usage: nixchecker");
+    const version = await run("--version");
+    expect(version.code).toBe(0);
+    expect(version.out).toMatch(/^nixchecker \d+\.\d+\.\d+/);
+  });
+
+  test("a mistake is one line and a hint, never a stack", async () => {
+    const r = await run("--bogus", join(dir, "good.nix"));
+    expect(r.code).toBe(2);
+    expect(r.err).toContain("nixchecker: ");
+    expect(r.err).toContain("Try 'nixchecker --help'");
+    expect(r.err).not.toContain("at ");
+    expect((await run("--release", "9.9", join(dir, "good.nix"))).code).toBe(2);
+  });
+
+  test("several files at once give the same answer, in the same order", async () => {
+    const files = [join(dir, "good.nix"), join(dir, "bad.nix"), join(dir, "hm.nix")];
+    const one = await run("--static", "--jobs", "1", "--format", "json", ...files);
+    const many = await run("--static", "--jobs", "3", "--format", "json", ...files);
+    expect(many.out).toBe(one.out);
+  });
+});

@@ -29,6 +29,7 @@
           src = fileset.toSource {
             root = ./.;
             fileset = fileset.unions [
+              ./package.json
               ./src/lib
               ./tools/local
               ./tools/lsp

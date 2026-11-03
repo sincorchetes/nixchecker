@@ -40,7 +40,9 @@ accepts the module, the static findings it settles are dropped. Files named in `
 where they are, so a configuration split over several files works, and an error in an imported module
 is reported in that file, at its line and column.
 
-- Name several files or directories (searched for `.nix` files) to check them in one run.
+- Name several files or directories (searched for `.nix` files) to check them in one run; they are
+  checked a few at a time (`--jobs`), and the output keeps the order given. `--help` lists every option and
+  `--version` prints the version; a mistake in the command is one line and exit status 2.
 - A `flake.nix` is evaluated with its own inputs: every `nixosConfigurations` and
   `homeConfigurations` entry (it needs a `flake.lock`).
 - `--partial` is for a file that is part of a system, not all of it: only the options it sets are
