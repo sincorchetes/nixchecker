@@ -21,6 +21,11 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - Catalog types read from Nix's own type objects (alternatives, list elements, values of attribute
   sets, converting types) instead of from the sentences of the manuals.
 - `public/catalog/manifest.json`: the revision of every source and the hash of every catalog file.
+- `evaluate` checks several files and directories in one run, evaluates the NixOS and Home Manager
+  configurations of a flake with its own inputs, and takes `--partial` for a file that is part of a
+  system (its options are read; the assertions of a whole system are skipped).
+- The nested options of disko's disk layouts (partitions, `content`, subvolumes, datasets...) are read
+  from disko's own serialized types instead of a hand-written overlay.
 
 ### Verified by
 
@@ -33,4 +38,10 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Changed
 
+- `evaluate`: when Nix accepts a module, the static findings it settles are dropped; when it fails, a
+  static finding at the same place is merged with the confirmed one, and an error in an imported module
+  names its file.
+- A value written below an `attrsOf` option is judged by the deepest option that knows its type, and
+  attributes written below a list option are a type error.
+- The oracle may miss at most 5 % of the wrong values (it was 7 %).
 - GitHub Actions are pinned by commit, and so is devenv.

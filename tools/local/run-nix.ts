@@ -10,8 +10,7 @@ const WHOLE = "top";
 
 // Reads the options the file sets, deeply or one level: types are only checked when a value is read,
 // and the assertions of a system (root file system, boot loader) are never reached.
-const PARTIAL =
-  "let vals = map (p: builtins.foldl' (c: n: c.${n}) config p) paths; in if deep then builtins.deepSeq vals true else builtins.all (v: builtins.seq v true) vals";
+const PARTIAL = `let vals = map (p: builtins.foldl' (c: n: c.\${n}) config p) paths; in if deep then builtins.deepSeq vals true else builtins.all (v: builtins.seq v true) vals`;
 
 // Something every system has, to read first: an unknown option is found by reading any of them.
 const BASE: Record<Kind, string[]> = {

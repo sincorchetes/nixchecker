@@ -1,31 +1,6 @@
 import type { Overlay } from "../../src/lib/catalog/convert";
 import { type OptionEntry, opt, type Target } from "../../src/lib/catalog/types";
 
-// disko's disk layouts are polymorphic submodules selected by `type`, so its manual only
-// documents the top level. These are the nested options users write most often.
-const content = ["gpt", "table", "filesystem", "luks", "lvm_pv", "btrfs", "zfs", "swap", "mdraid"];
-const disk = "disko.devices.disk.*";
-const part = `${disk}.content.partitions.*`;
-const nodev = "disko.devices.nodev.*";
-
-const diskoEntries: OptionEntry[] = [
-  opt(`${disk}.type`, "enum", { values: ["disk"] }),
-  // Free-form on purpose: only the options below are checked inside it.
-  opt(`${disk}.content`, "attrs"),
-  opt(`${disk}.content.type`, "enum", { values: content }),
-  opt(`${part}.size`, "str"),
-  opt(`${part}.type`, "str"),
-  opt(`${part}.priority`, "int"),
-  opt(`${part}.content.type`, "enum", { values: content }),
-  opt(`${part}.content.format`, "str"),
-  opt(`${part}.content.mountpoint`, "str"),
-  opt(`${part}.content.mountOptions`, "list"),
-  opt(`${nodev}.fsType`, "str"),
-  opt(`${nodev}.device`, "str"),
-  opt(`${nodev}.mountpoint`, "str"),
-  opt(`${nodev}.mountOptions`, "list"),
-];
-
 // Top-level attributes of flake.nix, from the "Flake format" section of the Nix manual.
 const flakeEntries: OptionEntry[] = [
   opt("description", "str"),
@@ -58,6 +33,7 @@ export const overlays: Record<Target, Overlay> = {
     entries: moduleEntries,
   },
   "home-manager": { entries: moduleEntries },
-  disko: { entries: [...moduleEntries, ...diskoEntries] },
+  // The nested options of the disk layouts are read from disko itself (see disko.ts).
+  disko: { entries: moduleEntries },
   flake: { entries: flakeEntries },
 };

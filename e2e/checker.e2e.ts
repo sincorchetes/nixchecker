@@ -105,7 +105,7 @@ describe("checker", () => {
     });
     // disko is not used by any earlier test, so nothing of it is cached yet.
     await validate("{ disko.devices = { }; }");
-    expect(files).toEqual(["disko/index.json", "disko/disko.json"]);
+    expect(files).toEqual(["disko/index.json", "disko/disko~0.json"]);
   });
 
   test("validates against the chosen release", async () => {

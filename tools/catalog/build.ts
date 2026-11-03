@@ -6,6 +6,7 @@ import { convert, type Overlay } from "../../src/lib/catalog/convert";
 import { extractRenames } from "../../src/lib/catalog/renames";
 import { shardFile, toShards } from "../../src/lib/catalog/shard";
 import { catalogName, VERSIONS, type Version } from "../../src/lib/catalog/versions";
+import { diskoEntries } from "./disko";
 import { overlays } from "./overlay";
 
 const root = join(import.meta.dir, "..", "..");
@@ -86,6 +87,26 @@ async function build(attr: string, overlay: Overlay) {
   return convert(options, hidden, { ...overlay, renamed }, shapes);
 }
 
+// The overlay of disko plus the nested options of its disk layouts, which its manual does not list.
+async function withDiskoLayouts(overlay: Overlay): Promise<Overlay> {
+  const proc = Bun.spawn(
+    [
+      "nix",
+      "build",
+      `${flakeDir}#disko-types`,
+      "--no-link",
+      "--print-out-paths",
+      "--extra-experimental-features",
+      "nix-command flakes",
+    ],
+    { stderr: "inherit" },
+  );
+  const out = (await new Response(proc.stdout).text()).trim();
+  if ((await proc.exited) !== 0) throw new Error("nix build disko-types failed");
+  const layouts = diskoEntries(await Bun.file(out).json());
+  return { ...overlay, entries: [...(overlay.entries ?? []), ...layouts] };
+}
+
 // What each catalog was made from and the hash of every file in it, so a copy can be checked.
 const manifest: Record<
   string,
@@ -138,10 +159,12 @@ for (const version of VERSIONS) {
     [homeManager, nixpkgs],
   );
 }
-await write("disko", label("disko", "disko"), await build("disko", overlays.disko), [
+await write(
   "disko",
-  "nixpkgs",
-]);
+  label("disko", "disko"),
+  await build("disko", await withDiskoLayouts(overlays.disko)),
+  ["disko", "nixpkgs"],
+);
 await write("flake", "Nix manual · flake format", convert({}, [], overlays.flake));
 
 // The revisions are the pins of tools/catalog/flake.lock, whose own hash is recorded too.

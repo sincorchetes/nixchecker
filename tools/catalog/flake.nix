@@ -125,6 +125,10 @@
           disko = bundle nixpkgs.legacyPackages.${system} "disko" "${disko}" {
             disko = (nixosSystem releases.unstable [ disko.nixosModules.disko ]).options.disko;
           };
+          # The options of every disk layout type, as disko serializes them for its own documentation.
+          disko-types = nixpkgs.legacyPackages.${system}.writeText "disko-types.json" (
+            builtins.toJSON disko.lib.jsonTypes
+          );
         };
     };
 }
