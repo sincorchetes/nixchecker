@@ -21,6 +21,7 @@ export interface Options {
   disko?: string | undefined;
   static?: boolean | undefined;
   partial?: boolean | undefined;
+  allOutputs?: boolean | undefined;
 }
 
 /** Where the catalog a file was checked against comes from, as recorded when it was generated. */
@@ -98,7 +99,7 @@ export async function checkFile(file: string, o: Options): Promise<Result> {
   if (evaluated) {
     const found: Finding[] =
       target === "flake"
-        ? await evaluateFlake(resolve(file))
+        ? await evaluateFlake(resolve(file), o.allOutputs)
         : await evaluate(
             target as Kind,
             await rootsOf(o),

@@ -19,6 +19,8 @@ Options:
                       assertions of a whole system (root file system, boot loader)
   --format <f>        ${FORMATS.join(", ")} (default: text); sarif is for code scanning
   --json              same as --format json
+  --all-outputs       for a flake, also evaluate its packages, checks and devShells (the
+                      default is its nixosConfigurations and homeConfigurations)
   --jobs <n>          files checked at the same time (default: ${Math.min(4, availableParallelism())})
   --nixpkgs <dir>     use this nixpkgs instead of building the pinned one (with --home-manager)
   --home-manager <dir>
@@ -45,6 +47,7 @@ export interface Command {
   disko?: string | undefined;
   static?: boolean | undefined;
   partial?: boolean | undefined;
+  allOutputs?: boolean | undefined;
 }
 
 export function parseCommand(argv: string[]): Command {
@@ -84,6 +87,7 @@ export function parseCommand(argv: string[]): Command {
     disko: values.disko,
     static: values.static,
     partial: values.partial,
+    allOutputs: values["all-outputs"],
   };
 }
 
@@ -95,6 +99,7 @@ const OPTIONS = {
   disko: { type: "string" },
   static: { type: "boolean" },
   partial: { type: "boolean" },
+  "all-outputs": { type: "boolean" },
   json: { type: "boolean" },
   format: { type: "string" },
   jobs: { type: "string", short: "j" },

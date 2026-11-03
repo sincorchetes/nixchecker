@@ -4,7 +4,7 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { problemsWith } from "../sarif-schema";
-import { evaluate, scratch, writeFlake } from "./support";
+import { currentSystem, evaluate, scratch, writeFlake } from "./support";
 
 const TIME = 900_000;
 let dir: string;
@@ -174,6 +174,44 @@ describe("a part of a system", () => {
       );
       expect(run.code).toBe(1);
       expect(run.items[0]).toMatchObject({ level: "evaluation", line: 2, col: 3 });
+    },
+    TIME,
+  );
+});
+
+describe("the other outputs of a flake", () => {
+  const broken = async () => {
+    const flake = await scratch();
+    const system = await currentSystem();
+    // A package that cannot even be evaluated, next to one that can.
+    await writeFlake(flake, {
+      outputs: `packages.${system} = {
+        fine = nixpkgs.legacyPackages.${system}.hello;
+        broken = throw "this package is broken on purpose";
+      };`,
+    });
+    return { flake, system };
+  };
+
+  test(
+    "are left alone unless asked for, as documented",
+    async () => {
+      const { flake } = await broken();
+      const run = await evaluate("--format", "json", join(flake, "flake.nix"));
+      expect(run.code).toBe(0);
+    },
+    TIME,
+  );
+
+  test(
+    "with --all-outputs, a package that cannot be evaluated is found, by name",
+    async () => {
+      const { flake, system } = await broken();
+      const run = await evaluate("--format", "json", "--all-outputs", join(flake, "flake.nix"));
+      expect(run.code).toBe(1);
+      const errors = run.items.filter((i) => i.severity === "error");
+      expect(errors.map((i) => i.config)).toEqual([`packages.${system}.broken`]);
+      expect(errors[0]?.message).toContain("this package is broken on purpose");
     },
     TIME,
   );

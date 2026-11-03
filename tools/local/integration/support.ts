@@ -46,8 +46,32 @@ export const sources = async () => {
   return { nixpkgs: nixpkgs as string, homeManager: homeManager as string };
 };
 
-/** Writes a flake that has one NixOS and one Home Manager configuration, with extra settings in each. */
-export async function writeFlake(dir: string, extra: { nixos?: string; home?: string } = {}) {
+/** The system this runs on, as flakes name it (`x86_64-linux`). */
+export async function currentSystem(): Promise<string> {
+  const proc = Bun.spawn(
+    [
+      "nix",
+      "eval",
+      "--impure",
+      "--raw",
+      "--expr",
+      "builtins.currentSystem",
+      "--extra-experimental-features",
+      "nix-command",
+    ],
+    { stdout: "pipe", stderr: "ignore" },
+  );
+  return (await new Response(proc.stdout).text()).trim();
+}
+
+/**
+ * Writes a flake that has one NixOS and one Home Manager configuration, with extra settings in each, and
+ * more outputs (`outputs`, as attributes of the flake) when given.
+ */
+export async function writeFlake(
+  dir: string,
+  extra: { nixos?: string; home?: string; outputs?: string } = {},
+) {
   const { nixpkgs, homeManager } = await sources();
   await Bun.write(
     join(dir, "flake.nix"),
@@ -76,6 +100,7 @@ export async function writeFlake(dir: string, extra: { nixos?: string; home?: st
         ${extra.home ?? ""}
       } ];
     };
+    ${extra.outputs ?? ""}
   };
 }
 `,

@@ -1,4 +1,5 @@
-// Evaluates a flake with its own inputs: every NixOS and Home Manager configuration it defines.
+// Evaluates a flake with its own inputs: every NixOS and Home Manager configuration it defines, and, when
+// asked, the packages, checks and development shells of the system this runs on.
 import { dirname } from "node:path";
 import { type Finding, parseEvaluation } from "../../src/lib/evaluation";
 
@@ -11,10 +12,14 @@ const FLAGS = [
 ];
 
 // The derivation of a configuration only evaluates when every assertion of it holds.
-const DERIVATIONS = {
+const CONFIGURATIONS = {
   nixosConfigurations: "config.system.build.toplevel.drvPath",
   homeConfigurations: "activationPackage.drvPath",
 } as const;
+
+// The outputs that are derivations for each system. Evaluating one is instantiating it: whatever is wrong
+// in how it is written fails, but nothing is built, so a build that fails is not found.
+const PER_SYSTEM = ["packages", "checks", "devShells"] as const;
 
 async function nix(args: string[]): Promise<{ ok: boolean; out: string; err: string }> {
   const proc = Bun.spawn(["nix", ...args, ...FLAGS], { stdout: "pipe", stderr: "pipe" });
@@ -29,11 +34,20 @@ async function nix(args: string[]): Promise<{ ok: boolean; out: string; err: str
 export const original = (file: string | undefined, dir: string): string | undefined =>
   file?.replace(/^\/nix\/store\/[^/]+-source\//, `${dir}/`);
 
-/** The warnings and errors of every configuration of the flake `file`, tagged with its name. */
-export async function evaluateFlake(path: string): Promise<Finding[]> {
+/**
+ * The warnings and errors of every configuration of the flake `file` (and of its packages, checks and
+ * development shells when `all`), tagged with the name of each.
+ */
+export async function evaluateFlake(path: string, all = false): Promise<Finding[]> {
   const ref = `path:${dirname(path)}`;
   const findings: Finding[] = [];
-  for (const [output, derivation] of Object.entries(DERIVATIONS)) {
+  const outputs: Array<[string, string]> = Object.entries(CONFIGURATIONS);
+  if (all) {
+    const system = (await nix(["eval", "--impure", "--raw", "--expr", "builtins.currentSystem"]))
+      .out;
+    for (const output of PER_SYSTEM) outputs.push([`${output}.${system}`, "drvPath"]);
+  }
+  for (const [output, derivation] of outputs) {
     const names = await nix([
       "eval",
       "--json",
