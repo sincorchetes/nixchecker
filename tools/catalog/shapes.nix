@@ -106,6 +106,21 @@ let
     else
       leaf t;
 
+  # `meta.maintainers` and `meta.teams` of any module: lists of the entries of `lib.maintainers` and `lib.teams`,
+  # which are sets. Their type has no inner type to read: only its description says so, and reading that
+  # recurses forever on some types.
+  isMeta =
+    loc:
+    let
+      n = lib.length loc;
+    in
+    n >= 2
+    && lib.elemAt loc (n - 2) == "meta"
+    && lib.elem (lib.elemAt loc (n - 1)) [
+      "maintainers"
+      "teams"
+    ];
+
   # Every option, with those inside submodules (which the manuals list under `<name>`).
   options =
     depth: opts:
@@ -119,7 +134,8 @@ let
         [
           {
             name = lib.showOption opt.loc;
-            value = lib.unique (walk false 0 opt.type);
+            value =
+              if isMeta opt.loc then [ [ "l" "a" ] ] else lib.unique (walk false 0 opt.type);
           }
         ]
         ++ lib.optionals (sub != { }) (options (depth + 1) (lib.collect lib.isOption sub))

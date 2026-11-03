@@ -54,6 +54,7 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   hand-written cases for both, valid and not.
 - The type a value is coerced from (`coercedTo`) is read shallowly: Nix only asks whether it is a list, so the elements of
   `extraCreateArgs = [ 1 ]` are not wrong (a false positive of the oracle, found on a sample of 150 options).
+- `meta.maintainers` and `meta.teams` (they turn up under the submodules of many options) take sets, not strings or integers.
 - No wrong value is left unconfirmed for lack of room: the cap of ten extra options read apart is gone (they are
   read four at a time), and an integration test has twenty wrong values, all confirmed by Nix.
 - A file with no expression in it (empty, or only comments) is a syntax error in the CLI, as Nix says; the
