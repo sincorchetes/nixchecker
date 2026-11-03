@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { isPatternKind, matches, patternKind, patternOf } from "./pattern";
+import {
+  enumElementKind,
+  enumValues,
+  isPatternKind,
+  matches,
+  patternKind,
+  patternOf,
+} from "./pattern";
 
 describe("pattern kinds", () => {
   test("round-trip an expression, keeping the separators of kinds out of it", () => {
@@ -8,6 +15,12 @@ describe("pattern kinds", () => {
     expect(isPatternKind(kind)).toBe(true);
     expect(isPatternKind("str")).toBe(false);
     expect(patternOf(kind)).toBe("[a-z]+:x");
+  });
+
+  test("the values of an enum come back as written, in either form", () => {
+    expect(enumValues(enumElementKind(["a+b", "c:d"]))).toEqual(["a+b", "c:d"]);
+    expect(enumElementKind(["a+b"]).slice(5)).not.toMatch(/[+:]/);
+    expect(enumValues('enum:["x","y"]')).toEqual(["x", "y"]);
   });
 
   test("a string has to match all of the expression", () => {

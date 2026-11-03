@@ -1,5 +1,5 @@
 import { splitPath } from "./path";
-import { patternKind } from "./pattern";
+import { enumElementKind, patternKind } from "./pattern";
 import { buildTree, type OptionTree } from "./tree";
 import { type OptionEntry, opt, type Target } from "./types";
 
@@ -22,6 +22,7 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("mixed.text", "mix", { values: ["str", "list:str"] }),
     opt("files.root", "path"),
     opt("files.list", "list", { values: ["path"] }),
+    opt("mixed.shells", "list", { values: [enumElementKind(["bash", "zsh+fzf"])] }),
     opt("units.name", "mix", { values: [patternKind("^[a-z]+[.]service$")] }),
     opt("units.after", "list", { values: [patternKind("[a-z]+[.](service|socket)")] }),
     opt("units.either", "mix", { values: ["int", patternKind("[[:digit:]]+")] }),

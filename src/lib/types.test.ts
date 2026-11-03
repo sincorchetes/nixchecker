@@ -91,6 +91,12 @@ describe("values narrowed by more than their kind", () => {
     expect(got('{ x, ... }: { files.list = [ "${x}/a" x ]; }')).toEqual([]);
   });
 
+  test("the elements of a list can be held to an enum", () => {
+    expect(got('{ mixed.shells = [ "bash" "zsh+fzf" ]; }')).toEqual([]);
+    expect(got('{ x, ... }: { mixed.shells = [ "${x}" x ]; }')).toEqual([]);
+    expect(got('{ mixed.shells = [ "fish" ]; }')).toEqual(["list of enum(bash | zsh+fzf)"]);
+  });
+
   test("a string with a pattern has to match it, and says which", () => {
     expect(got('{ units.name = "a.service"; }')).toEqual([]);
     expect(got('{ units.name = "a"; }')).toEqual(["string matching ^[a-z]+[.]service$"]);

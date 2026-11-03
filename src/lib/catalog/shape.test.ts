@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { enumElementKind } from "./pattern";
 import { elementsOf, fromShape } from "./shape";
 
 describe("fromShape", () => {
@@ -62,7 +63,14 @@ describe("fromShape", () => {
     ).toHaveLength(3);
     expect(fromShape([["l", ["e", "x"]], "s"])).toEqual({
       type: "mix",
-      values: ["list:str", "str"],
+      values: ["list:enum:%5B%22x%22%5D", "str"],
+    });
+  });
+
+  test("a list of an enum keeps its values, whatever characters they have", () => {
+    expect(fromShape([["l", ["e", "a+b", "c:d"]]])).toEqual({
+      type: "list",
+      values: [enumElementKind(["a+b", "c:d"])],
     });
   });
 

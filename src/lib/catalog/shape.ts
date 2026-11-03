@@ -1,4 +1,4 @@
-import { patternKind } from "./pattern";
+import { enumElementKind, patternKind } from "./pattern";
 import type { OptionType } from "./types";
 
 /**
@@ -29,11 +29,14 @@ const KIND: Record<string, string> = {
   k: "pkg",
 };
 
-const ELEMENT: Record<string, string> = { e: "str", m: "attrs", l: "list" };
+const ELEMENT: Record<string, string> = { m: "attrs", l: "list" };
 
 // An alternative that is a list or a set: the kind of what it holds, and a pattern keeps its expression.
-const elementKind = (alt: Alt[]): string | undefined =>
-  alt[0] === "r" ? patternKind(alt[1] as string) : ELEMENT[alt[0] as string];
+const elementKind = (alt: Alt[]): string | undefined => {
+  if (alt[0] === "r") return patternKind(alt[1] as string);
+  if (alt[0] === "e") return enumElementKind(alt.slice(1) as string[]);
+  return ELEMENT[alt[0] as string];
+};
 
 // What an alternative of a list's elements allows, as the kinds a catalog stores. Undefined when it is
 // something nothing can be said about.

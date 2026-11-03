@@ -18,6 +18,17 @@ const CLASSES: Record<string, string> = {
   space: "\\s",
 };
 
+// A fixed set of strings as an element of a list: the same JSON a top-level `enum:["a"]` holds, URI-encoded
+// so that a `+` in a value is not taken for the separator of kinds.
+export const enumElementKind = (values: string[]): string =>
+  `enum:${encodeURIComponent(JSON.stringify(values))}`;
+
+/** The strings an `enum:` kind allows, written either way. */
+export function enumValues(kind: string): string[] {
+  const text = kind.slice("enum:".length);
+  return JSON.parse(text.startsWith("[") ? text : decodeURIComponent(text)) as string[];
+}
+
 const compiled = new Map<string, RegExp | null>();
 
 // The expression of a kind as JavaScript reads it, which has to match the whole string as Nix's does.

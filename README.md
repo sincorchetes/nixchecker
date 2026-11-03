@@ -109,7 +109,7 @@ Limits to know about:
 - A string that must match a pattern (`strMatching`: a host name, a unit name such as `x.service`) is
   checked against it, and so are the elements of a list of paths. What narrows a value in other ways is
   checked as its base type, and the page lets such a value through (`evaluate` finds it): the fixed
-  integers of an `enum`, the strings an `enum` allows as elements of a list, the lists nixpkgs defines
+  integers of an `enum`, the lists nixpkgs defines
   for itself (`meta.teams`), and everything disko narrows (it serializes its patterns as plain strings).
   In the oracle these are about 1 % of the wrong values.
 - When a wrong value makes another module's `mkIf` fail (`programs.sway.enable = "yes"` stops what

@@ -1,6 +1,6 @@
 import type { SkipCause } from "./analysis";
 import type { IndexedOption, OptionTree } from "./catalog";
-import { isPatternKind, matches, patternOf } from "./catalog/pattern";
+import { enumValues, isPatternKind, matches, patternOf } from "./catalog/pattern";
 import { knownPrefix } from "./catalog/tree";
 import type { Assignment, ValueKind } from "./nix/scan";
 
@@ -38,6 +38,10 @@ function packageFits(
   return kind === "other";
 }
 
+// Whether a string (not written out in full, if `undefined`) is one an `enum:` kind allows.
+const inEnum = (kind: string, value: string | undefined): boolean =>
+  value === undefined || enumValues(kind).includes(value);
+
 // Whether an element of a list written out can be one of the kinds the list takes.
 function elementFits(
   allowed: string[],
@@ -47,6 +51,7 @@ function elementFits(
 ): boolean {
   if (kind === "other" || allowed.includes(kind)) return true;
   if (kind === "str" && allowed.some((k) => isPatternKind(k) && matches(k, value))) return true;
+  if (kind === "str" && allowed.some((k) => k.startsWith("enum:") && inEnum(k, value))) return true;
   if (kind === "str" && allowed.includes("path") && (value === undefined || value.startsWith("/")))
     return true;
   return allowed.includes("pkg") && packageFits(kind, value, plain);
@@ -77,8 +82,7 @@ export function describeGot(entry: IndexedOption, a: Assignment): string {
 
 const describeKind = (kind: string): string => {
   if (isPatternKind(kind)) return `string matching ${patternOf(kind)}`;
-  if (kind.startsWith("enum:"))
-    return `enum(${(JSON.parse(kind.slice(5)) as string[]).join(" | ")})`;
+  if (kind.startsWith("enum:")) return `enum(${enumValues(kind).join(" | ")})`;
   if (kind.startsWith("list:"))
     return `list of ${kind.slice(5).split("+").map(describeKind).join(" or ")}`;
   return kind === "pkg" ? "package" : kind;
@@ -92,8 +96,7 @@ const isAbsolute = (a: Assignment) =>
 function mixMismatch(kinds: string[], a: Assignment): string | undefined {
   const fits = (kind: string) => {
     if (kind.startsWith("enum:")) {
-      const values = JSON.parse(kind.slice("enum:".length)) as string[];
-      return a.kind === "str" && (a.value === undefined || values.includes(a.value));
+      return a.kind === "str" && inEnum(kind, a.value);
     }
     if (isPatternKind(kind)) return a.kind === "str" && matches(kind, a.value);
     if (kind === "path") return isAbsolute(a);
