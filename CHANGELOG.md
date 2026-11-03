@@ -25,6 +25,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   configurations of a flake with its own inputs, and takes `--partial` for a file that is part of a
   system (its options are read; the assertions of a whole system are skipped).
 - The page validates by itself when the text rests for a moment (the button still validates at once).
+- A flake with the packaged command line and language server: `nix run github:sincorchetes/nixchecker`
+  and `nix run github:sincorchetes/nixchecker#lsp`, checked by `nix flake check` in CI.
 - `devenv shell -- lsp`: a Language Server that publishes the static findings as diagnostics in any editor,
   with the certain fixes (misspelled or renamed options) as quick fixes, completes option names from the catalog and shows the type of an option on hover.
 - The analysis runs in a Web Worker (in the page where one cannot start), and a service worker keeps

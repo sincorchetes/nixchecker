@@ -11,7 +11,7 @@ async function sourceRoot(attr: string, levels: number): Promise<string> {
     [
       "nix",
       "build",
-      `${flakeDir}#${attr}`,
+      `path:${flakeDir}#${attr}`,
       "--no-link",
       "--print-out-paths",
       "--extra-experimental-features",

@@ -26,8 +26,13 @@ The page only analyzes text. For what needs evaluation (`imports`, `mkIf`, `mkMe
 the assertions of the system), run the file through the module system of your own Nix:
 
 ```sh
-devenv shell -- evaluate my-config.nix --target nixos --release 26.05
+nix run github:sincorchetes/nixchecker -- my-config.nix --target nixos --release 26.05
 ```
+
+That runs the command line from the flake of this repository (Nix and network needed the first time;
+the pinned sources are built once and kept). Pin a version with `github:sincorchetes/nixchecker/v0.0.N`,
+or put `nixchecker` and `nixchecker-lsp` on your PATH with `nix profile install github:sincorchetes/nixchecker`.
+In a clone of the repository, `devenv shell -- evaluate …` is the same command.
 
 It prints the static findings and then what Nix itself says, each marked by how sure it is
 (`syntax`, `static check`, `confirmed by Nix`), and exits with 1 when something is an error. When Nix
@@ -50,7 +55,7 @@ run again to see the next.
 
 ### In your editor
 
-`devenv shell -- lsp` starts a Language Server (stdio) that publishes the static findings as diagnostics
+`nixchecker-lsp` (in a clone, `devenv shell -- lsp`) starts a Language Server (stdio) that publishes the static findings as diagnostics
 while you type, over the word each one is about: wrong types, unknown options, syntax errors. Point any
 LSP client at it for `nix` files. Options go in `initializationOptions`:
 `{ "target": "nixos", "release": "unstable" }` (the target is detected when left out). Where a finding has a fix that
@@ -60,13 +65,14 @@ statement, and inside `x.y = { ... }`, with the type of each option), but not in
 comments. On hover it shows the option's type, what it was renamed to, and a link to its official
 page (the catalogs keep no descriptions). It does not run Nix: use `evaluate` for that.
 
-For example, in Neovim (checked with 0.12), from this repository:
+Without a clone: `nix run github:sincorchetes/nixchecker#lsp`, or `nixchecker-lsp` once installed with
+`nix profile install`. For example, in Neovim (checked with 0.12, from a clone):
 
 ```lua
 vim.lsp.start({
   name = "nixchecker",
-  cmd = { "devenv", "shell", "--", "lsp" },
-  root_dir = "/path/to/nixchecker",
+  cmd = { "nix", "run", "github:sincorchetes/nixchecker#lsp" },
+  root_dir = vim.fn.getcwd(),
   init_options = { target = "nixos" },
 })
 ```

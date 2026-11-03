@@ -37,6 +37,7 @@ Siempre que se terminen de implementar cambios en el proyecto, seguir rigurosame
 ## Convenciones del proyecto
 
 - **Todo pasa por devenv**: la CI ejecuta los mismos scripts que en local (`devenv shell -- <script>`). Scripts: `dev`, `check` (tsc), `lint`, `fix`, `unit`, `e2e`, `site-build`, `start`, `catalog`, `corpus`, `differential`, `oracle`, `evaluate`, `integration`, `lsp`, `secrets`, `sonar`. Se definen en `devenv.nix`.
+- **Paquete Nix**: `flake.nix` (raíz) empaqueta la CLI y el LSP (`nix run .# -- archivo.nix`, `nix run .#lsp`); `nix flake check` ejecuta el binario empaquetado y la CI lo corre. Si cambian los archivos que usan la CLI o el LSP (`src/lib`, `tools/local`, `tools/lsp`, `tools/corpus/sources.ts`, `tools/catalog/{flake.nix,flake.lock,shapes.nix}`, `public/catalog`), el `fileset` de `flake.nix` debe seguir cubriéndolos. Los archivos nuevos hay que añadirlos a git para que el flake los vea.
 - **Bun para todo** (instalar, ejecutar, tests); no usar `npm`.
 - **Idiomas**: la interfaz y lo que se genera existen en español (texto fuente, `src/lib/i18n/es.ts`) e inglés (`src/lib/i18n/en.ts`). Cada texto nuevo lleva su traducción; el compilador y un test fallan si falta. La documentación del repositorio (`README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CREDITS.md`) **y los comentarios del código** están en inglés americano; este archivo está en español.
 - **Salida de herramientas en inglés**: lo que imprimen los scripts, `devenv test`, la CI y los títulos de los tests (`describe`/`test`) va en inglés, igual que los mensajes de `devenv.nix`.
