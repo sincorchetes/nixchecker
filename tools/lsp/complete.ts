@@ -4,8 +4,9 @@ import { loadCatalog } from "../../src/lib/catalog";
 import { childrenOf, findExact } from "../../src/lib/catalog/tree";
 import type { CatalogIndex } from "../../src/lib/catalog/types";
 import { catalogName, type Version } from "../../src/lib/catalog/versions";
+import { checkText } from "../../src/lib/check-text";
 import { byName } from "../../src/lib/sort";
-import { analyze, resolveTarget, type TargetChoice } from "../../src/lib/validate";
+import type { TargetChoice } from "../../src/lib/validate";
 import { fromDisk, publicDir } from "../local/static-layer";
 
 export interface Candidate {
@@ -24,7 +25,9 @@ export async function candidates(
   version: Version,
   path: string[],
 ): Promise<Candidate[]> {
-  const target = resolveTarget(analyze(text), (choice ?? "auto") as TargetChoice);
+  // The target is decided as everywhere else: by what the text says, or by where it has fewer errors.
+  const target = (await checkText(text, (choice ?? "auto") as TargetChoice, version, "/", fromDisk))
+    .report.target;
   const { tree } = await loadCatalog(target, version, "/", path.length > 0 ? [path] : [], fromDisk);
   const file = join(publicDir, "catalog", catalogName(target, version), "index.json");
   const index = (await Bun.file(file).json()) as CatalogIndex;

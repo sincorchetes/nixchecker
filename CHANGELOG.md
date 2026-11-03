@@ -52,6 +52,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - `evaluate`: when Nix accepts a module, the static findings it settles are dropped; when it fails, a
   static finding at the same place is merged with the confirmed one, and an error in an imported module
   names its file.
+- The page, `evaluate` and the language server decide the target the same way: by what the file says, or
+  else where it has fewer errors (NixOS or Home Manager). The command line and the editor used to take
+  NixOS whenever the file did not say.
 - A value written below an `attrsOf` option is judged by the deepest option that knows its type, and
   attributes written below a list option are a type error.
 - Names with dots inside quotes (`services.akkoma.config.":pleroma"."Pleroma.Web.Endpoint".http.port`)

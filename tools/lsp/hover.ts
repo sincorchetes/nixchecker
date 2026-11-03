@@ -5,7 +5,8 @@ import { docUrl, loadCatalog } from "../../src/lib/catalog";
 import { splitPath } from "../../src/lib/catalog/path";
 import { childrenOf, findExact } from "../../src/lib/catalog/tree";
 import type { Version } from "../../src/lib/catalog/versions";
-import { analyze, resolveTarget, type TargetChoice } from "../../src/lib/validate";
+import { checkText } from "../../src/lib/check-text";
+import type { TargetChoice } from "../../src/lib/validate";
 import { fromDisk } from "../local/static-layer";
 import { contextAt } from "./context";
 
@@ -39,7 +40,9 @@ export async function hoverAt(
   const cursorOn = splitPath(text.slice(start, offset)).length;
   const path = [...enclosing, ...written.slice(0, Math.max(cursorOn, 1))];
 
-  const target = resolveTarget(analyze(text), (choice ?? "auto") as TargetChoice);
+  // The target is decided as everywhere else: by what the text says, or by where it has fewer errors.
+  const target = (await checkText(text, (choice ?? "auto") as TargetChoice, version, "/", fromDisk))
+    .report.target;
   const { tree } = await loadCatalog(target, version, "/", [path], fromDisk);
   const entry = findExact(tree, path);
   const below = childrenOf(tree, path).length;

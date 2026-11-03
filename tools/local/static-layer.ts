@@ -1,15 +1,10 @@
 // The static layer of a check, for a text in memory: the analysis of the page against the catalog of a
 // release on disk.
 import { join } from "node:path";
-import { loadCatalog } from "../../src/lib/catalog/load";
+import type { Target } from "../../src/lib/catalog";
 import type { Version } from "../../src/lib/catalog/versions";
-import {
-  analyze,
-  check,
-  type Diagnostic,
-  resolveTarget,
-  type TargetChoice,
-} from "../../src/lib/validate";
+import { checkText } from "../../src/lib/check-text";
+import type { Analysis, Diagnostic, TargetChoice } from "../../src/lib/validate";
 import { fromDiagnostic, type Located } from "./report";
 
 export const publicDir = join(import.meta.dir, "..", "..", "public");
@@ -17,8 +12,8 @@ export const fromDisk = (async (url) =>
   new Response(Bun.file(join(publicDir, String(url))))) as typeof fetch;
 
 export interface StaticResult {
-  analysis: ReturnType<typeof analyze>;
-  target: ReturnType<typeof resolveTarget>;
+  analysis: Analysis;
+  target: Target;
   items: Located[];
   /** What `items` were made from, in the same order: the fixes are proposed by these. */
   diagnostics: Diagnostic[];
@@ -31,20 +26,17 @@ export async function staticLayer(
   choice: string | undefined,
   version: Version,
 ): Promise<StaticResult> {
-  const analysis = analyze(text);
-  const target = resolveTarget(analysis, (choice ?? "auto") as TargetChoice);
-  const catalog = await loadCatalog(
-    target,
+  const { analysis, report } = await checkText(
+    text,
+    (choice ?? "auto") as TargetChoice,
     version,
     "/",
-    analysis.assignments.map((a) => a.path),
     fromDisk,
   );
-  const report = check(analysis, target, catalog.tree, version);
   const { total, skipped } = report.coverage;
   return {
     analysis,
-    target,
+    target: report.target,
     items: report.diagnostics.map(fromDiagnostic),
     diagnostics: report.diagnostics,
     coverage: { checked: total - skipped.length, total },

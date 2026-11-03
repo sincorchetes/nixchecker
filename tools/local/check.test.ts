@@ -5,6 +5,7 @@ const script = join(import.meta.dir, "check.ts");
 const dir = await Bun.$`mktemp -d`.text().then((t) => t.trim());
 await Bun.write(join(dir, "good.nix"), '{ networking.hostName = "box"; }\n');
 await Bun.write(join(dir, "bad.nix"), "{ networking.hostName = 5; }\n");
+await Bun.write(join(dir, "hm.nix"), '{ programs.git.userEmail = "a@b.c"; }\n');
 await Bun.write(join(dir, "broken.nix"), "{ networking.hostName = ; }\n");
 
 async function run(...args: string[]) {
@@ -105,5 +106,13 @@ describe("evaluate CLI (formats)", () => {
 
   test("an unknown format is a usage error", async () => {
     expect((await run("--format", "xml", join(dir, "good.nix"))).code).toBe(2);
+  });
+});
+
+describe("evaluate CLI (target)", () => {
+  test("a file that could be NixOS or Home Manager goes where it has fewer errors, as on the page", async () => {
+    const r = await run("--format", "json", "--static", join(dir, "hm.nix"));
+    expect(JSON.parse(r.out).target).toBe("home-manager");
+    expect(r.code).toBe(0);
   });
 });
