@@ -22,6 +22,36 @@ function position(text: string, offset: number): Position {
   return { line, character: offset - (before.lastIndexOf("\n") + 1) };
 }
 
+export interface Range {
+  start: Position;
+  end: Position;
+}
+
+const before = (a: Position, b: Position) =>
+  a.line < b.line || (a.line === b.line && a.character <= b.character);
+
+/** Whether two ranges share at least a point, as a cursor on a finding does. */
+export const overlaps = (a: Range, b: Range): boolean =>
+  before(a.start, b.end) && before(b.start, a.end);
+
+/** The smallest single edit that turns `text` into `fixed`. */
+export function editBetween(text: string, fixed: string): { range: Range; newText: string } {
+  let start = 0;
+  while (start < text.length && start < fixed.length && text[start] === fixed[start]) start++;
+  let end = 0;
+  while (
+    end < text.length - start &&
+    end < fixed.length - start &&
+    text[text.length - 1 - end] === fixed[fixed.length - 1 - end]
+  ) {
+    end++;
+  }
+  return {
+    range: { start: position(text, start), end: position(text, text.length - end) },
+    newText: fixed.slice(start, fixed.length - end),
+  };
+}
+
 export function toLsp(text: string, items: Located[]): LspDiagnostic[] {
   return items.map((item) => {
     const [start, end] = item.line ? wordAt(text, item.line, item.col ?? 1) : [0, 0];

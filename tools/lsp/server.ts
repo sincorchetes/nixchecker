@@ -2,11 +2,15 @@
 //   bun tools/lsp/server.ts     (talks LSP over stdin/stdout; `devenv shell -- lsp`)
 // Options (initializationOptions): { "target": "nixos" | "home-manager" | "disko" | "flake", "release": "unstable" }.
 import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
+import { applyFix } from "../../src/lib/fix";
+import type { Diagnostic } from "../../src/lib/validate";
 import { staticLayer } from "../local/static-layer";
-import { toLsp } from "./diagnostics";
+import { editBetween, type LspDiagnostic, overlaps, type Range, toLsp } from "./diagnostics";
 import { type Message, readMessages, send } from "./rpc";
 
 const texts = new Map<string, string>();
+// What was last published for a document, to offer the fixes of its findings.
+const published = new Map<string, { diagnostics: Diagnostic[]; shown: LspDiagnostic[] }>();
 // Only the latest text of a document may be published: analyzing is asynchronous.
 const latest = new Map<string, number>();
 let options: { target?: string | undefined; release?: Version | undefined } = {};
@@ -16,15 +20,37 @@ async function publish(uri: string): Promise<void> {
   const token = (latest.get(uri) ?? 0) + 1;
   latest.set(uri, token);
   const text = texts.get(uri) ?? "";
-  let diagnostics: ReturnType<typeof toLsp> = [];
+  let diagnostics: LspDiagnostic[] = [];
+  let found: Diagnostic[] = [];
   try {
-    const { items } = await staticLayer(text, options.target, options.release ?? DEFAULT_VERSION);
-    diagnostics = toLsp(text, items);
+    const layer = await staticLayer(text, options.target, options.release ?? DEFAULT_VERSION);
+    diagnostics = toLsp(text, layer.items);
+    found = layer.diagnostics;
   } catch {
     // A catalog that cannot be read is no reason to flag the file.
   }
-  if (latest.get(uri) === token)
-    send({ method: "textDocument/publishDiagnostics", params: { uri, diagnostics } });
+  if (latest.get(uri) !== token) return;
+  published.set(uri, { diagnostics: found, shown: diagnostics });
+  send({ method: "textDocument/publishDiagnostics", params: { uri, diagnostics } });
+}
+
+// The fixes for the findings under `range`: each is one edit that applies what the finding proposes.
+function quickFixes(uri: string, range: Range) {
+  const text = texts.get(uri) ?? "";
+  const known = published.get(uri);
+  return (known?.diagnostics ?? []).flatMap((d, n) => {
+    const shown = known?.shown[n] as LspDiagnostic;
+    const fixed = overlaps(shown.range, range) ? applyFix(text, d) : undefined;
+    if (fixed === undefined) return [];
+    return [
+      {
+        title: `Apply fix: ${d.suggestion ?? d.params.replacement}`,
+        kind: "quickfix",
+        diagnostics: [shown],
+        edit: { changes: { [uri]: [editBetween(text, fixed)] } },
+      },
+    ];
+  });
 }
 
 type Document = { uri: string; text: string };
@@ -42,7 +68,13 @@ function handle({ id, method, params }: Message): void {
     case "initialize": {
       const given = (params?.initializationOptions ?? {}) as { target?: string; release?: string };
       options = { target: given.target, release: VERSIONS.find((v) => v === given.release) };
-      reply({ capabilities: { textDocumentSync: 1 }, serverInfo: { name: "nixchecker" } });
+      reply({
+        capabilities: {
+          textDocumentSync: 1,
+          codeActionProvider: { codeActionKinds: ["quickfix"] },
+        },
+        serverInfo: { name: "nixchecker" },
+      });
       break;
     }
     case "textDocument/didOpen": {
@@ -61,11 +93,15 @@ function handle({ id, method, params }: Message): void {
     case "textDocument/didClose": {
       const { uri } = documentOf(params);
       texts.delete(uri);
+      published.delete(uri);
       // Whatever is still being analyzed for it must not be published after this.
       latest.set(uri, (latest.get(uri) ?? 0) + 1);
       cleared(uri);
       break;
     }
+    case "textDocument/codeAction":
+      reply(quickFixes(documentOf(params).uri, params?.range as Range));
+      break;
     case "shutdown":
       shuttingDown = true;
       reply(null);

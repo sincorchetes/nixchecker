@@ -11,7 +11,7 @@ const write = (message: Record<string, unknown>) => {
   proc.stdin.write(`Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`);
   proc.stdin.flush();
 };
-const next = async () => (await incoming.next()).value as Message & Record<string, unknown>;
+const next = async <T = Message & Record<string, unknown>>() => (await incoming.next()).value as T;
 const open = (text: string) =>
   write({
     method: "textDocument/didOpen",
@@ -72,7 +72,55 @@ describe("language server", () => {
     write({ id: 9, method: "textDocument/hover", params: {} });
     expect(await next()).toMatchObject({ id: 9, error: { code: -32601 } });
   });
+});
 
+describe("language server fixes", () => {
+  const range = (character: number) => ({
+    start: { line: 0, character },
+    end: { line: 0, character },
+  });
+  const ask = (character: number) =>
+    write({
+      id: 20,
+      method: "textDocument/codeAction",
+      params: { textDocument: { uri: "file:///b.nix" }, range: range(character) },
+    });
+
+  test("a finding with a certain fix offers it as one small edit", async () => {
+    write({
+      method: "textDocument/didOpen",
+      params: {
+        textDocument: { uri: "file:///b.nix", text: "{ services.openssh.enabel = true; }" },
+      },
+    });
+    await next();
+    ask(10);
+    const reply = await next<{ result: Array<Record<string, unknown>> }>();
+    expect(reply.result).toHaveLength(1);
+    expect(reply.result[0]).toMatchObject({
+      kind: "quickfix",
+      title: "Apply fix: services.openssh.enable",
+      edit: {
+        changes: {
+          "file:///b.nix": [
+            {
+              // `enabel` and `enable` differ in the last two letters only: that is all the edit touches.
+              range: { start: { line: 0, character: 23 }, end: { line: 0, character: 25 } },
+              newText: "le",
+            },
+          ],
+        },
+      },
+    });
+  });
+
+  test("nothing is offered away from the finding", async () => {
+    ask(0);
+    expect((await next<{ result: unknown[] }>()).result).toEqual([]);
+  });
+});
+
+describe("language server shutdown", () => {
   test("shuts down and exits cleanly", async () => {
     write({ id: 10, method: "shutdown" });
     expect(await next()).toMatchObject({ id: 10, result: null });

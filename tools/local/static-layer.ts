@@ -3,7 +3,13 @@
 import { join } from "node:path";
 import { loadCatalog } from "../../src/lib/catalog/load";
 import type { Version } from "../../src/lib/catalog/versions";
-import { analyze, check, resolveTarget, type TargetChoice } from "../../src/lib/validate";
+import {
+  analyze,
+  check,
+  type Diagnostic,
+  resolveTarget,
+  type TargetChoice,
+} from "../../src/lib/validate";
 import { fromDiagnostic, type Located } from "./report";
 
 export const publicDir = join(import.meta.dir, "..", "..", "public");
@@ -13,6 +19,8 @@ export interface StaticResult {
   analysis: ReturnType<typeof analyze>;
   target: ReturnType<typeof resolveTarget>;
   items: Located[];
+  /** What `items` were made from, in the same order: the fixes are proposed by these. */
+  diagnostics: Diagnostic[];
   /** Assignments the analysis could judge, out of all of them. */
   coverage: { checked: number; total: number };
 }
@@ -37,6 +45,7 @@ export async function staticLayer(
     analysis,
     target,
     items: report.diagnostics.map(fromDiagnostic),
+    diagnostics: report.diagnostics,
     coverage: { checked: total - skipped.length, total },
   };
 }

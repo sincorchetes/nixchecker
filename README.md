@@ -53,8 +53,9 @@ run again to see the next.
 `devenv shell -- lsp` starts a Language Server (stdio) that publishes the static findings as diagnostics
 while you type, over the word each one is about: wrong types, unknown options, syntax errors. Point any
 LSP client at it for `nix` files. Options go in `initializationOptions`:
-`{ "target": "nixos", "release": "unstable" }` (the target is detected when left out). It does not run
-Nix: use `evaluate` for that.
+`{ "target": "nixos", "release": "unstable" }` (the target is detected when left out). Where a finding has a fix that
+is certain (a misspelled option, a renamed one), the editor offers it as a quick fix, one small edit.
+It does not run Nix: use `evaluate` for that.
 
 Limits to know about:
 
