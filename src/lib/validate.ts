@@ -10,6 +10,7 @@ import {
   knownPrefix,
   siblings,
 } from "./catalog/tree";
+import { foldUnrelated } from "./fold";
 import { byName } from "./sort";
 import { closest, distance } from "./suggest";
 import { isGroup, ownerReason, skipReason, typeMismatch, valueMismatch } from "./typecheck";
@@ -26,6 +27,7 @@ export {
   type SkipCause,
   type TargetChoice,
 } from "./analysis";
+export { foldUnrelated } from "./fold";
 
 // Closest known path to `path`, with `*` filled in from what the user wrote.
 function suggest(tree: OptionTree, path: string[], known: number): string | undefined {
@@ -200,7 +202,8 @@ export function validate(
 ): Report {
   const analysis = analyze(source);
   const target = resolveTarget(analysis, choice);
-  return check(analysis, target, catalogs[target], version);
+  const report = check(analysis, target, catalogs[target], version);
+  return choice === "auto" ? foldUnrelated(report, analysis, catalogs[target]) : report;
 }
 
 const errorsIn = (report: Report) =>

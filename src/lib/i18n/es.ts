@@ -77,6 +77,8 @@ export const es = {
     "«{name}» no está definido: no es un argumento ni se declara en el archivo. ¿Faltan comillas o un valor?",
   "diag.nothing-to-check":
     "No se ha encontrado ningún conjunto de atributos { ... } que revisar, así que no se ha comprobado nada. Pon las opciones dentro de llaves.",
+  "diag.not-a-module":
+    "Ninguna de las claves de este archivo es una opción de este tipo de archivo, así que no parece un módulo y no se ha comprobado nada. Puede ser una biblioteca, un paquete, un overlay, o solo opciones que declaran tus propios módulos.",
   "diag.unknown-option": "La opción «{path}» no existe en la documentación.",
   "diag.type-mismatch": "«{path}» espera {expected}, pero recibe {got}.",
   "diag.deprecated": "«{path}» está obsoleta: usa «{replacement}».",

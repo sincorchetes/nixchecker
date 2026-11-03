@@ -1,6 +1,13 @@
 import type { Analysis, Report } from "./analysis";
 import { loadCatalog, type OptionTree, type Version } from "./catalog";
-import { analyze, bestReport, candidateTargets, check, type TargetChoice } from "./validate";
+import {
+  analyze,
+  bestReport,
+  candidateTargets,
+  check,
+  foldUnrelated,
+  type TargetChoice,
+} from "./validate";
 
 export interface Checked {
   analysis: Analysis;
@@ -33,7 +40,10 @@ export async function checkText(
   const reports = kinds.map((kind, n) =>
     check(analysis, kind, (catalogs[n] as (typeof catalogs)[number]).tree, release),
   );
-  const report = bestReport(reports);
-  const catalog = catalogs[kinds.indexOf(report.target)] as (typeof catalogs)[number];
+  const best = bestReport(reports);
+  const catalog = catalogs[kinds.indexOf(best.target)] as (typeof catalogs)[number];
+  // A file that was not told what it is, and has no key that is an option of what it was held against, is
+  // not a module of it: one warning instead of an error for each key.
+  const report = choice === "auto" ? foldUnrelated(best, analysis, catalog.tree) : best;
   return { analysis, report, source: catalog.source, tree: catalog.tree };
 }

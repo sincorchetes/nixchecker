@@ -38,3 +38,15 @@ describe("checkText", () => {
     await expect(checkText("{ a = 1; }", "nixos", "26.05", "/", down)).rejects.toThrow();
   });
 });
+
+describe("checkText on a file that is no module", () => {
+  const lib = "{ toXmlAttrs = 1; mkXmlAttr = 2; }";
+
+  test("one warning when the kind was guessed, errors when it was chosen", async () => {
+    expect((await run(lib)).report.diagnostics.map((d) => d.code)).toEqual(["not-a-module"]);
+    expect((await run(lib, "nixos")).report.diagnostics.map((d) => d.code)).toEqual([
+      "unknown-option",
+      "unknown-option",
+    ]);
+  });
+});

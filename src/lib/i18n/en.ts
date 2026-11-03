@@ -78,6 +78,8 @@ export const en: Record<MessageKey, string> = {
     "“{name}” is not defined: it is not an argument and is not declared in the file. Missing quotes or a value?",
   "diag.nothing-to-check":
     "No attribute set { ... } was found to check, so nothing was validated. Put the options inside braces.",
+  "diag.not-a-module":
+    "None of the keys of this file is an option of this kind of file, so it does not look like a module of it and nothing was checked. It may be a library, a package, an overlay, or only options that your own modules declare.",
   "diag.unknown-option": "The option “{path}” does not exist in the documentation.",
   "diag.type-mismatch": "“{path}” expects {expected}, but gets {got}.",
   "diag.deprecated": "“{path}” is deprecated: use “{replacement}”.",
