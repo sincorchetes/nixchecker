@@ -39,7 +39,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - disko's layouts are read down to six levels of `content`, and below each device only what its types
   declare exists (the manual described hooks under `nodev` that the module does not have).
 - `evaluate --partial` finds every wrong value of a file in one run, not only the first one Nix stops at:
-  it asks which of the options the file sets fail to evaluate, and for the message of each of them.
+  it asks which of the options the file sets fail to evaluate, and for the message of each of them. Options
+  that do not exist no longer hide the wrong values of the rest: the file is read again with the module
+  system's existence check off (`_module.check = false`).
 - `evaluate --help`, `--version` and `--jobs`: every mistake in the command is one line with exit status 2,
   and several files are checked concurrently.
 - A flake with the packaged command line and language server: `nix run github:sincorchetes/nixchecker`

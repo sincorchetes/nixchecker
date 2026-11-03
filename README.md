@@ -53,9 +53,9 @@ is reported in that file, at its line and column.
   with its coverage and the revisions of the catalog used; `--format sarif` prints SARIF 2.1.0 for code scanning annotations.
 
 Nothing is uploaded: it all runs on your machine. In a whole system Nix stops at the first error it meets, so fix it and
-run again to see the next; with `--partial` every wrong value of the file is found in one run (an
-option that does not exist is the exception: Nix reports those first, and together, and nothing else
-until they are fixed).
+run again to see the next; with `--partial` every wrong value of the file is found in one run, and so are the
+options that do not exist (Nix stops at those before it looks at any value, so the file is read a
+second time with that check off).
 
 ### In your editor
 

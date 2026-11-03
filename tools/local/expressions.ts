@@ -13,9 +13,17 @@ const quote = (s: string) => JSON.stringify(s);
 /**
  * An expression taking `args` (an attribute set pattern such as `{ file, path }`). In `force`, `config`
  * is the configuration of the system made of the module `file` and `top` the path of its derivation, which
- * only evaluates when every assertion of the system holds.
+ * only evaluates when every assertion of the system holds. With `lenient` the module system does not
+ * check that every option written exists (`_module.check = false`), so what is wrong with the others shows.
  */
-export function systemExpression(kind: Kind, r: Roots, args: string, force: string): string {
+export function systemExpression(
+  kind: Kind,
+  r: Roots,
+  args: string,
+  force: string,
+  lenient = false,
+): string {
+  const loose = lenient ? "{ _module.check = false; }" : "";
   if (kind === "home-manager") {
     return `${args}:
 let
@@ -23,7 +31,7 @@ let
   hm = import (${quote(r.homeManager)} + "/modules") {
     inherit pkgs;
     configuration = {
-      imports = [ file ];
+      imports = [ file ${loose} ];
       home = { username = "u"; homeDirectory = "/home/u"; stateVersion = "25.05"; };
     };
   };
@@ -38,7 +46,7 @@ ${force}`;
 let
   ev = import (${quote(r.nixpkgs)} + "/nixos/lib/eval-config.nix") {
     system = "x86_64-linux";
-    modules = [ file ${extra} ];
+    modules = [ file ${extra} ${loose} ];
   };
   config = ev.config;
   top = ev.config.system.build.toplevel.drvPath;

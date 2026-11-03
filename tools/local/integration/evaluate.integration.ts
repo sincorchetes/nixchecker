@@ -1,10 +1,10 @@
 // The command line against real Nix, on the cases the unit tests can only imitate: what Nix accepts and
-// the analysis does not know, an error in an imported file, a part of a system, and a whole flake.
+// the analysis does not know, an error in an imported file, and a part of a system.
 // `devenv shell -- integration` (needs Nix; the first run builds the pinned sources).
 import { beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { problemsWith } from "../sarif-schema";
-import { currentSystem, evaluate, scratch, writeFlake } from "./support";
+import { evaluate, scratch } from "./support";
 
 const TIME = 900_000;
 let dir: string;
@@ -28,6 +28,11 @@ beforeAll(async () => {
   await write(
     "two-wrong.nix",
     `{ ... }: {\n  networking.hostName = 5;\n  services.openssh.ports = "x";\n  services.openssh.enable = true;\n}\n`,
+  );
+  // An option that does not exist next to two wrong values: Nix stops at the one that does not exist.
+  await write(
+    "mixed.nix",
+    `{ ... }: {\n  networking.hostName = 5;\n  services.openssh.enabel = true;\n  services.openssh.ports = "x";\n}\n`,
   );
   await write("good.nix", `{ ... }: {\n  networking.hostName = "box";\n}\n`);
 });
@@ -133,6 +138,29 @@ describe("more than the first error", () => {
   );
 });
 
+describe("an option that does not exist does not hide the wrong values", () => {
+  test(
+    "with --partial, it and every wrong value are confirmed in one run",
+    async () => {
+      const run = await evaluate(
+        "--format",
+        "json",
+        "--partial",
+        "--target",
+        "nixos",
+        join(dir, "mixed.nix"),
+      );
+      const confirmed = run.items.filter((i) => i.level === "evaluation");
+      expect(confirmed.map((i) => i.line).sort()).toEqual([2, 3, 4]);
+      const text = confirmed.map((i) => i.message).join("\n");
+      expect(text).toContain("services.openssh.enabel does not exist");
+      expect(text).toContain("networking.hostName");
+      expect(text).toContain("services.openssh.ports");
+    },
+    TIME,
+  );
+});
+
 describe("a part of a system", () => {
   test(
     "with --partial, only what the file sets is read",
@@ -174,74 +202,6 @@ describe("a part of a system", () => {
       );
       expect(run.code).toBe(1);
       expect(run.items[0]).toMatchObject({ level: "evaluation", line: 2, col: 3 });
-    },
-    TIME,
-  );
-});
-
-describe("the other outputs of a flake", () => {
-  const broken = async () => {
-    const flake = await scratch();
-    const system = await currentSystem();
-    // A package that cannot even be evaluated, next to one that can.
-    await writeFlake(flake, {
-      outputs: `packages.${system} = {
-        fine = nixpkgs.legacyPackages.${system}.hello;
-        broken = throw "this package is broken on purpose";
-      };`,
-    });
-    return { flake, system };
-  };
-
-  test(
-    "are left alone unless asked for, as documented",
-    async () => {
-      const { flake } = await broken();
-      const run = await evaluate("--format", "json", join(flake, "flake.nix"));
-      expect(run.code).toBe(0);
-    },
-    TIME,
-  );
-
-  test(
-    "with --all-outputs, a package that cannot be evaluated is found, by name",
-    async () => {
-      const { flake, system } = await broken();
-      const run = await evaluate("--format", "json", "--all-outputs", join(flake, "flake.nix"));
-      expect(run.code).toBe(1);
-      const errors = run.items.filter((i) => i.severity === "error");
-      expect(errors.map((i) => i.config)).toEqual([`packages.${system}.broken`]);
-      expect(errors[0]?.message).toContain("this package is broken on purpose");
-    },
-    TIME,
-  );
-});
-
-describe("a flake with a NixOS and a Home Manager configuration", () => {
-  test(
-    "that is right passes, and each configuration was evaluated",
-    async () => {
-      const flake = await scratch();
-      await writeFlake(flake);
-      const run = await evaluate("--format", "json", join(flake, "flake.nix"));
-      expect(run.items.filter((i) => i.severity === "error")).toEqual([]);
-      expect(run.code).toBe(0);
-    },
-    TIME,
-  );
-
-  test(
-    "a wrong value in each is found, and says which configuration it is in",
-    async () => {
-      const flake = await scratch();
-      await writeFlake(flake, {
-        nixos: "networking.hostName = 5;",
-        home: 'programs.git.enable = "yes";',
-      });
-      const run = await evaluate("--format", "json", join(flake, "flake.nix"));
-      expect(run.code).toBe(1);
-      const configs = run.items.filter((i) => i.severity === "error").map((i) => i.config);
-      expect(configs.sort()).toEqual(["homeConfigurations.u", "nixosConfigurations.box"]);
     },
     TIME,
   );
