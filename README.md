@@ -48,6 +48,14 @@ names its file.
 Nothing is uploaded: it all runs on your machine. Nix stops at the first error it meets, so fix it and
 run again to see the next.
 
+### In your editor
+
+`devenv shell -- lsp` starts a Language Server (stdio) that publishes the static findings as diagnostics
+while you type, over the word each one is about: wrong types, unknown options, syntax errors. Point any
+LSP client at it for `nix` files. Options go in `initializationOptions`:
+`{ "target": "nixos", "release": "unstable" }` (the target is detected when left out). It does not run
+Nix: use `evaluate` for that.
+
 Limits to know about:
 
 - The page is static: nothing is evaluated, so values built with functions, `mkIf` or `let` are not

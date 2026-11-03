@@ -35,7 +35,7 @@ Siempre que se terminen de implementar cambios en el proyecto, seguir rigurosame
 
 ## Convenciones del proyecto
 
-- **Todo pasa por devenv**: la CI ejecuta los mismos scripts que en local (`devenv shell -- <script>`). Scripts: `dev`, `check` (tsc), `lint`, `fix`, `unit`, `e2e`, `site-build`, `start`, `catalog`, `corpus`, `differential`, `oracle`, `evaluate`, `secrets`, `sonar`. Se definen en `devenv.nix`.
+- **Todo pasa por devenv**: la CI ejecuta los mismos scripts que en local (`devenv shell -- <script>`). Scripts: `dev`, `check` (tsc), `lint`, `fix`, `unit`, `e2e`, `site-build`, `start`, `catalog`, `corpus`, `differential`, `oracle`, `evaluate`, `lsp`, `secrets`, `sonar`. Se definen en `devenv.nix`.
 - **Bun para todo** (instalar, ejecutar, tests); no usar `npm`.
 - **Idiomas**: la interfaz y lo que se genera existen en español (texto fuente, `src/lib/i18n/es.ts`) e inglés (`src/lib/i18n/en.ts`). Cada texto nuevo lleva su traducción; el compilador y un test fallan si falta. La documentación del repositorio (`README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CREDITS.md`) **y los comentarios del código** están en inglés americano; este archivo está en español.
 - **Salida de herramientas en inglés**: lo que imprimen los scripts, `devenv test`, la CI y los títulos de los tests (`describe`/`test`) va en inglés, igual que los mensajes de `devenv.nix`.

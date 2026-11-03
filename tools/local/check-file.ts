@@ -2,16 +2,16 @@
 // real evaluation of this machine's Nix, which settles what the analysis can only guess.
 import { join, resolve } from "node:path";
 import type { Target } from "../../src/lib/catalog";
-import { loadCatalog } from "../../src/lib/catalog/load";
 import { catalogName, type Version } from "../../src/lib/catalog/versions";
 import type { Finding } from "../../src/lib/evaluation";
-import { analyze, check, resolveTarget, type TargetChoice } from "../../src/lib/validate";
+import type { analyze } from "../../src/lib/validate";
 import { diskoRoot, releaseRoots } from "../corpus/sources";
 import type { Kind, Roots } from "./expressions";
 import { evaluateFlake } from "./flake";
 import { reconcile } from "./reconcile";
-import { fromDiagnostic, fromFinding, type Located } from "./report";
+import { fromFinding, type Located } from "./report";
 import { evaluate } from "./run-nix";
+import { publicDir, staticLayer } from "./static-layer";
 
 export interface Options {
   target?: string | undefined;
@@ -40,9 +40,6 @@ export interface Result {
   catalog: Provenance;
   items: Located[];
 }
-
-const publicDir = join(import.meta.dir, "..", "..", "public");
-const files = (async (url) => new Response(Bun.file(join(publicDir, String(url))))) as typeof fetch;
 
 // Building the pinned sources is slow, so a run over many files does it once per release.
 const built = new Map<Version, Promise<Roots>>();
@@ -77,20 +74,9 @@ async function provenance(name: string): Promise<Provenance> {
 }
 
 export async function checkFile(file: string, o: Options): Promise<Result> {
-  const analysis = analyze(await Bun.file(file).text());
-  const target = resolveTarget(analysis, (o.target ?? "auto") as TargetChoice);
-
-  const catalog = await loadCatalog(
-    target,
-    o.version,
-    "/",
-    analysis.assignments.map((a) => a.path),
-    files,
-  );
-  const report = check(analysis, target, catalog.tree, o.version);
-  let items: Located[] = report.diagnostics.map(fromDiagnostic);
-  const { total, skipped } = report.coverage;
-  const coverage = { checked: total - skipped.length, total };
+  const text = await Bun.file(file).text();
+  const { analysis, target, coverage, ...layer } = await staticLayer(text, o.target, o.version);
+  let { items } = layer;
 
   // The real evaluation, unless the text does not even parse. A flake brings its own inputs.
   const broken = items.some((i) => i.level === "syntax" && i.severity === "error");
