@@ -18,7 +18,9 @@ export function reconcile(items: Located[], evaluated: boolean): Reconciled {
   if (!evaluated) return { items, refuted: 0, merged: 0 };
   const confirmed = items.filter((i) => i.level === "evaluation" && i.severity === "error");
   const accepted = confirmed.length === 0;
-  const same = (a: Located, b: Located) => !!a.line && a.line === b.line && a.col === b.col;
+  // The same place is the same line and column of the same file: the file checked, unless one says otherwise.
+  const same = (a: Located, b: Located) =>
+    !!a.line && a.file === b.file && a.line === b.line && a.col === b.col;
   let refuted = 0;
   let merged = 0;
   const kept = items.filter((i) => {

@@ -28,6 +28,13 @@ describe("reconcile static findings with Nix", () => {
     expect(reconcile([deprecated], true).items).toEqual([deprecated]);
   });
 
+  test("does not merge a finding of an imported file with one of the file checked", () => {
+    const elsewhere: Located = { ...nixError, file: "/x/child.nix" };
+    const r = reconcile([staticItem("type-mismatch"), elsewhere], true);
+    expect(r.items).toHaveLength(2);
+    expect(r.merged).toBe(0);
+  });
+
   test("merges a static finding Nix confirmed at the same place", () => {
     const other = staticItem("unknown-option", 5);
     const r = reconcile([staticItem("type-mismatch"), other, nixError], true);

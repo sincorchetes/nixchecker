@@ -12,6 +12,10 @@ export interface Located {
   message: string;
   /** The static diagnostic code, when it comes from the analysis. */
   code?: string;
+  /** The file it is in, when that is not the one checked (an imported module). */
+  file?: string;
+  /** The configuration of a flake it was found in. */
+  config?: string;
   line?: number;
   col?: number;
 }
@@ -34,15 +38,22 @@ function whereIs(option: string | undefined, assignments: Assignment[]) {
   return assignments.find((a) => a.path.length >= segs.length && same(a));
 }
 
-/** A finding of the real evaluation, placed in the file when its option is written there. */
+/** Whether Nix says the option is defined in a file other than `checked`. */
+export const isImported = (f: Finding, checked: string): boolean =>
+  f.file !== undefined && resolve(f.file) !== resolve(checked);
+
+/**
+ * A finding of the real evaluation, placed where its option is written: in `assignments` (those of the
+ * checked file, or of the imported one it is defined in, when that could be read).
+ */
 export function fromFinding(f: Finding, assignments: Assignment[], checked: string): Located {
-  const imported = f.file !== undefined && resolve(f.file) !== resolve(checked);
-  const at = imported ? undefined : whereIs(f.option, assignments);
-  const severity = f.kind === "warning" ? "warning" : "error";
+  const at = whereIs(f.option, assignments);
   return {
     level: "evaluation",
-    severity,
-    message: imported ? `${f.message} (defined in ${f.file})` : f.message,
+    severity: f.kind === "warning" ? "warning" : "error",
+    message: f.message,
+    ...(isImported(f, checked) && { file: f.file }),
+    ...(f.config && { config: f.config }),
     ...(at && { line: at.line, col: at.col }),
   };
 }
@@ -52,8 +63,10 @@ const LABEL = { syntax: "syntax", static: "static check", evaluation: "confirmed
 export function printText(items: Located[], coverage: string, evaluated: boolean): void {
   for (const level of ["syntax", "static", "evaluation"] as const) {
     for (const item of items.filter((i) => i.level === level)) {
-      const where = item.line ? `${item.line}:${item.col}  ` : "";
-      console.log(`${item.severity.padEnd(7)} ${where}${item.message}  [${LABEL[level]}]`);
+      const place = item.line ? `${item.line}:${item.col}` : "";
+      const where = item.file ? `${item.file}${place && `:${place}`}  ` : place && `${place}  `;
+      const config = item.config ? `${item.config}: ` : "";
+      console.log(`${item.severity.padEnd(7)} ${where}${config}${item.message}  [${LABEL[level]}]`);
     }
   }
   const errors = items.filter((i) => i.severity === "error").length;

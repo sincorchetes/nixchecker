@@ -11,6 +11,8 @@ export interface Finding {
   expected?: string;
   /** The file that defines the option, as Nix names it (the module system gives no line). */
   file?: string;
+  /** Which configuration of a flake it was found in (`nixosConfigurations.box`). */
+  config?: string;
   message: string;
 }
 

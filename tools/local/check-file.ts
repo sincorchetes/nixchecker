@@ -4,12 +4,12 @@ import { join, resolve } from "node:path";
 import type { Target } from "../../src/lib/catalog";
 import { catalogName, type Version } from "../../src/lib/catalog/versions";
 import type { Finding } from "../../src/lib/evaluation";
-import type { analyze } from "../../src/lib/validate";
+import { type Analysis, analyze } from "../../src/lib/validate";
 import { diskoRoot, releaseRoots } from "../corpus/sources";
 import type { Kind, Roots } from "./expressions";
 import { evaluateFlake } from "./flake";
 import { reconcile } from "./reconcile";
-import { fromFinding, type Located } from "./report";
+import { fromFinding, isImported, type Located } from "./report";
 import { evaluate } from "./run-nix";
 import { publicDir, staticLayer } from "./static-layer";
 
@@ -67,6 +67,15 @@ const optionPaths = (analysis: ReturnType<typeof analyze>): string[][] =>
     .map((a) => a.path)
     .filter((p) => !p.some((s) => s === "*" || s.startsWith("<")));
 
+// Where to look for an option a finding is about: the file checked, or the imported module that defines
+// it when it is on disk (the modules of nixpkgs are not the user's, and are not read).
+async function assignmentsOf(finding: Finding, checked: string, own: Analysis) {
+  if (!isImported(finding, checked)) return own.assignments;
+  const path = finding.file as string;
+  if (path.startsWith("/nix/store/") || !(await Bun.file(path).exists())) return [];
+  return analyze(await Bun.file(path).text()).assignments;
+}
+
 async function provenance(name: string): Promise<Provenance> {
   const manifest = await Bun.file(join(publicDir, "catalog", "manifest.json")).json();
   const { source, revisions } = manifest.catalogs[name];
@@ -91,7 +100,9 @@ export async function checkFile(file: string, o: Options): Promise<Result> {
             file,
             o.partial ? optionPaths(analysis) : undefined,
           );
-    for (const finding of found) items.push(fromFinding(finding, analysis.assignments, file));
+    for (const finding of found) {
+      items.push(fromFinding(finding, await assignmentsOf(finding, file, analysis), file));
+    }
     items = reconcile(items, true).items;
   }
   const origin = await provenance(catalogName(target as Target, o.version));

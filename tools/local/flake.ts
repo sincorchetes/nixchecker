@@ -49,7 +49,7 @@ export async function evaluateFlake(path: string): Promise<Finding[]> {
       ]);
       for (const f of parseEvaluation(run.err)) {
         const file = original(f.file, dirname(path));
-        findings.push({ ...f, ...(file && { file }), message: `${output}.${name}: ${f.message}` });
+        findings.push({ ...f, ...(file && { file }), config: `${output}.${name}` });
       }
     }
   }

@@ -16,10 +16,12 @@ export function toSarif(results: Result[]) {
             ruleId: item.code ?? item.level,
             level: LEVEL[item.severity],
             message: { text: item.message },
+            ...(item.config && { properties: { configuration: item.config } }),
             locations: [
               {
                 physicalLocation: {
-                  artifactLocation: { uri: r.file },
+                  // A finding in an imported module belongs to that file, not to the one checked.
+                  artifactLocation: { uri: item.file ?? r.file },
                   ...(item.line && {
                     region: { startLine: item.line, startColumn: item.col ?? 1 },
                   }),

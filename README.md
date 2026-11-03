@@ -33,7 +33,7 @@ It prints the static findings and then what Nix itself says, each marked by how 
 (`syntax`, `static check`, `confirmed by Nix`), and exits with 1 when something is an error. When Nix
 accepts the module, the static findings it settles are dropped. Files named in `imports` are read from
 where they are, so a configuration split over several files works, and an error in an imported module
-names its file.
+is reported in that file, at its line and column.
 
 - Name several files or directories (searched for `.nix` files) to check them in one run.
 - A `flake.nix` is evaluated with its own inputs: every `nixosConfigurations` and
