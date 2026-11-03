@@ -5,6 +5,7 @@ import {
   candidates,
   childrenOf,
   findExact,
+  findListAbove,
   findOwner,
   knownPrefix,
   siblings,
@@ -94,6 +95,25 @@ export function check(
   for (const a of analysis.assignments) {
     const at = { line: a.line, col: a.col };
     const path = a.path.join(".");
+    // Attributes written below a list option: the list takes a `[ ... ]`, not a set.
+    const list = findListAbove(tree, a.path);
+    if (list) {
+      if (!reported.has(list.path)) {
+        reported.add(list.path);
+        diagnostics.push({
+          severity: "error",
+          code: "type-mismatch",
+          ...at,
+          params: {
+            path: a.path.slice(0, list.segs.length).join("."),
+            expected: "list",
+            got: "attrs",
+          },
+          docUrl: docUrl(target, list.path, version),
+        });
+      }
+      continue;
+    }
     const exact = findExact(tree, a.path);
     // An entry above this path that cannot be checked any deeper (free-form set, opaque
     // type, or an alias whose children are unknown).

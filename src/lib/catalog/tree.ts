@@ -74,6 +74,20 @@ export function findOwner(at: OptionTree, path: string[], i = 0): IndexedOption 
   return owns ? entry : undefined;
 }
 
+/**
+ * The option above `path` (not at it) that is a list. Its elements are not attributes of it, so a
+ * path written through it, such as `commands.x.command`, can never be valid.
+ */
+export function findListAbove(at: OptionTree, path: string[], i = 0): IndexedOption | undefined {
+  if (i >= path.length) return undefined;
+  if (i > 0 && at.entry?.type === "list") return at.entry;
+  for (const next of step(at, path[i] as string)) {
+    const found = findListAbove(next, path, i + 1);
+    if (found) return found;
+  }
+  return undefined;
+}
+
 /** Number of leading segments of `path` that lead to some known option. */
 export function knownPrefix(at: OptionTree, path: string[], i = 0): number {
   if (i === path.length) return i;
