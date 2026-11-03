@@ -11,6 +11,7 @@ import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/v
 import { analyze, check, resolveTarget, type TargetChoice } from "../../src/lib/validate";
 import { diskoRoot, releaseRoots } from "../corpus/sources";
 import type { Kind } from "./expressions";
+import { reconcile } from "./reconcile";
 import { fromDiagnostic, fromFinding, type Located, printText } from "./report";
 import { evaluate } from "./run-nix";
 
@@ -52,7 +53,7 @@ const catalog = await loadCatalog(
   files,
 );
 const report = check(analysis, target, catalog.tree, version);
-const items: Located[] = report.diagnostics.map(fromDiagnostic);
+let items: Located[] = report.diagnostics.map(fromDiagnostic);
 const { total, skipped } = report.coverage;
 const coverage = `${total - skipped.length} of ${total} assignments checked statically.`;
 
@@ -72,6 +73,7 @@ if (evaluated) {
   for (const finding of await evaluate(target as Kind, roots, file)) {
     items.push(fromFinding(finding, analysis.assignments));
   }
+  items = reconcile(items, true).items;
 }
 
 if (opts.json) console.log(JSON.stringify({ target, version, evaluated, items }, null, 2));

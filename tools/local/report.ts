@@ -8,6 +8,8 @@ export interface Located {
   level: "syntax" | "static" | "evaluation";
   severity: "error" | "warning";
   message: string;
+  /** The static diagnostic code, when it comes from the analysis. */
+  code?: string;
   line?: number;
   col?: number;
 }
@@ -18,7 +20,7 @@ const SYNTAX = /^(syntax-|undefined-variable|not-callable|list-plus|concat-non-l
 export function fromDiagnostic(d: Diagnostic): Located {
   const message = format(messages.en[`diag.${d.code}` as keyof typeof messages.en], d.params);
   const level = SYNTAX.test(d.code) ? "syntax" : "static";
-  return { level, severity: d.severity, message, line: d.line, col: d.col };
+  return { level, severity: d.severity, message, code: d.code, line: d.line, col: d.col };
 }
 
 // Where the file assigns the option a finding is about (or something below it).
