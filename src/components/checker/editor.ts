@@ -1,19 +1,62 @@
+import { wordAt } from "../../lib/fix";
+import { highlight, segments } from "../../lib/nix/highlight";
 import type { Diagnostic } from "../../lib/validate";
 import { el, type Translate } from "./dom";
 
+// Past this much text, coloring it at every keystroke costs more than it helps: it is shown plain.
+const MAX_COLORED = 200_000;
+
 /**
- * Line numbers beside the text (red or yellow where the last validation found something) and
- * the cursor position, as an editor's ruler shows it. Returns what the page needs to call.
+ * Line numbers beside the text (red or yellow where the last validation found something), the cursor
+ * position, and the text in colors with the findings underlined, as an editor shows them. Returns what
+ * the page needs to call.
  */
 export function setupEditor(
   source: HTMLTextAreaElement,
   gutter: HTMLElement,
   cursor: HTMLElement,
+  layer: HTMLElement,
   tr: Translate,
   onEdit: () => void,
 ) {
   let marks = new Map<number, string>();
+  let findings: Diagnostic[] = [];
   let painted = 0;
+  let queued = false;
+
+  // The colored copy of the text under the text. The underlines are only drawn for the text as it was
+  // validated: the first edit clears them.
+  const color = () => {
+    queued = false;
+    const text = source.value;
+    const on = text.length <= MAX_COLORED;
+    layer.parentElement?.parentElement?.classList.toggle("hl", on);
+    if (!on) return layer.replaceChildren();
+    const underlines = findings.map((d) => {
+      const [start, end] = wordAt(text, d.line, d.col);
+      return { start, end: Math.max(end, start + 1), severity: d.severity };
+    });
+    const pieces = segments(text, highlight(text), underlines).map(
+      ({ text: piece, kind, severity }) => {
+        if (!kind && !severity) return document.createTextNode(piece);
+        const span = el(
+          "span",
+          [kind && `tok-${kind}`, severity && `mk-${severity}`].filter(Boolean).join(" "),
+          piece,
+        );
+        return span;
+      },
+    );
+    // The newline that ends the text, so an empty last line is as tall as in the text area.
+    layer.replaceChildren(...pieces, document.createTextNode("\n"));
+    layer.scrollTop = source.scrollTop;
+    layer.scrollLeft = source.scrollLeft;
+  };
+  const schedule = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(color);
+  };
 
   const paint = (force = false) => {
     const lines = source.value.split("\n").length;
@@ -36,8 +79,10 @@ export function setupEditor(
   // The text changed: the marks belonged to the old lines.
   const refresh = () => {
     marks = new Map();
+    findings = [];
     paint(true);
     where();
+    schedule();
   };
 
   source.addEventListener("input", () => {
@@ -46,11 +91,15 @@ export function setupEditor(
   });
   source.addEventListener("scroll", () => {
     gutter.scrollTop = source.scrollTop;
+    layer.scrollTop = source.scrollTop;
+    layer.scrollLeft = source.scrollLeft;
   });
   document.addEventListener("selectionchange", () => {
     if (document.activeElement === source) where();
   });
   refresh();
+  // Colored before the first frame, so the text is never drawn transparent over nothing.
+  color();
 
   return {
     refresh,
@@ -60,6 +109,8 @@ export function setupEditor(
         if (d.severity === "error" || !marks.has(d.line)) marks.set(d.line, d.severity);
       }
       paint(true);
+      findings = diagnostics;
+      schedule();
     },
   };
 }

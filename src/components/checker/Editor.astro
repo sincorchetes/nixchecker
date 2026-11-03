@@ -11,13 +11,16 @@ const m = messages[Astro.props.lang];
 <label for="source">{m["checker.label"]}</label>
 <div class="editor">
   <pre id="gutter" class="gutter" aria-hidden="true"></pre>
-  <textarea
-    id="source"
-    wrap="off"
-    spellcheck="false"
-    autocomplete="off"
-    autocapitalize="off"
-    placeholder={m["checker.placeholder"]}></textarea>
+  <div class="pane">
+    <pre id="highlight" class="highlight" aria-hidden="true"></pre>
+    <textarea
+      id="source"
+      wrap="off"
+      spellcheck="false"
+      autocomplete="off"
+      autocapitalize="off"
+      placeholder={m["checker.placeholder"]}></textarea>
+  </div>
 </div>
 <p id="cursor" class="cursor"></p>
 
@@ -42,7 +45,14 @@ const m = messages[Astro.props.lang];
   .editor:focus-within {
     border-color: var(--accent-light);
   }
+  .pane {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
   .gutter,
+  .highlight,
   textarea {
     margin: 0;
     padding: 1rem 0;
@@ -85,6 +95,64 @@ const m = messages[Astro.props.lang];
     white-space: pre;
     overflow: auto;
     tab-size: 2;
+  }
+  /* The colored copy of the text sits right under the text, which is then drawn transparent. */
+  .highlight {
+    position: absolute;
+    inset: 0;
+    padding-inline: 1rem;
+    overflow: hidden;
+    pointer-events: none;
+    color: var(--text);
+    white-space: pre;
+    tab-size: 2;
+  }
+  .hl textarea {
+    -webkit-text-fill-color: transparent;
+    caret-color: var(--text);
+  }
+  .hl textarea::placeholder {
+    -webkit-text-fill-color: var(--text-3);
+  }
+  /* See-through, so the colored text stays readable while selected. */
+  .hl textarea::selection {
+    background: color-mix(in srgb, var(--accent) 38%, transparent);
+  }
+  .highlight :global(.tok-comment) {
+    color: var(--text-3);
+    font-style: italic;
+  }
+  .highlight :global(.tok-string) {
+    color: var(--ok);
+  }
+  .highlight :global(.tok-number) {
+    color: var(--warning);
+  }
+  .highlight :global(.tok-keyword) {
+    color: var(--accent-light);
+    font-weight: 600;
+  }
+  .highlight :global(.tok-path) {
+    color: var(--info-text);
+  }
+  .highlight :global(.mk-error),
+  .highlight :global(.mk-warning) {
+    text-decoration: underline wavy;
+    text-underline-offset: 0.2em;
+  }
+  .highlight :global(.mk-error) {
+    text-decoration-color: var(--error);
+  }
+  .highlight :global(.mk-warning) {
+    text-decoration-color: var(--warning);
+  }
+  @media (forced-colors: active) {
+    .highlight {
+      display: none;
+    }
+    .hl textarea {
+      -webkit-text-fill-color: currentcolor;
+    }
   }
   textarea::placeholder {
     color: var(--text-3);

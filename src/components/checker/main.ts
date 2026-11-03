@@ -25,14 +25,15 @@ const target = query<HTMLSelectElement>("#target");
 const version = query<HTMLSelectElement>("#version");
 const results = query("#results");
 const gutter = query("#gutter");
+const layer = query("#highlight");
 const cursor = query("#cursor");
 
-if (root?.dataset.messages && source && target && version && results && gutter && cursor) {
+if (root?.dataset.messages && source && target && version && results && gutter && cursor && layer) {
   const text = JSON.parse(root.dataset.messages) as Record<string, string>;
   const tr = (key: string, params?: Record<string, string | number>) =>
     format(text[key] ?? key, params);
   let pause: ReturnType<typeof setTimeout> | undefined;
-  const editor = setupEditor(source, gutter, cursor, tr, () => {
+  const editor = setupEditor(source, gutter, cursor, layer, tr, () => {
     // Results describe the text as it was when validated: dim them as soon as it changes.
     results.setAttribute("data-stale", "");
     clearTimeout(pause);

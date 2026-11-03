@@ -116,3 +116,70 @@ describe("remembering the text", () => {
     expect(await text()).toBe("");
   });
 });
+
+describe("colors and underlines", () => {
+  const classes = () =>
+    page.$$eval("#highlight span", (els) => els.map((el) => [el.className, el.textContent ?? ""]));
+
+  test("the text is colored by what it is", async () => {
+    await page.$eval("#source", (el) => {
+      (el as HTMLTextAreaElement).value = '# note\n{ a = "x"; b = 12; c = ./p; d = true; }\n';
+      el.dispatchEvent(new Event("input"));
+    });
+    await page.waitForFunction(() => document.querySelector("#highlight .tok-path"));
+    const found = await classes();
+    expect(found).toContainEqual(["tok-comment", "# note"]);
+    expect(found).toContainEqual(["tok-string", '"x"']);
+    expect(found).toContainEqual(["tok-number", "12"]);
+    expect(found).toContainEqual(["tok-path", "./p"]);
+    expect(found).toContainEqual(["tok-keyword", "true"]);
+  });
+
+  test("the layer is the text area's twin, so the colors sit on the characters", async () => {
+    const metrics = (selector: string) =>
+      page.$eval(selector, (el) => {
+        const style = getComputedStyle(el);
+        return ["fontFamily", "fontSize", "lineHeight", "paddingTop", "paddingLeft", "tabSize"].map(
+          (key) => style[key as keyof CSSStyleDeclaration],
+        );
+      });
+    expect(await metrics("#highlight")).toEqual(await metrics("#source"));
+    // The text itself is the layer's: the text area's is drawn transparent, with a visible caret.
+    const fill = await page.$eval("#source", (el) => getComputedStyle(el).webkitTextFillColor);
+    expect(fill).toBe("rgba(0, 0, 0, 0)");
+  });
+
+  test("a finding is underlined where it is, until the text changes", async () => {
+    await validateIn(page, "{ networking.hostName = 5; }");
+    await page.waitForSelector("#highlight .mk-error");
+    expect(await page.$eval("#highlight .mk-error", (el) => el.textContent)).toBe(
+      "networking.hostName",
+    );
+    await page.type("#source", " ");
+    await page.waitForFunction(() => !document.querySelector("#highlight .mk-error"));
+  });
+
+  test("long lines scroll sideways with the colors, and the layer is as tall as the text", async () => {
+    const lines = Array.from({ length: 80 }, (_, n) => `  a${n} = "${"x".repeat(200)}";`).join(
+      "\n",
+    );
+    await page.$eval(
+      "#source",
+      (el, text) => {
+        const area = el as HTMLTextAreaElement;
+        area.value = `{\n${text}\n}`;
+        area.dispatchEvent(new Event("input"));
+        area.scrollLeft = 120;
+        area.dispatchEvent(new Event("scroll"));
+      },
+      lines,
+    );
+    // The colors are redrawn on the next frame, and only then are they wide enough to scroll.
+    await page.waitForFunction(() => document.getElementById("highlight")?.scrollLeft === 120);
+    const heights = await page.evaluate(() => [
+      document.getElementById("highlight")?.clientHeight,
+      document.getElementById("source")?.clientHeight,
+    ]);
+    expect(heights[0]).toBe(heights[1]);
+  });
+});
