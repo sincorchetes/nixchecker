@@ -35,6 +35,8 @@
   #   devenv shell -- evaluate my-config.nix --target nixos --release 26.05
   scripts.evaluate.exec = "bun tools/local/check.ts \"$@\"";
   # A Language Server for Nix files (the static layer, as diagnostics while you type), over stdin/stdout.
+  # The command line against real Nix, on the cases the unit tests can only imitate (needs Nix).
+  scripts.integration.exec = "bun test -c tools/local/integration/bunfig.toml ./tools/local/integration/*.integration.ts";
   scripts.lsp.exec = "bun tools/lsp/server.ts";
   scripts.oracle.exec = "bun tools/oracle/run.ts \"$@\"";
   scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --config .gitleaks.toml --no-banner --redact --verbose";

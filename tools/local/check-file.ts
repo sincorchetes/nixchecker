@@ -61,10 +61,15 @@ function rootsOf(o: Options): Promise<Roots> {
   return built.get(o.version) as Promise<Roots>;
 }
 
-// The options a file sets by name; a placeholder in the path stands for a name only the user knows.
-const optionPaths = (analysis: ReturnType<typeof analyze>): string[][] =>
+// The keys of the module system itself, which are not options and cannot be read from `config`.
+const MODULE_KEYS = new Set(["imports", "disabledModules", "options", "_module", "meta"]);
+
+// The options a file sets by name, as paths into `config`: what is written under `config = { ... }` is
+// read without that prefix, and a placeholder in a path stands for a name only the user knows.
+const optionPaths = (analysis: Analysis): string[][] =>
   analysis.assignments
-    .map((a) => a.path)
+    .map((a) => (a.path[0] === "config" ? a.path.slice(1) : a.path))
+    .filter((p) => p.length > 0 && !MODULE_KEYS.has(p[0] as string))
     .filter((p) => !p.some((s) => s === "*" || s.startsWith("<")));
 
 // Where to look for an option a finding is about: the file checked, or the imported module that defines

@@ -59,6 +59,8 @@ jobs:
         run: devenv shell -- differential
       - name: The validator agrees with the real module system
         run: devenv shell -- oracle
+      - name: The command line works against real Nix (own modules, imports, --partial, flakes)
+        run: devenv shell -- integration
 
   build:
     name: Build

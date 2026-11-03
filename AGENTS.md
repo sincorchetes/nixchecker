@@ -15,6 +15,7 @@ Siempre que se terminen de implementar cambios en el proyecto, seguir rigurosame
    - Si cambia el analizador de Nix (`src/lib/nix/`): `devenv shell -- corpus` (necesita Nix): todos los `.nix` de nixpkgs y Home Manager son válidos y deben parsearse sin problemas; la CI también lo ejecuta.
   - Si cambia el analizador de Nix (`src/lib/nix/`): `devenv shell -- differential` (necesita Nix): nuestro analizador y `nix-instantiate --parse` deben coincidir sobre copias dañadas de esos archivos; la CI también lo ejecuta.
   - Si cambia el validador o el catálogo: `devenv shell -- oracle` (necesita Nix): módulos reales de NixOS, Home Manager y disko (escritos y generados desde el catálogo) evaluados con Nix y con nuestro validador deben coincidir en opciones desconocidas y tipos erróneos (salvo lo documentado en `tools/oracle/run.ts`); la CI también lo ejecuta.
+  - Si cambia `tools/local/` (la CLI `evaluate`, la reconciliación con Nix, los flakes, SARIF): `devenv shell -- integration` (necesita Nix): la CLI contra Nix real con módulos propios, archivos importados, `--partial` y un flake; la CI también lo ejecuta.
   - Si cambia el generador de catálogos o su overlay: `devenv shell -- catalog` (necesita Nix) y revisar la diferencia en `public/catalog/`; la CI comprueba que lo versionado coincide con lo que generan las versiones fijadas.
    - Si cambia la interfaz: `devenv shell -- site-build && devenv shell -- e2e` (necesita Chrome).
    - Si cambia la salida generada **a propósito**, aceptar las instantáneas con `bun test --update-snapshots` y revisar la diferencia.
@@ -35,7 +36,7 @@ Siempre que se terminen de implementar cambios en el proyecto, seguir rigurosame
 
 ## Convenciones del proyecto
 
-- **Todo pasa por devenv**: la CI ejecuta los mismos scripts que en local (`devenv shell -- <script>`). Scripts: `dev`, `check` (tsc), `lint`, `fix`, `unit`, `e2e`, `site-build`, `start`, `catalog`, `corpus`, `differential`, `oracle`, `evaluate`, `lsp`, `secrets`, `sonar`. Se definen en `devenv.nix`.
+- **Todo pasa por devenv**: la CI ejecuta los mismos scripts que en local (`devenv shell -- <script>`). Scripts: `dev`, `check` (tsc), `lint`, `fix`, `unit`, `e2e`, `site-build`, `start`, `catalog`, `corpus`, `differential`, `oracle`, `evaluate`, `integration`, `lsp`, `secrets`, `sonar`. Se definen en `devenv.nix`.
 - **Bun para todo** (instalar, ejecutar, tests); no usar `npm`.
 - **Idiomas**: la interfaz y lo que se genera existen en español (texto fuente, `src/lib/i18n/es.ts`) e inglés (`src/lib/i18n/en.ts`). Cada texto nuevo lleva su traducción; el compilador y un test fallan si falta. La documentación del repositorio (`README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CREDITS.md`) **y los comentarios del código** están en inglés americano; este archivo está en español.
 - **Salida de herramientas en inglés**: lo que imprimen los scripts, `devenv test`, la CI y los títulos de los tests (`describe`/`test`) va en inglés, igual que los mensajes de `devenv.nix`.
