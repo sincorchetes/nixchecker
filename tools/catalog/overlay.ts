@@ -26,6 +26,7 @@ const moduleEntries: OptionEntry[] = [
   opt("assertions", "list"),
   opt("warnings", "list", { values: ["str"] }),
   opt("meta", "attrs"),
+  opt("freeformType", "any"),
 ];
 
 export const overlays: Record<Target, Overlay> = {

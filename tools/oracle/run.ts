@@ -100,6 +100,8 @@ for (const { kind, version, cases, catalog } of TARGETS) {
   await each(generated, async (source) => {
     const { ours, real } = await judge(source);
     if (real.other || real.unknown) return; // not a question about types
+    // Read one level only, and no type error seen: the elements were not looked at, so it says nothing.
+    if (real.shallow && !real.typeError) return;
     if (real.typeError) wrong++;
     if (ours.typeError && !real.typeError) {
       falsePositives++;

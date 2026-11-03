@@ -39,6 +39,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   only if it says `type = "derivation"`: `package = { }` is an error, `pkgs.hello // { ... }` is not.
 - disko's layouts are read down to six levels of `content`, and below each device only what its types
   declare exists (the manual described hooks under `nodev` that the module does not have).
+- The oracle does not count a case it could only read one level deep and found no type error in: the
+  elements of a list were not looked at, so that says nothing.
 - `evaluate` of a whole system also finds every wrong value in one run: when Nix stops at the first, the options of
   the file are read one by one as well and what they add is merged. (The assertions of the system wait
   until the values are right.)
@@ -81,6 +83,12 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Fixed
 
+- A file that was not told what it is and has no key that is, or is close to, an option (a library, a package, an
+  overlay) gets one warning, "it does not look like a module", instead of an error on each key. A misspelling
+  is still an error, and so is anything under a kind that was chosen. On the 666 modules of nixpkgs under
+  `services/networking`, `programs` and `config` the errors went from 98 to none.
+- The catalogs include the internal options (`system.path`, `networking.proxy.envVars`...), which the manuals
+  leave out: they were reported as options that do not exist. They are hidden options now (a warning).
 - `assertions`, `warnings` and `meta` (`meta.doc`, `meta.maintainers`...), internal options that every module of
   your own may set and that the manuals leave out, were reported as options that do not exist.
 - Options written under `config` (`config = { a.b = 1; }`, `config.a.b = 1;`) are the same options as without

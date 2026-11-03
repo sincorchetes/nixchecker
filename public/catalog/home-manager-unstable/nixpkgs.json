@@ -1,1 +1,1 @@
-[["nixpkgs.config","any"],["nixpkgs.overlays","list"]]
+[["nixpkgs.config","any"],["nixpkgs.overlays","list"],["nixpkgs.system","hidden"]]

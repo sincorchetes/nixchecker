@@ -1,1 +1,1 @@
-[["image.modules","attrs"],["image.repart.imageFile","any","image.fileName"],["image.repart.imageFileBasename","any","image.baseName"]]
+[["image.modules","set"],["image.modules.*._module.args","hidden"],["image.modules.*._module.check","hidden"],["image.modules.*._module.freeformType","hidden"],["image.modules.*._module.specialArgs","hidden"],["image.repart.imageFile","any","image.fileName"],["image.repart.imageFileBasename","any","image.baseName"]]

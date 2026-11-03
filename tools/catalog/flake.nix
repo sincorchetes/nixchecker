@@ -61,8 +61,12 @@
               inherit options;
               warningsAreErrors = false;
             }).optionsJSON;
+          # Options the manuals leave out: those that are not visible, and the internal ones (which exist and can
+          # be set, as `system.path` or `assertions`; the manuals just do not document them).
           hidden = map (o: o.name) (
-            lib.filter (o: !(o.visible or true)) (lib.optionAttrSetToDocList options)
+            lib.filter (o: !(o.visible or true) || (o.internal or false)) (
+              lib.optionAttrSetToDocList options
+            )
           );
         in
         pkgs.runCommand "nixchecker-catalog-${name}" { } ''

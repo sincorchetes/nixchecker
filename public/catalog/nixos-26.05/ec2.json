@@ -1,1 +1,1 @@
-[["ec2.zfs.datasets","set"],["ec2.zfs.datasets.*.mount","str"],["ec2.zfs.datasets.*.properties","attrs",["str"]]]
+[["ec2.efi","hidden"],["ec2.hvm","hidden"],["ec2.zfs.datasets","set"],["ec2.zfs.datasets.*._module.args","hidden"],["ec2.zfs.datasets.*._module.check","hidden"],["ec2.zfs.datasets.*._module.freeformType","hidden"],["ec2.zfs.datasets.*._module.specialArgs","hidden"],["ec2.zfs.datasets.*.mount","str"],["ec2.zfs.datasets.*.properties","attrs",["str"]],["ec2.zfs.enable","hidden"]]

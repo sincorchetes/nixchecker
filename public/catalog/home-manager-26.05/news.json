@@ -1,1 +1,1 @@
-[["news.display","enum",["silent","notify","show"]]]
+[["news.display","enum",["silent","notify","show"]],["news.entries","hidden"],["news.entries.*._module.args","hidden"],["news.entries.*._module.check","hidden"],["news.entries.*._module.freeformType","hidden"],["news.entries.*._module.specialArgs","hidden"],["news.entries.*.condition","hidden"],["news.entries.*.id","hidden"],["news.entries.*.message","hidden"],["news.entries.*.time","hidden"],["news.json.output","hidden"]]

@@ -1,1 +1,1 @@
-[["specialisation","set"],["specialisation.*.configuration","attrs"]]
+[["specialisation","set"],["specialisation.*._module.args","hidden"],["specialisation.*._module.check","hidden"],["specialisation.*._module.freeformType","hidden"],["specialisation.*._module.specialArgs","hidden"],["specialisation.*.configuration","attrs"]]
