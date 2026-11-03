@@ -52,7 +52,7 @@ describe("checker", () => {
     expect(picked).toBe("networking.hostName");
   });
 
-  test("does not validate while typing, and dims stale results", async () => {
+  test("dims the results the moment the text changes, until it is validated", async () => {
     await page.type("#source", " ");
     expect(await page.$eval("#results", (el) => el.hasAttribute("data-stale"))).toBe(true);
     await page.click("#validate");

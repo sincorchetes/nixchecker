@@ -1,0 +1,118 @@
+// The editor around the text: validating by itself, opening files, the report as a download and the
+// text kept between visits.
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { join } from "node:path";
+import type { Browser, Page } from "puppeteer-core";
+import { dist, launchChrome, serveSite, validateIn } from "./support";
+
+let site: ReturnType<typeof serveSite>;
+let browser: Browser;
+let page: Page;
+const dir = await Bun.$`mktemp -d`.text().then((t) => t.trim());
+
+const text = () => page.$eval("#source", (el) => (el as HTMLTextAreaElement).value);
+const empty = () => page.$eval("#results .empty", (el) => el.textContent ?? "");
+
+// Drops a file with this content on the editor, as dragging it from the desktop does.
+const drop = (name: string, content: string) =>
+  page.$eval(
+    ".editor",
+    (area, file, body) => {
+      const data = new DataTransfer();
+      data.items.add(new File([body], file));
+      area.dispatchEvent(new DragEvent("drop", { dataTransfer: data, bubbles: true }));
+    },
+    name,
+    content,
+  );
+
+beforeAll(async () => {
+  site = serveSite(dist);
+  browser = await launchChrome();
+  page = await browser.newPage();
+  await page.goto(site.url());
+});
+
+afterAll(async () => {
+  await browser?.close();
+  site?.stop();
+});
+
+describe("validating by itself", () => {
+  test("a pause in typing validates, with no click", async () => {
+    await page.$eval("#source", (el) => ((el as HTMLTextAreaElement).value = ""));
+    await page.type("#source", "{ networking.hostName = 5; }");
+    expect(await page.$eval("#results", (el) => el.hasAttribute("data-stale"))).toBe(true);
+    await page.waitForSelector("#results:not([data-stale]) .summary.bad");
+  });
+});
+
+describe("opening files", () => {
+  test("the picker puts the file in the editor and validates it", async () => {
+    const path = join(dir, "picked.nix");
+    await Bun.write(path, "{ services.openssh.enable = true; }\n");
+    await page.$eval("#results", (el) => el.replaceChildren());
+    const input = await page.$("input#file");
+    await input?.uploadFile(path);
+    await page.waitForSelector("#results .summary.good");
+    expect(await text()).toBe("{ services.openssh.enable = true; }\n");
+  });
+
+  test("a dropped file is read the same way", async () => {
+    await page.$eval("#results", (el) => el.replaceChildren());
+    await drop("dropped.nix", "{ networking.hostName = 5; }");
+    await page.waitForSelector("#results .summary.bad");
+    expect(await text()).toBe("{ networking.hostName = 5; }");
+  });
+
+  test("a file that is too large is refused and the text stays", async () => {
+    await drop("big.nix", "x".repeat(600 * 1024));
+    await page.waitForSelector("#results .empty");
+    expect(await empty()).toContain("512 KB");
+    expect(await text()).toBe("{ networking.hostName = 5; }");
+  });
+});
+
+describe("the report", () => {
+  test("is downloadable once there is one, and holds what the page shows", async () => {
+    await page.$eval("#source", (el) => ((el as HTMLTextAreaElement).value = ""));
+    expect(await page.$eval("#export", (el) => (el as HTMLButtonElement).disabled)).toBe(true);
+    await page.evaluate(() => {
+      const make = URL.createObjectURL.bind(URL);
+      URL.createObjectURL = (blob) => {
+        (window as unknown as { saved: Blob }).saved = blob as Blob;
+        return make(blob);
+      };
+    });
+    await validateIn(page, "{ networking.hostName = 5; }");
+    expect(await page.$eval("#export", (el) => (el as HTMLButtonElement).disabled)).toBe(false);
+    await page.click("#export");
+    const saved = await page.evaluate(() => (window as unknown as { saved: Blob }).saved.text());
+    const data = JSON.parse(saved);
+    expect(data.target).toBe("nixos");
+    expect(data.coverage).toEqual({ checked: 1, total: 1 });
+    expect(data.diagnostics[0]).toMatchObject({ code: "type-mismatch", line: 1 });
+  });
+});
+
+describe("remembering the text", () => {
+  test("is off unless asked, and then it survives a reload", async () => {
+    await page.reload();
+    expect(await page.$eval("#remember", (el) => (el as HTMLInputElement).checked)).toBe(false);
+    await page.type("#source", "{ x = 1; }");
+    await page.reload();
+    expect(await text()).toBe("");
+
+    await page.click("#remember");
+    await page.type("#source", "{ y = 2; }");
+    await page.reload();
+    expect(await text()).toBe("{ y = 2; }");
+    expect(await page.$eval("#remember", (el) => (el as HTMLInputElement).checked)).toBe(true);
+  });
+
+  test("turning it off forgets the text", async () => {
+    await page.click("#remember");
+    await page.reload();
+    expect(await text()).toBe("");
+  });
+});

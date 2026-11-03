@@ -23,7 +23,14 @@ const m = messages[Astro.props.lang];
       {VERSIONS.map((v) => <option value={v} selected={v === DEFAULT_VERSION}>{v}</option>)}
     </select>
   </label>
+  <label class="choice remember">
+    <input type="checkbox" id="remember" />
+    <span>{m["checker.remember"]}</span>
+  </label>
   <div class="actions">
+    <input type="file" id="file" accept=".nix,text/plain" hidden />
+    <button type="button" class="btn" id="open">{m["checker.open"]}</button>
+    <button type="button" class="btn" id="export" disabled>{m["checker.export"]}</button>
     <button type="button" class="btn" id="clear">{m["checker.clear"]}</button>
     <button type="button" class="btn" id="example">{m["checker.example"]}</button>
     <button type="button" class="btn primary" id="validate">{m["checker.validate"]}</button>
@@ -54,6 +61,12 @@ const m = messages[Astro.props.lang];
     color: var(--text);
     font: inherit;
     font-size: 0.9rem;
+  }
+  .remember {
+    cursor: pointer;
+  }
+  .remember input {
+    accent-color: var(--accent);
   }
   .actions {
     display: flex;

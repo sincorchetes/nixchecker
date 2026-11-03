@@ -21,6 +21,9 @@ export const es = {
   "checker.validate": "Validar",
   "checker.example": "Cargar ejemplo",
   "checker.clear": "Limpiar",
+  "checker.open": "Abrir archivo",
+  "checker.export": "Descargar informe",
+  "checker.remember": "Recordar mi texto en este dispositivo",
   "checker.privacy": "Todo se valida en tu navegador. Tu código no se envía a ningún servidor.",
 
   "target.auto": "Detectar automáticamente",
@@ -41,6 +44,8 @@ export const es = {
   "coverage.hidden": "{n} en una opción oculta",
   "coverage.interpolated": "{n} con texto interpolado",
   "coverage.free-form": "{n} en una opción de forma libre",
+  "result.fileTooBig": "Ese archivo pesa demasiado (máximo {max} KB).",
+  "result.fileError": "No se pudo leer el archivo.",
   "result.loadError": "No se pudo cargar el catálogo. Revisa tu conexión e inténtalo de nuevo.",
   "result.line": "Línea {line}, columna {col}",
   "result.suggest": "¿Quisiste decir {suggestion}?",

@@ -35,6 +35,10 @@ const m = messages[Astro.props.lang];
     background: color-mix(in srgb, var(--text) 5%, transparent);
     overflow: hidden;
   }
+  .editor.dropping {
+    border-style: dashed;
+    border-color: var(--accent-light);
+  }
   .editor:focus-within {
     border-color: var(--accent-light);
   }

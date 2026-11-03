@@ -9,8 +9,14 @@ import {
   type TargetChoice,
 } from "../../lib/validate";
 import { el } from "./dom";
+import { setupDraft } from "./draft";
 import { setupEditor } from "./editor";
+import { download, reportData } from "./export";
+import { setupFiles } from "./files";
 import { showReport } from "./report";
+
+// How long the text must rest before it is validated by itself (the button validates at once).
+const PAUSE_MS = 700;
 
 const query = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
 const root = query("#checker");
@@ -25,16 +31,30 @@ if (root?.dataset.messages && source && target && version && results && gutter &
   const text = JSON.parse(root.dataset.messages) as Record<string, string>;
   const tr = (key: string, params?: Record<string, string | number>) =>
     format(text[key] ?? key, params);
+  let pause: ReturnType<typeof setTimeout> | undefined;
   const editor = setupEditor(source, gutter, cursor, tr, () => {
     // Results describe the text as it was when validated: dim them as soon as it changes.
     results.setAttribute("data-stale", "");
+    clearTimeout(pause);
+    pause = setTimeout(validate, PAUSE_MS);
   });
-  const say = (key: string) => results.replaceChildren(el("p", "empty", tr(key)));
+  const exporter = query<HTMLButtonElement>("#export");
+  // What the download button hands over: the last report, until there is none.
+  let exportable: (() => unknown) | undefined;
+  const offer = (data: (() => unknown) | undefined) => {
+    exportable = data;
+    if (exporter) exporter.disabled = !data;
+  };
+  const say = (key: string, params?: Record<string, string | number>) => {
+    offer(undefined);
+    results.replaceChildren(el("p", "empty", tr(key, params)));
+  };
 
   // Only the latest run may touch the page: catalogs download asynchronously.
   let run = 0;
   const render = async () => {
     const current = ++run;
+    clearTimeout(pause);
     results.removeAttribute("data-stale");
     editor.refresh();
     if (!source.value.trim()) return say("result.empty");
@@ -63,6 +83,7 @@ if (root?.dataset.messages && source && target && version && results && gutter &
     const catalog = catalogs[kinds.indexOf(report.target)] as (typeof catalogs)[number];
     editor.mark(report.diagnostics);
     showReport({ source, results, tr, rerun: validate }, report, catalog.source);
+    offer(() => reportData(report, catalog.source, release));
   };
 
   // `void`: the handlers start a validation and have nothing to wait for.
@@ -78,5 +99,17 @@ if (root?.dataset.messages && source && target && version && results && gutter &
     source.value = "";
     validate();
   });
+  const area = query(".editor");
+  const input = query<HTMLInputElement>("#file");
+  const opener = query("#open");
+  if (area && input && opener) {
+    setupFiles({ source, area, input, opener, tr, say, loaded: validate });
+  }
+  const remember = query<HTMLInputElement>("#remember");
+  if (remember) setupDraft(source, remember);
+  exporter?.addEventListener(
+    "click",
+    () => exportable && download("nixchecker-report.json", exportable()),
+  );
   validate();
 }

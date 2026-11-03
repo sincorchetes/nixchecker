@@ -21,6 +21,9 @@ export const en: Record<MessageKey, string> = {
   "checker.validate": "Validate",
   "checker.example": "Load example",
   "checker.clear": "Clear",
+  "checker.open": "Open file",
+  "checker.export": "Download report",
+  "checker.remember": "Remember my text on this device",
   "checker.privacy":
     "Everything is validated in your browser. Your code is never sent to a server.",
 
@@ -42,6 +45,8 @@ export const en: Record<MessageKey, string> = {
   "coverage.hidden": "{n} inside a hidden option",
   "coverage.interpolated": "{n} with interpolated text",
   "coverage.free-form": "{n} inside a free-form option",
+  "result.fileTooBig": "That file is too large (at most {max} KB).",
+  "result.fileError": "The file could not be read.",
   "result.loadError": "Could not load the catalog. Check your connection and try again.",
   "result.line": "Line {line}, column {col}",
   "result.suggest": "Did you mean {suggestion}?",
