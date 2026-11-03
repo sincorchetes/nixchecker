@@ -9,16 +9,27 @@ NixOS, Home Manager, disko and Nix flakes.
 
 ## Status
 
-In active development; not for anything that cannot be checked twice. The validator parses the file with its own Nix parser (syntax errors come with
-the exact line and column), collects every `a.b.c = value;` assignment and checks it against catalogs generated from the official sources: `nixosOptionsDoc` for NixOS
-(~27k options), the Home Manager manual (~6k) and the disko module, plus the flake format.
-It reports unknown options with "did you mean" suggestions and the options available there, wrong
+In active development; not for anything that cannot be checked twice. The validator parses the file
+with its own Nix parser (syntax errors come with the exact line and column), collects every
+`a.b.c = value;` assignment and checks it against catalogs generated from the official sources:
+`nixosOptionsDoc` for NixOS (~27k options), the Home Manager manual (~6k) and the disko module, plus the
+flake format. It reports unknown options with "did you mean" suggestions and the options available there, wrong
 value types, renamed options, options hidden from the manuals, and names that are not defined.
 
 The parser is checked against every `.nix` file of nixpkgs and Home Manager (about 49,000), all of
 which must parse without a problem: `devenv shell -- corpus`, also run by CI. A second check damages
 sampled files (cuts, a lost character, a stray symbol) and requires our parser and the official
 `nix-instantiate --parse` to agree on whether each one is valid: `devenv shell -- differential`.
+
+## Using the page
+
+Paste or type your file, drop a `.nix` file on the editor, or use "Open file" (up to 512 KB). The page
+checks it by itself when you stop typing for a moment; the button checks at once. The text is colored,
+each finding is underlined where it is and marked in the line numbers, and the report lists them with a
+link to the offending word, a button for the fixes that are certain (one, or all at once) and the
+official page of each option. "Download report" saves the report as JSON. "Remember my text on this
+device" (off by default) keeps the text in this browser's storage between visits. Everything runs in your
+browser; nothing is uploaded.
 
 ## Checking a whole configuration with real Nix
 
@@ -34,7 +45,8 @@ the pinned sources are built once and kept). Pin a version with `github:sincorch
 or put `nixchecker` and `nixchecker-lsp` on your PATH with `nix profile install github:sincorchetes/nixchecker`.
 In a clone of the repository, `devenv shell -- evaluate …` is the same command.
 
-It prints the static findings and then what Nix itself says, each marked by how sure it is
+Evaluating a file is running it, as `nix build` does (it can import, fetch and build): use it on code you
+trust (see `SECURITY.md`); `--static` does not evaluate. It prints the static findings and then what Nix itself says, each marked by how sure it is
 (`syntax`, `static check`, `confirmed by Nix`), and exits with 1 when something is an error. When Nix
 accepts the module, the static findings it settles are dropped. Files named in `imports` are read from
 where they are, so a configuration split over several files works, and an error in an imported module

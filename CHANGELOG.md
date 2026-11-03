@@ -68,6 +68,7 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   official `nix-instantiate --parse` on damaged copies of them (`differential`).
 - The validator against the real NixOS, Home Manager and disko module systems, on written and
   generated modules, on every release (`oracle`).
+- `SECURITY.md` says what the command line does that the page does not: evaluate Nix code on your machine.
 - The command line against real Nix on an own module, an error in an imported file, `--partial` with
   and without the assertions of a whole system, and a flake with NixOS and Home Manager configurations
   (`integration`); its SARIF against the official SARIF 2.1.0 schema (OASIS).
@@ -76,6 +77,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Fixed
 
+- A flake is read as Nix reads a directory: in a Git repository only the tracked files. It used `path:`,
+  which copied the whole directory (untracked files and secrets too) into the Nix store.
 - `evaluate --partial` no longer reads `imports`, `options` and the other keys of the module system as
   if they were options (it failed with `attribute 'imports' missing`), and reads what is under
   `config = { ... }` without that prefix.

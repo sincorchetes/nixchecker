@@ -39,7 +39,9 @@ export const original = (file: string | undefined, dir: string): string | undefi
  * development shells when `all`), tagged with the name of each.
  */
 export async function evaluateFlake(path: string, all = false): Promise<Finding[]> {
-  const ref = `path:${dirname(path)}`;
+  // The directory as Nix reads it: in a Git repository only the files Git tracks, as for `nix build`. (With
+  // `path:` the whole directory, untracked files and secrets included, would be copied to the store.)
+  const ref = dirname(path);
   const findings: Finding[] = [];
   const outputs: Array<[string, string]> = Object.entries(CONFIGURATIONS);
   if (all) {

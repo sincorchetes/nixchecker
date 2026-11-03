@@ -44,6 +44,47 @@ describe("the other outputs of a flake", () => {
   );
 });
 
+describe("a flake in a Git repository", () => {
+  const git = async (dir: string, ...args: string[]) => {
+    const proc = Bun.spawn(["git", "-C", dir, ...args], { stdout: "pipe", stderr: "ignore" });
+    const out = await new Response(proc.stdout).text();
+    await proc.exited;
+    return out;
+  };
+
+  test(
+    "is read as Nix reads it: what Git does not track never reaches the store",
+    async () => {
+      const flake = await scratch();
+      await writeFlake(flake);
+      await Bun.write(join(flake, "secret.env"), "PASSWORD=hunter2\n");
+      await git(flake, "init", "-q");
+      await git(flake, "add", "flake.nix", "flake.lock");
+
+      const run = await evaluate("--format", "json", join(flake, "flake.nix"));
+      expect(run.code).toBe(0);
+
+      // The copy Nix made for that evaluation is the tracked files alone.
+      const proc = Bun.spawn(
+        [
+          "nix",
+          "flake",
+          "metadata",
+          flake,
+          "--json",
+          "--extra-experimental-features",
+          "nix-command flakes",
+        ],
+        { stdout: "pipe", stderr: "ignore" },
+      );
+      const { path } = JSON.parse(await new Response(proc.stdout).text());
+      expect(await Bun.file(join(path, "flake.nix")).exists()).toBe(true);
+      expect(await Bun.file(join(path, "secret.env")).exists()).toBe(false);
+    },
+    TIME,
+  );
+});
+
 describe("a flake with a NixOS and a Home Manager configuration", () => {
   test(
     "that is right passes, and each configuration was evaluated",

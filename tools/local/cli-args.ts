@@ -10,6 +10,7 @@ export const HELP = `Usage: nixchecker [options] <file.nix | directory>...
 
 Checks NixOS, Home Manager, disko and flake files against the official options (static analysis), and
 against the module system of your own Nix (real evaluation). Directories are searched for .nix files.
+Evaluating is running code, as nix build is: use it on code you trust (--static does not evaluate).
 
 Options:
   --target <t>        what the file is: ${TARGETS.join(", ")} (default: auto, as the web page decides)

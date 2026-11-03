@@ -3,6 +3,10 @@
 1. Branch from an up-to-date `main`: `git switch -c feat/short-description`.
 2. Format and lint: `devenv shell -- fix`, then `devenv shell -- lint`.
 3. Run `devenv test`. `src/lib` must keep 100% line coverage, so add a test for every new branch.
+   Depending on what you changed, also run the checks that need Nix or a browser (CI runs them all):
+   `corpus` and `differential` (the Nix parser), `oracle` (the validator and the catalogs), `catalog`
+   (the catalog generator), `integration` (the command line against real Nix) and `e2e` (the page, in
+   Chrome).
 4. Open a pull request with a conventional commit title (`feat:`, `fix:`, `docs:`...).
 
 Conventions:
