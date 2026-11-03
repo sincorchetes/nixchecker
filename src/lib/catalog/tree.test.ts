@@ -84,3 +84,18 @@ test("addRoots makes the roots known, without overwriting what is there", () => 
   expect(roots.kids.get("a")?.kids.has("b")).toBe(true);
   expect(roots.kids.get("z")?.visible).toBe(true);
 });
+
+describe("owner of a value below an attrsOf submodule", () => {
+  const kernels = buildTree([
+    { path: "k", type: "attrs", values: ["attrs"], segs: ["k"] },
+    { path: "k.*.paths", type: "attrs", values: ["path"], segs: ["k", "*", "paths"] },
+  ]);
+
+  test("is the deepest option that knows its values", () => {
+    expect(findOwner(kernels, path("k.x.paths.a"))?.path).toBe("k.*.paths");
+  });
+
+  test("falls back to the free-form set above when nothing below fits", () => {
+    expect(findOwner(kernels, path("k.x.other.a"))?.path).toBe("k");
+  });
+});
