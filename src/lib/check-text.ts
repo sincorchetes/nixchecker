@@ -1,5 +1,8 @@
 import type { Analysis, Report } from "./analysis";
-import { loadCatalog, type OptionTree, type Version } from "./catalog";
+import type { OptionTree } from "./catalog";
+import { type Catalog, loadCatalog, type Target, type Version } from "./catalog";
+import { splitPath } from "./catalog/path";
+import { findExact } from "./catalog/tree";
 import {
   analyze,
   bestReport,
@@ -16,6 +19,33 @@ export interface Checked {
   source: string;
   /** That catalog, with the parts the text needed loaded. */
   tree: OptionTree;
+}
+
+// A renamed option passes its value on to the option it was renamed to, which is held to that one's type:
+// that one can be in a part of the catalog the text did not touch, so the parts it is in are loaded too
+// (a few rounds, for a rename of a rename).
+const RENAME_ROUNDS = 4;
+
+async function loadWithRenames(
+  kind: Target,
+  release: Version,
+  base: string,
+  paths: string[][],
+  fetcher: typeof fetch | undefined,
+): Promise<Catalog> {
+  let catalog = await loadCatalog(kind, release, base, paths, fetcher);
+  const asked = new Set(paths.map((p) => p.join(".")));
+  let frontier = paths;
+  for (let round = 0; round < RENAME_ROUNDS; round++) {
+    const targets = frontier
+      .map((p) => findExact(catalog.tree, p)?.renamedTo)
+      .filter((to): to is string => to !== undefined && !asked.has(to));
+    if (targets.length === 0) break;
+    for (const to of targets) asked.add(to);
+    frontier = targets.map(splitPath);
+    catalog = await loadCatalog(kind, release, base, frontier, fetcher);
+  }
+  return catalog;
 }
 
 /**
@@ -35,7 +65,7 @@ export async function checkText(
   const kinds = candidateTargets(analysis, choice);
   const paths = analysis.assignments.map((a) => a.path);
   const catalogs = await Promise.all(
-    kinds.map((kind) => loadCatalog(kind, release, base, paths, fetcher)),
+    kinds.map((kind) => loadWithRenames(kind, release, base, paths, fetcher)),
   );
   const reports = kinds.map((kind, n) =>
     check(analysis, kind, (catalogs[n] as (typeof catalogs)[number]).tree, release),

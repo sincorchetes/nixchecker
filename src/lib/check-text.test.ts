@@ -39,6 +39,20 @@ describe("checkText", () => {
   });
 });
 
+describe("checkText on a renamed option", () => {
+  const codes = async (text: string) =>
+    (await run(text, "nixos")).report.diagnostics.map((d) => d.code).sort();
+
+  test("holds the value to the type of the option it was renamed to, in another part of the catalog", async () => {
+    // `security` and `users` are different shards, and the new name has a `*` where the old one has `root`.
+    expect(await codes("{ security.initialRootPassword = 5; }")).toEqual([
+      "deprecated",
+      "type-mismatch",
+    ]);
+    expect(await codes('{ security.initialRootPassword = "!"; }')).toEqual(["deprecated"]);
+  });
+});
+
 describe("checkText on a file that is no module", () => {
   const lib = "{ toXmlAttrs = 1; mkXmlAttr = 2; }";
 

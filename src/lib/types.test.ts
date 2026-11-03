@@ -128,4 +128,12 @@ describe("renamed options", () => {
     expect(diagnostics.map((d) => d.code).sort()).toEqual(["deprecated", "type-mismatch"]);
     expect(codes("{ services.xserver.displayManager.gdm.enable = true; }")).toEqual(["deprecated"]);
   });
+
+  test("through the renames of renames, and not past what cannot be followed", () => {
+    expect(codes('{ mixed.old = "yes"; }').sort()).toEqual(["deprecated", "type-mismatch"]);
+    expect(codes("{ mixed.old = true; }")).toEqual(["deprecated"]);
+    // The new name is not in the catalog, or the renames go round: the value is not judged.
+    expect(codes("{ mixed.lost = 5; }")).toEqual(["deprecated"]);
+    expect(codes("{ mixed.loop = 5; }")).toEqual(["deprecated"]);
+  });
 });

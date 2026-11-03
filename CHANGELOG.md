@@ -48,6 +48,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   POSIX classes of Nix read as JavaScript reads them (a pattern that cannot be read is not judged), and the
   elements of a list of paths must be absolute. The oracle no longer lets through any of the wrong values of
   `systemd.*.conflicts` or `app_service_config_files`. The catalogs grow by under 2 %.
+- The part of the catalog a renamed option points to is downloaded too, even when it is another shard (up to four renames
+  deep): `security.initialRootPassword = 5` is a type error, not only "deprecated". The oracle samples renamed options.
 - A value written for a renamed option is held to the type of the option it was renamed to (`xdg.userDirs.publishShare = 1` was only "deprecated").
 - The elements of a list that is an `enum` of strings are held to those strings (`programs.browserpass.browsers`).
 - `nixpkgs.overlays` takes functions, and a user's `home` an absolute path (`passwdEntry path`); the oracle has

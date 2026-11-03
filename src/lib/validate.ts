@@ -56,6 +56,18 @@ function available(tree: OptionTree, path: string[], known: number, written?: st
 }
 
 /** Checks an analyzed file against the options of `target`. */
+// A renamed option passes its value on as it is: the value is held to the type of the option it was
+// renamed to (through the renames of renames), when that is known here.
+function renamedTo(tree: OptionTree, entry: IndexedOption): IndexedOption {
+  let at = entry;
+  for (let hops = 0; at.renamedTo && hops < 4; hops++) {
+    const next = findExact(tree, splitPath(at.renamedTo));
+    if (!next) break;
+    at = next;
+  }
+  return at;
+}
+
 export function check(
   analysis: Analysis,
   target: Target,
@@ -138,8 +150,7 @@ export function check(
     if (exact) {
       // A renamed option passes its value on as it is: the value is held to the type of the new one,
       // when that is known here.
-      const renamed = exact.renamedTo ? findExact(tree, splitPath(exact.renamedTo)) : undefined;
-      const expected = typeMismatch(renamed ?? exact, a);
+      const expected = typeMismatch(renamedTo(tree, exact), a);
       if (expected) {
         diagnostics.push({
           severity: "error",

@@ -30,7 +30,8 @@ export async function sampleOptions(name: string, count: number, seed: number): 
     if (file === "index.json") continue;
     const rows = (await Bun.file(join(dir, file)).json()) as OptionRow[];
     for (const [path, type, extra] of rows) {
-      if (!["hidden", "any", "set"].includes(type)) paths.push(path);
+      // A renamed option is tried whatever its own type says: its value is held to the type of the new one.
+      if (!["hidden", "any", "set"].includes(type) || typeof extra === "string") paths.push(path);
       // An attribute set of something: also try a key below it, where its values are checked.
       if (type === "attrs" && Array.isArray(extra)) paths.push(`${path}.k`);
     }
