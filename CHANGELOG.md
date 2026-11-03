@@ -45,5 +45,5 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   names its file.
 - A value written below an `attrsOf` option is judged by the deepest option that knows its type, and
   attributes written below a list option are a type error.
-- The oracle may miss at most 5 % of the wrong values (it was 7 %).
+- The oracle may miss at most 3 % of the wrong values (it was 7 %).
 - GitHub Actions are pinned by commit, and so is devenv.
