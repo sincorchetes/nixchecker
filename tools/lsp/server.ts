@@ -148,7 +148,7 @@ function handle({ id, method, params }: Message): void {
     }
     case "textDocument/didChange": {
       const { uri } = documentOf(params);
-      const changes = params?.contentChanges as Array<{ text: string }>;
+      const changes = (params?.contentChanges ?? []) as Array<{ text: string }>;
       texts.set(uri, changes[changes.length - 1]?.text ?? "");
       void publish(uri);
       break;
@@ -183,4 +183,15 @@ function handle({ id, method, params }: Message): void {
   }
 }
 
-for await (const message of readMessages(Bun.stdin.stream())) handle(message);
+// A message that cannot be handled is answered with an error (if it asked for an answer) and the server
+// goes on: an editor's server does not die of what one request carried.
+for await (const message of readMessages(Bun.stdin.stream())) {
+  try {
+    handle(message);
+  } catch (error) {
+    console.error(`nixchecker-lsp: ${message.method}: ${(error as Error).message}`);
+    if (message.id !== undefined) {
+      send({ id: message.id, error: { code: -32603, message: (error as Error).message } });
+    }
+  }
+}

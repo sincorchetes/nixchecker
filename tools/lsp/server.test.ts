@@ -212,6 +212,28 @@ describe("language server hover", () => {
   });
 });
 
+describe("language server robustness", () => {
+  test("a request that cannot be handled gets an error, and the server goes on", async () => {
+    write({
+      method: "textDocument/didOpen",
+      params: { textDocument: { uri: "file:///r.nix", text: "{ networking.hostName = 5; }" } },
+    });
+    await next();
+    // Fixes for a place that is not given: that throws inside the handler.
+    write({
+      id: 50,
+      method: "textDocument/codeAction",
+      params: { textDocument: { uri: "file:///r.nix" } },
+    });
+    expect(await next()).toMatchObject({ id: 50, error: { code: -32603 } });
+    // A change with no changes is taken as an empty text, and the server still answers what follows.
+    write({ method: "textDocument/didChange", params: { textDocument: { uri: "file:///r.nix" } } });
+    expect(diagnostics(await next())).toEqual([]);
+    write({ id: 51, method: "textDocument/definition", params: {} });
+    expect(await next()).toMatchObject({ id: 51, error: { code: -32601 } });
+  });
+});
+
 describe("language server shutdown", () => {
   test("shuts down and exits cleanly", async () => {
     write({ id: 10, method: "shutdown" });

@@ -77,6 +77,10 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Fixed
 
+- The language server no longer dies of a message it cannot handle: it answers with an error and goes on.
+- `evaluate` on a path that does not exist says so in one line (exit status 2) instead of a stack trace.
+- `evaluate` no longer says "Nix stops at the first error" when Nix was not asked (`--static`) or when it
+  reads the file option by option (`--partial`).
 - A flake is read as Nix reads a directory: in a Git repository only the tracked files. It used `path:`,
   which copied the whole directory (untracked files and secrets too) into the Nix store.
 - `evaluate --partial` no longer reads `imports`, `options` and the other keys of the module system as

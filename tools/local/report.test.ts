@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Assignment } from "../../src/lib/nix/scan";
-import { fromFinding, isImported } from "./report";
+import { fromFinding, type How, isImported, type Located, printText } from "./report";
 
 const assignments = [{ path: ["networking", "hostName"], line: 3, col: 5 }] as Assignment[];
 const finding = { kind: "type-error", option: "networking.hostName", message: "bad" } as const;
@@ -90,5 +90,42 @@ describe("an option set in several places", () => {
     const places = [set(1, "bool"), set(2, "list"), set(3, "attrs"), set(4, "other")];
     const at = (printed: string) => fromFinding(wrong(printed), places, "a.nix").line;
     expect([at("true"), at("[ 1 ]"), at("{ a = 1; }"), at("<function>")]).toEqual([1, 2, 3, 4]);
+  });
+});
+
+describe("what is said after the findings", () => {
+  const said = (items: Located[], how: How) => {
+    const lines: string[] = [];
+    const log = console.log;
+    console.log = (line: string) => void lines.push(line);
+    try {
+      printText(items, "1 of 1 checked.", how);
+    } finally {
+      console.log = log;
+    }
+    return lines.join("\n");
+  };
+  const confirmed: Located = {
+    level: "evaluation",
+    severity: "error",
+    message: "bad",
+    line: 1,
+    col: 1,
+  };
+
+  test("the way Nix stops is told only for a whole system that failed", () => {
+    expect(said([confirmed], "whole")).toContain("Nix stops at the first error");
+    expect(said([], "whole")).not.toContain("Nix stops");
+    expect(said([confirmed], "partial")).not.toContain("Nix stops");
+    expect(said([confirmed], "static")).not.toContain("Nix stops");
+  });
+
+  test("a file not evaluated because of its syntax says so, and one checked statically does not", () => {
+    expect(said([], "syntax")).toContain("Not evaluated");
+    expect(said([], "static")).not.toContain("Not evaluated");
+  });
+
+  test("the counts and the coverage are always there", () => {
+    expect(said([confirmed], "static")).toContain("1 errors, 0 warnings. 1 of 1 checked.");
   });
 });

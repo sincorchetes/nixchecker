@@ -146,3 +146,18 @@ describe("evaluate CLI (help and mistakes)", () => {
     expect(many.out).toBe(one.out);
   });
 });
+
+describe("evaluate CLI (what is not there)", () => {
+  test("a file or directory that does not exist is one line and exit status 2, not a crash", async () => {
+    const r = await run("--static", join(dir, "nope.nix"));
+    expect(r.code).toBe(2);
+    expect(r.err).toContain("no such file or directory");
+    expect(r.err).toContain("nope.nix");
+    expect(r.err).not.toContain("    at ");
+  });
+
+  test("the way Nix stops is not told when Nix was not asked", async () => {
+    const r = await run("--static", join(dir, "bad.nix"), "--target", "nixos");
+    expect(r.out).not.toContain("Nix stops");
+  });
+});

@@ -91,7 +91,10 @@ export function fromFinding(f: Finding, assignments: Assignment[], checked: stri
 
 const LABEL = { syntax: "syntax", static: "static check", evaluation: "confirmed by Nix" } as const;
 
-export function printText(items: Located[], coverage: string, evaluated: boolean): void {
+/** How a file was checked: only statically, not evaluated for a syntax error, or by Nix (all of it, or part). */
+export type How = "static" | "syntax" | "whole" | "partial";
+
+export function printText(items: Located[], coverage: string, how: How): void {
   for (const level of ["syntax", "static", "evaluation"] as const) {
     for (const item of items.filter((i) => i.level === level)) {
       const place = item.line ? `${item.line}:${item.col}` : "";
@@ -107,7 +110,11 @@ export function printText(items: Located[], coverage: string, evaluated: boolean
   }
   const errors = items.filter((i) => i.severity === "error").length;
   console.log(`\n${errors} errors, ${items.length - errors} warnings. ${coverage}`);
-  if (!evaluated) console.log("Not evaluated: fix the syntax errors first, or pass --static.");
-  else
+  if (how === "syntax")
+    console.log("Not evaluated: fix the syntax errors first, or pass --static.");
+  // Only a whole system stops at the first error; a part of one (--partial) is read option by option.
+  const failed = items.some((i) => i.level === "evaluation" && i.severity === "error");
+  if (how === "whole" && failed) {
     console.log("Nix stops at the first error it meets: fix it and run again to see the next one.");
+  }
 }

@@ -3,7 +3,7 @@
 // priorities, assertions). Directories are searched for .nix files. `--help` says how.
 import { checkFile } from "./check-file";
 import { HELP, parseCommand, UsageError } from "./cli-args";
-import { nixFiles } from "./files";
+import { MissingPath, nixFiles } from "./files";
 import { mapLimit } from "./pool";
 import { printText } from "./report";
 import { toSarif } from "./sarif";
@@ -39,16 +39,14 @@ try {
     for (const r of results) {
       if (results.length > 1) console.log(`\n== ${r.file}`);
       const { checked, total } = r.coverage;
-      printText(
-        r.items,
-        `${checked} of ${total} assignments checked statically.`,
-        r.evaluated || !!command.static,
-      );
+      const nix = command.partial ? "partial" : "whole";
+      const how = r.evaluated ? nix : command.static ? "static" : "syntax";
+      printText(r.items, `${checked} of ${total} assignments checked statically.`, how);
     }
   }
   process.exit(results.some((r) => r.items.some((i) => i.severity === "error")) ? 1 : 0);
 } catch (error) {
-  if (!(error instanceof UsageError)) throw error;
+  if (!(error instanceof UsageError || error instanceof MissingPath)) throw error;
   console.error(`nixchecker: ${error.message}\nTry 'nixchecker --help'.`);
   process.exit(2);
 }
