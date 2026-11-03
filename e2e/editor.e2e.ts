@@ -183,3 +183,38 @@ describe("colors and underlines", () => {
     expect(heights[0]).toBe(heights[1]);
   });
 });
+
+describe("validating without a worker", () => {
+  test("gives the same answer in the page when workers are not available", async () => {
+    const plain = await browser.newPage();
+    await plain.evaluateOnNewDocument(() => {
+      (window as unknown as { Worker?: unknown }).Worker = undefined;
+    });
+    await plain.goto(site.url());
+    await validateIn(plain, "{ networking.hostName = 5; services.openssh.enabel = true; }");
+    const found = await plain.$$eval(".diag .msg", (els) => els.length);
+    expect(found).toBe(2);
+    await plain.close();
+  });
+});
+
+describe("without a connection", () => {
+  test("a page that was used opens and validates from what it kept", async () => {
+    // Its own server, so the page has an origin (and a service worker) of its own to lose.
+    const own = serveSite(dist);
+    const offline = await browser.newPage();
+    const controlled = () => offline.waitForFunction(() => navigator.serviceWorker.controller);
+    await offline.goto(own.url());
+    await controlled();
+    // The reload is the first visit made under the service worker: that is when everything is kept.
+    await offline.reload();
+    await controlled();
+    await validateIn(offline, "{ networking.hostName = 5; }");
+
+    own.stop();
+    await offline.reload();
+    await validateIn(offline, "{ networking.hostName = 5; }");
+    expect(await offline.$$eval(".diag .msg", (els) => els.length)).toBe(1);
+    await offline.close();
+  });
+});

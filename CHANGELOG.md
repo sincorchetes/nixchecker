@@ -25,6 +25,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   configurations of a flake with its own inputs, and takes `--partial` for a file that is part of a
   system (its options are read; the assertions of a whole system are skipped).
 - The page validates by itself when the text rests for a moment (the button still validates at once).
+- The analysis runs in a Web Worker (in the page where one cannot start), and a service worker keeps
+  the page and the catalogs used so it works with no connection after the first visit.
 - Syntax colors in the editor (comments, strings, numbers, keywords, paths) and the findings underlined
   where they are, for text up to 200 KB; in forced-colors mode the plain text area is shown.
 - Open a `.nix` file with a picker or by dropping it on the editor (read in the browser, up to 512 KB),

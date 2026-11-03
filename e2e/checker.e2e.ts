@@ -56,7 +56,7 @@ describe("checker", () => {
     await page.type("#source", " ");
     expect(await page.$eval("#results", (el) => el.hasAttribute("data-stale"))).toBe(true);
     await page.click("#validate");
-    await page.waitForSelector("#results:not([data-stale])");
+    await page.waitForSelector("#results:not([data-stale]):not([aria-busy])");
   });
 
   test("applies a fix and validates again", async () => {

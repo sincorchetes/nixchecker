@@ -70,6 +70,11 @@ sharded (`public/catalog/<target>/`): the browser downloads a small index plus o
 the options your file mentions, typically 20-30 KB gzipped for NixOS instead of the whole catalog
 (about 190 KB).
 
+The analysis runs in a Web Worker, so a large file does not stall the editor (where a worker cannot
+start, the page does the same work itself). A service worker (`public/sw.js`) keeps a copy of the page
+and of the catalog files it used, so after one visit it also opens and validates with no connection;
+the network always comes first, so an update is never hidden by an old copy.
+
 ### Regenerating the catalogs
 
 ```sh

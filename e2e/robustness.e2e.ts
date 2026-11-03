@@ -8,7 +8,8 @@ import { dist, launchChrome, serveSite, validateIn } from "./support";
 const root = join(import.meta.dir, "..");
 const subDist = join(root, "dist-base");
 const sub = serveSite(subDist, "/nixchecker");
-const site = serveSite(dist);
+let catalogsDown = false;
+const site = serveSite(dist, "", () => catalogsDown);
 let browser: Browser;
 
 beforeAll(async () => {
@@ -39,18 +40,14 @@ async function freshPage() {
 describe("robustness", () => {
   test("says so when the catalog cannot be downloaded, and recovers", async () => {
     const page = await freshPage();
-    await page.setRequestInterception(true);
-    let offline = true;
-    page.on("request", (r) =>
-      offline && r.url().includes("/catalog/") ? r.abort() : r.continue(),
-    );
+    catalogsDown = true;
     await page.goto(site.url());
     await page.$eval("#source", (el) => ((el as HTMLTextAreaElement).value = "{ a.b = 1; }"));
     await page.click("#validate");
     await page.waitForFunction(() =>
       document.querySelector("#results")?.textContent?.includes("No se pudo cargar el catálogo"),
     );
-    offline = false;
+    catalogsDown = false;
     await validateIn(page, "{ services.openssh.enable = true; }");
     expect(await page.$eval(".summary", (el) => el.className)).toContain("good");
   });
