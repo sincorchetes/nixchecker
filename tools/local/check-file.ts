@@ -19,6 +19,7 @@ export interface Options {
   homeManager?: string | undefined;
   disko?: string | undefined;
   static?: boolean | undefined;
+  partial?: boolean | undefined;
 }
 
 export interface Result {
@@ -53,6 +54,12 @@ function rootsOf(o: Options): Promise<Roots> {
   return built.get(o.version) as Promise<Roots>;
 }
 
+// The options a file sets by name; a placeholder in the path stands for a name only the user knows.
+const optionPaths = (analysis: ReturnType<typeof analyze>): string[][] =>
+  analysis.assignments
+    .map((a) => a.path)
+    .filter((p) => !p.some((s) => s === "*" || s.startsWith("<")));
+
 export async function checkFile(file: string, o: Options): Promise<Result> {
   const analysis = analyze(await Bun.file(file).text());
   const target = resolveTarget(analysis, (o.target ?? "auto") as TargetChoice);
@@ -76,7 +83,12 @@ export async function checkFile(file: string, o: Options): Promise<Result> {
     const found: Finding[] =
       target === "flake"
         ? await evaluateFlake(resolve(file))
-        : await evaluate(target as Kind, await rootsOf(o), file);
+        : await evaluate(
+            target as Kind,
+            await rootsOf(o),
+            file,
+            o.partial ? optionPaths(analysis) : undefined,
+          );
     for (const finding of found) items.push(fromFinding(finding, analysis.assignments, file));
     items = reconcile(items, true).items;
   }

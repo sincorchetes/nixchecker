@@ -2,7 +2,8 @@
 // of the Nix on this machine, which settles what the analysis can only guess (imports, mkIf, merging,
 // priorities, assertions). Directories are searched for .nix files.
 //   bun tools/local/check.ts <file.nix|dir>... [--target nixos|home-manager|disko] [--release unstable|26.05|25.11]
-//        [--nixpkgs DIR] [--home-manager DIR] [--disko DIR] [--static] [--json]
+//        [--nixpkgs DIR] [--home-manager DIR] [--disko DIR] [--static] [--partial] [--json]
+//   --partial: the file is part of a system, not all of it: read its options, skip the system assertions.
 // Without --nixpkgs (and --home-manager) the pinned sources of --release are built (needs Nix).
 import { parseArgs } from "node:util";
 import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
@@ -20,6 +21,7 @@ const { values: opts, positionals } = parseArgs({
     "home-manager": { type: "string" },
     disko: { type: "string" },
     static: { type: "boolean" },
+    partial: { type: "boolean" },
     json: { type: "boolean" },
   },
 });
@@ -45,6 +47,7 @@ for (const path of paths) {
       homeManager: opts["home-manager"],
       disko: opts.disko,
       static: opts.static,
+      partial: opts.partial,
     }),
   );
 }
