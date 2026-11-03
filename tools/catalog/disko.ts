@@ -11,7 +11,7 @@ type Options = Record<string, Type | { type: Type }>;
 export type JsonTypes = Record<string, Options & { types?: string[] }>;
 
 // A polymorphic place holds any of these types; below this many of them nested, it is left free-form.
-const MAX_NESTING = 4;
+const MAX_NESTING = 6;
 
 // Where each kind of device is declared, and the type that describes its options.
 const ROOTS: Record<string, string> = {
@@ -38,6 +38,9 @@ const isOptions = (t: Type): t is { options: Options } =>
 // An option is its type, or `{ type = ...; }` with a default and a description.
 const typeOf = (option: Type | { type: Type }): Type =>
   typeof option === "string" ? option : (option.type as Type);
+
+/** The places disko's layout types are authoritative: below each, only what its types declare exists. */
+export const LAYOUT_ROOTS = Object.keys(ROOTS).map((device) => `disko.devices.${device}.*`);
 
 export function diskoEntries(types: JsonTypes): OptionEntry[] {
   const found = new Map<string, OptionEntry>();

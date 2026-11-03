@@ -31,6 +31,13 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - When an option is set in several places of a file, `evaluate` picks the one whose value is what Nix
   printed (by its kind, and by its text for a string) and, if it still cannot tell, reports the other
   places too (`alternatives` in the JSON, related locations in SARIF) instead of choosing silently.
+- `evaluate --all-outputs` also evaluates the `packages`, `checks` and `devShells` of a flake for the
+  system it runs on (the default is still its NixOS and Home Manager configurations).
+- The option type `package` is known to the validator: a number, a boolean, a list or any string that is
+  not a path in the store is an error where a package (or a list of them) goes. Only a set, a name, a call
+  or a string with `${...}` in it, which could be one, is let through.
+- disko's layouts are read down to six levels of `content`, and below each device only what its types
+  declare exists (the manual described hooks under `nodev` that the module does not have).
 - `evaluate --partial` finds every wrong value of a file in one run, not only the first one Nix stops at:
   it asks which of the options the file sets fail to evaluate, and for the message of each of them.
 - `evaluate --help`, `--version` and `--jobs`: every mistake in the command is one line with exit status 2,

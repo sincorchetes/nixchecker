@@ -52,8 +52,11 @@ describe("disko layouts", () => {
   });
 
   test("nesting stops at a depth, leaving the rest free-form", () => {
-    expect(entries[`${root}.content.content.content.content`]).toMatchObject({ type: "attrs" });
-    expect(entries[`${root}.content.content.content.content.type`]).toBeUndefined();
+    const deepest = Array(6).fill("content").join(".");
+    expect(entries[`${root}.${deepest}`]).toMatchObject({ type: "attrs" });
+    expect(entries[`${root}.${deepest}.type`]).toBeUndefined();
+    // Just above it, the layout is still read.
+    expect(entries[`${root}.${Array(5).fill("content").join(".")}.type`]).toBeDefined();
   });
 });
 

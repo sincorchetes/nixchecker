@@ -44,10 +44,15 @@ export async function sampleOptions(name: string, count: number, seed: number): 
   return picked;
 }
 
-/** Modules assigning each value to an option; names written `*` in the catalog become `x`. */
+/**
+ * Modules assigning each value to an option; names written `*` in the catalog become `x`. A disko
+ * `nodev` takes its name as the place it mounts, so there it is `/x`: `x` would be rejected for that alone.
+ */
 export const modulesFor = (option: string): string[] => {
-  const path = splitPath(option).map((seg) =>
-    seg === "*" ? "x" : /^[A-Za-z_][\w'-]*$/.test(seg) ? seg : JSON.stringify(seg),
-  );
+  const name = option.startsWith("disko.devices.nodev.*") ? "/x" : "x";
+  const path = splitPath(option).map((seg) => {
+    const written = seg === "*" ? name : seg;
+    return /^[A-Za-z_][\w'-]*$/.test(written) ? written : JSON.stringify(written);
+  });
   return VALUES.map((value) => `{ ${path.join(".")} = ${value}; }`);
 };

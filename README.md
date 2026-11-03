@@ -88,11 +88,13 @@ Limits to know about:
   settles those with real Nix.
 - disko's manual documents only its top level; the nested options of the disk layouts are read from
   disko's own serialized types (`tools/catalog/disko.ts`). Where a place may hold several layout types
-  (`content`) the options of all of them are accepted there, and layouts nested more than four deep are
+  (`content`) the options of all of them are accepted there, and what the manual describes below a
+  device that its type does not declare is dropped, and layouts nested more than six deep are
   not read.
-- For a flake, `evaluate` evaluates its `nixosConfigurations` and `homeConfigurations` only. It does not
-  evaluate `checks`, `packages`, `devShells` or any other output: a flake that passes is not a flake
-  whose every output builds.
+- For a flake, `evaluate` evaluates its `nixosConfigurations` and `homeConfigurations`; with
+  `--all-outputs` also its `packages`, `checks` and `devShells` for the system it runs on. Evaluating a
+  derivation instantiates it, it does not build it: a package that evaluates but fails to build passes.
+  Other outputs (`apps`, `overlays`, `templates`...) are not evaluated.
 - Renamed options are read from the `mkRenamedOptionModule` calls in the nixpkgs and Home Manager
   sources (about 750 for NixOS); the ones that were removed rather than renamed, and the ones
   hidden without a replacement, get a generic warning.

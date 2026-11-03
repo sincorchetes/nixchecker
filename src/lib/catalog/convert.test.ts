@@ -205,6 +205,22 @@ describe("extractRenames", () => {
   });
 });
 
+describe("convert with an authoritative overlay", () => {
+  test("what the manuals add below a path and the overlay does not list is dropped", () => {
+    const entries = convert(
+      {
+        "d.*.keep": { type: "string" },
+        "d.*.manualOnly": { type: "string" },
+        "d.*.sub.deep": { type: "string" },
+        "other.stays": { type: "string" },
+      },
+      [],
+      { entries: [opt("d.*.keep", "str"), opt("d.*.fromModule", "int")], authoritative: ["d.*"] },
+    );
+    expect(entries.map((e) => e.path)).toEqual(["d.*.fromModule", "d.*.keep", "other.stays"]);
+  });
+});
+
 describe("convert names with dots", () => {
   test("a quoted name that holds dots is one attribute, not a container of its pieces", () => {
     const entries = convert({

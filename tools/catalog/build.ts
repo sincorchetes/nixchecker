@@ -6,7 +6,7 @@ import { convert, type Overlay } from "../../src/lib/catalog/convert";
 import { extractRenames } from "../../src/lib/catalog/renames";
 import { shardFile, toShards } from "../../src/lib/catalog/shard";
 import { catalogName, VERSIONS, type Version } from "../../src/lib/catalog/versions";
-import { diskoEntries } from "./disko";
+import { diskoEntries, LAYOUT_ROOTS } from "./disko";
 import { overlays } from "./overlay";
 
 const root = join(import.meta.dir, "..", "..");
@@ -104,7 +104,11 @@ async function withDiskoLayouts(overlay: Overlay): Promise<Overlay> {
   const out = (await new Response(proc.stdout).text()).trim();
   if ((await proc.exited) !== 0) throw new Error("nix build disko-types failed");
   const layouts = diskoEntries(await Bun.file(out).json());
-  return { ...overlay, entries: [...(overlay.entries ?? []), ...layouts] };
+  return {
+    ...overlay,
+    entries: [...(overlay.entries ?? []), ...layouts],
+    authoritative: LAYOUT_ROOTS,
+  };
 }
 
 // What each catalog was made from and the hash of every file in it, so a copy can be checked.

@@ -14,6 +14,11 @@ export interface Overlay {
   renamed?: Record<string, string>;
   /** Entries that replace (or add to) the generated ones. */
   entries?: OptionEntry[];
+  /**
+   * Paths whose options the `entries` list in full: what the manuals document below them and the entries
+   * do not have is dropped (the manuals can describe options a module does not declare).
+   */
+  authoritative?: string[];
 }
 
 interface Mapped {
@@ -124,6 +129,14 @@ export function convert(
   for (const entry of overlay.entries ?? []) {
     containers.delete(entry.path);
     entries.set(entry.path, entry);
+  }
+  const listed = new Set((overlay.entries ?? []).map((entry) => entry.path));
+  for (const prefix of overlay.authoritative ?? []) {
+    for (const path of [...entries.keys()]) {
+      if (!path.startsWith(`${prefix}.`) || listed.has(path)) continue;
+      entries.delete(path);
+      containers.delete(path);
+    }
   }
 
   const parents = new Set<string>();
