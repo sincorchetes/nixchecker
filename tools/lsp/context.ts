@@ -53,7 +53,10 @@ export function contextAt(text: string, offset: number): Context | undefined {
       // A quoted name is a string, so the owner is read from the text as written.
       const owner = OPENS_VALUE.exec(text.slice(0, i))?.[1];
       const parent = stack.length === 0 ? [] : stack[stack.length - 1];
-      if (owner) stack.push(parent && [...parent, ...splitPath(owner)]);
+      // Under `config = { ... }` the options are the module's own, as if the `config` were not written.
+      const written = splitPath(owner ?? "");
+      const own = stack.length === 1 && written[0] === "config" ? written.slice(1) : written;
+      if (owner) stack.push(parent && [...parent, ...own]);
       else stack.push(stack.length === 0 ? [] : undefined);
     }
   }

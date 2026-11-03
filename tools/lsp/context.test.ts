@@ -52,3 +52,19 @@ describe("completion context", () => {
     expect(at('{ a = "}"; b| }')).toEqual({ enclosing: [], written: [], partial: "b" });
   });
 });
+
+describe("completion context under config", () => {
+  test("the options are the module's own, as if config were not written", () => {
+    expect(at("{ config = { net| }; }")).toEqual({ enclosing: [], written: [], partial: "net" });
+    expect(at("{ config = { services.openssh = { ena| }; }; }")?.enclosing).toEqual([
+      "services",
+      "openssh",
+    ]);
+    // Only a config at the top is the module's: deeper, it is just a name.
+    expect(at("{ services.x = { config = { ena| }; }; }")?.enclosing).toEqual([
+      "services",
+      "x",
+      "config",
+    ]);
+  });
+});

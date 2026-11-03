@@ -59,8 +59,16 @@ export function analyze(source: string): Analysis {
   const { ast, problems, lexical } = parse(source);
   const syntax: Diagnostic[] = problems.map((p) => ({ severity: "error", ...p }));
   // An unterminated string or comment garbles what follows, so nothing is read after one.
-  const { assignments, undefinedNames } =
-    ast && !lexical ? scan(ast) : { assignments: [], undefinedNames: [] };
+  const scanned = ast && !lexical ? scan(ast) : { assignments: [], undefinedNames: [] };
+  const { undefinedNames } = scanned;
+  // A module may write its options under `config` (`config = { a.b = 1; }`, `config.a.b = 1;`): they are the
+  // same options, so the paths are the options', and everything that reads them reads them alike.
+  // The `config` that holds them is then nothing left to check, if it is a set written in the file.
+  const assignments = scanned.assignments
+    .filter((a) => !(a.path.length === 1 && a.path[0] === "config" && a.kind === "attrs"))
+    .map((a) =>
+      a.path[0] === "config" && a.path.length > 1 ? { ...a, path: a.path.slice(1) } : a,
+    );
   for (const { name, line, col } of undefinedNames) {
     syntax.push({ severity: "error", code: "undefined-variable", line, col, params: { name } });
   }

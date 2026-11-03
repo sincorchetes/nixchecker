@@ -77,6 +77,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Fixed
 
+- Options written under `config` (`config = { a.b = 1; }`, `config.a.b = 1;`) are the same options as without
+  it: the page, `evaluate` and the language server check them, place them and complete them. They were
+  left unchecked, and a finding of Nix about them had no line.
 - The language server no longer dies of a message it cannot handle: it answers with an error and goes on.
 - `evaluate` on a path that does not exist says so in one line (exit status 2) instead of a stack trace.
 - `evaluate` no longer says "Nix stops at the first error" when Nix was not asked (`--static`) or when it
