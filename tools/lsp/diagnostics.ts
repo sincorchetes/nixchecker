@@ -16,7 +16,7 @@ export interface LspDiagnostic {
 }
 
 // LSP counts lines and characters from zero, in UTF-16 units: the text's own.
-function position(text: string, offset: number): Position {
+export function position(text: string, offset: number): Position {
   const before = text.slice(0, offset);
   const line = before.split("\n").length - 1;
   return { line, character: offset - (before.lastIndexOf("\n") + 1) };

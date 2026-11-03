@@ -13,7 +13,8 @@ import {
 import { fromDiagnostic, type Located } from "./report";
 
 export const publicDir = join(import.meta.dir, "..", "..", "public");
-const files = (async (url) => new Response(Bun.file(join(publicDir, String(url))))) as typeof fetch;
+export const fromDisk = (async (url) =>
+  new Response(Bun.file(join(publicDir, String(url))))) as typeof fetch;
 
 export interface StaticResult {
   analysis: ReturnType<typeof analyze>;
@@ -37,7 +38,7 @@ export async function staticLayer(
     version,
     "/",
     analysis.assignments.map((a) => a.path),
-    files,
+    fromDisk,
   );
   const report = check(analysis, target, catalog.tree, version);
   const { total, skipped } = report.coverage;

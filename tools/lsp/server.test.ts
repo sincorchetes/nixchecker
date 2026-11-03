@@ -120,6 +120,51 @@ describe("language server fixes", () => {
   });
 });
 
+describe("language server completion", () => {
+  const complete = async (text: string, line: number, character: number) => {
+    write({
+      method: "textDocument/didOpen",
+      params: { textDocument: { uri: "file:///c.nix", text } },
+    });
+    await next();
+    write({
+      id: 30,
+      method: "textDocument/completion",
+      params: { textDocument: { uri: "file:///c.nix" }, position: { line, character } },
+    });
+    const { result } = await next<{ result: { items: Array<Record<string, unknown>> } }>();
+    return result.items;
+  };
+
+  test("offers the options of the group being written, with their types", async () => {
+    const items = await complete("{ services.openssh.ena }", 0, 22);
+    const enable = items.find((i) => i.label === "enable");
+    expect(enable).toMatchObject({ kind: 10, detail: "bool" });
+    expect(enable?.textEdit).toMatchObject({
+      range: { start: { line: 0, character: 19 }, end: { line: 0, character: 22 } },
+      newText: "enable",
+    });
+    // The group `settings` is a group, not an option.
+    expect(items.find((i) => i.label === "settings")).toMatchObject({ kind: 9 });
+  });
+
+  test("offers the roots at the start of a name, and the second names of a big root", async () => {
+    expect((await complete("{ \n}", 0, 2)).some((i) => i.label === "networking")).toBe(true);
+    const services = await complete("{ services. }", 0, 11);
+    expect(services.some((i) => i.label === "openssh")).toBe(true);
+    expect(services.length).toBeGreaterThan(100);
+  });
+
+  test("works under the set an option is assigned to", async () => {
+    const items = await complete("{ services.openssh = {\n  ena\n}; }", 1, 5);
+    expect(items.some((i) => i.label === "enable")).toBe(true);
+  });
+
+  test("offers nothing in a value", async () => {
+    expect(await complete("{ networking.hostName = foo.ba }", 0, 30)).toEqual([]);
+  });
+});
+
 describe("language server shutdown", () => {
   test("shuts down and exits cleanly", async () => {
     write({ id: 10, method: "shutdown" });

@@ -55,7 +55,9 @@ while you type, over the word each one is about: wrong types, unknown options, s
 LSP client at it for `nix` files. Options go in `initializationOptions`:
 `{ "target": "nixos", "release": "unstable" }` (the target is detected when left out). Where a finding has a fix that
 is certain (a misspelled option, a renamed one), the editor offers it as a quick fix, one small edit.
-It does not run Nix: use `evaluate` for that.
+It also completes option names from the catalog as you type them (after a `.`, at the start of a
+statement, and inside `x.y = { ... }`, with the type of each option), but not in values, strings or
+comments. It does not run Nix: use `evaluate` for that.
 
 Limits to know about:
 

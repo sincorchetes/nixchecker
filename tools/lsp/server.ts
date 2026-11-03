@@ -2,10 +2,19 @@
 //   bun tools/lsp/server.ts     (talks LSP over stdin/stdout; `devenv shell -- lsp`)
 // Options (initializationOptions): { "target": "nixos" | "home-manager" | "disko" | "flake", "release": "unstable" }.
 import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
-import { applyFix } from "../../src/lib/fix";
+import { applyFix, offsetOf } from "../../src/lib/fix";
 import type { Diagnostic } from "../../src/lib/validate";
 import { staticLayer } from "../local/static-layer";
-import { editBetween, type LspDiagnostic, overlaps, type Range, toLsp } from "./diagnostics";
+import { candidates } from "./complete";
+import { contextAt } from "./context";
+import {
+  editBetween,
+  type LspDiagnostic,
+  overlaps,
+  position,
+  type Range,
+  toLsp,
+} from "./diagnostics";
 import { type Message, readMessages, send } from "./rpc";
 
 const texts = new Map<string, string>();
@@ -53,6 +62,37 @@ function quickFixes(uri: string, range: Range) {
   });
 }
 
+// The options the catalog has where the cursor is, if a name is being written there.
+async function complete(id: number | string, params: Message["params"]): Promise<void> {
+  const { uri } = documentOf(params);
+  const text = texts.get(uri) ?? "";
+  const { line, character } = (params?.position ?? { line: 0, character: 0 }) as {
+    line: number;
+    character: number;
+  };
+  const offset = offsetOf(text, line + 1, character + 1);
+  const context = contextAt(text, offset);
+  let items: unknown[] = [];
+  if (context) {
+    const names = await candidates(text, options.target, options.release ?? DEFAULT_VERSION, [
+      ...context.enclosing,
+      ...context.written,
+    ]).catch(() => []);
+    // The name being typed is what the client replaces, whatever it takes a word to be.
+    const range = {
+      start: position(text, offset - context.partial.length),
+      end: position(text, offset),
+    };
+    items = names.map(({ name, detail, group }) => ({
+      label: name,
+      kind: group ? 9 : 10,
+      ...(detail && { detail }),
+      textEdit: { range, newText: name },
+    }));
+  }
+  send({ id, result: { isIncomplete: false, items } });
+}
+
 type Document = { uri: string; text: string };
 const documentOf = (params: Message["params"]) => (params?.textDocument ?? { uri: "" }) as Document;
 
@@ -72,6 +112,7 @@ function handle({ id, method, params }: Message): void {
         capabilities: {
           textDocumentSync: 1,
           codeActionProvider: { codeActionKinds: ["quickfix"] },
+          completionProvider: { triggerCharacters: ["."] },
         },
         serverInfo: { name: "nixchecker" },
       });
@@ -99,6 +140,9 @@ function handle({ id, method, params }: Message): void {
       cleared(uri);
       break;
     }
+    case "textDocument/completion":
+      if (id !== undefined) void complete(id, params);
+      break;
     case "textDocument/codeAction":
       reply(quickFixes(documentOf(params).uri, params?.range as Range));
       break;
