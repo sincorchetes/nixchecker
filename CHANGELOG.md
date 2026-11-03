@@ -45,5 +45,7 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   names its file.
 - A value written below an `attrsOf` option is judged by the deepest option that knows its type, and
   attributes written below a list option are a type error.
+- Names with dots inside quotes (`services.akkoma.config.":pleroma"."Pleroma.Web.Endpoint".http.port`)
+  are one attribute in the catalogs, as they are in the file, instead of being cut at every dot.
 - The oracle may miss at most 3 % of the wrong values (it was 7 %).
 - GitHub Actions are pinned by commit, and so is devenv.

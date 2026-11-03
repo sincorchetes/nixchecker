@@ -1,5 +1,6 @@
 // Prints what the static analysis and the real evaluation found, by how sure each one is.
 import { resolve } from "node:path";
+import { splitPath } from "../../src/lib/catalog/path";
 import type { Finding } from "../../src/lib/evaluation";
 import { format, messages } from "../../src/lib/i18n";
 import type { Assignment } from "../../src/lib/nix/scan";
@@ -27,7 +28,7 @@ export function fromDiagnostic(d: Diagnostic): Located {
 // Where the file assigns the option a finding is about (or something below it).
 function whereIs(option: string | undefined, assignments: Assignment[]) {
   if (!option) return undefined;
-  const segs = option.split(".");
+  const segs = splitPath(option);
   const same = (a: Assignment) =>
     segs.every((s, i) => s === a.path[i] || s.startsWith("<") || a.path[i] === "*");
   return assignments.find((a) => a.path.length >= segs.length && same(a));

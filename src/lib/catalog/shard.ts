@@ -1,6 +1,7 @@
 import { byName } from "../sort";
 import { closest } from "../suggest";
 import { toRow } from "./convert";
+import { splitPath } from "./path";
 import type { CatalogIndex, OptionEntry, OptionRow } from "./types";
 
 /** Roots with more options than this are split into buckets. */
@@ -32,7 +33,7 @@ export function toShards(
 ): { index: CatalogIndex; shards: Record<string, OptionRow[]> } {
   const byRoot = new Map<string, OptionEntry[]>();
   for (const entry of entries) {
-    const root = entry.path.split(".")[0] as string;
+    const root = splitPath(entry.path)[0] as string;
     byRoot.set(root, [...(byRoot.get(root) ?? []), entry]);
   }
   const shards: Record<string, OptionRow[]> = {};
@@ -48,7 +49,7 @@ export function toShards(
     const buckets = Math.ceil(list.length / rows);
     const names = new Set<string>();
     for (const entry of list) {
-      const segs = entry.path.split(".");
+      const segs = splitPath(entry.path);
       if (segs.length === 1) {
         add(root, entry);
       } else {

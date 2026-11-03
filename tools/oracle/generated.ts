@@ -3,6 +3,7 @@
 // reject that Nix accepts (false positives) and what Nix rejects that we accept (false negatives).
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
+import { splitPath } from "../../src/lib/catalog/path";
 import type { OptionRow } from "../../src/lib/catalog/types";
 
 const catalogDir = join(import.meta.dir, "..", "..", "public", "catalog");
@@ -45,8 +46,8 @@ export async function sampleOptions(name: string, count: number, seed: number): 
 
 /** Modules assigning each value to an option; names written `*` in the catalog become `x`. */
 export const modulesFor = (option: string): string[] => {
-  const path = option
-    .split(".")
-    .map((seg) => (seg === "*" ? "x" : /^[A-Za-z_][\w'-]*$/.test(seg) ? seg : JSON.stringify(seg)));
+  const path = splitPath(option).map((seg) =>
+    seg === "*" ? "x" : /^[A-Za-z_][\w'-]*$/.test(seg) ? seg : JSON.stringify(seg),
+  );
   return VALUES.map((value) => `{ ${path.join(".")} = ${value}; }`);
 };

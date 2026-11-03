@@ -1,8 +1,9 @@
+import { splitPath } from "./path";
 import { buildTree, type OptionTree } from "./tree";
 import { type OptionEntry, opt, type Target } from "./types";
 
 const index = (entries: OptionEntry[]): OptionTree =>
-  buildTree(entries.map((entry) => ({ ...entry, segs: entry.path.split(".") })));
+  buildTree(entries.map((entry) => ({ ...entry, segs: splitPath(entry.path) })));
 
 const content = ["gpt", "filesystem", "luks", "swap"];
 const disk = "disko.devices.disk.*";

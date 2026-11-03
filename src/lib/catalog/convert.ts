@@ -1,4 +1,5 @@
 import { byName } from "../sort";
+import { ancestors, splitPath } from "./path";
 import { elementsOf, fromShape, type Shape } from "./shape";
 import type { OptionEntry, OptionRow, OptionType } from "./types";
 
@@ -111,14 +112,13 @@ export function convert(
   const documentedParents = new Set<string>();
   const roots = new Set<string>();
   for (const path of entries.keys()) {
-    const segs = path.split(".");
-    roots.add(segs[0] as string);
-    for (let n = 1; n < segs.length; n++) documentedParents.add(segs.slice(0, n).join("."));
+    roots.add(splitPath(path)[0] as string);
+    for (const parent of ancestors(path)) documentedParents.add(parent);
   }
   for (const [from, to] of Object.entries(overlay.renamed ?? {})) {
     const current = entries.get(from);
     if ((current && current.type !== "hidden") || documentedParents.has(from)) continue;
-    if (!roots.has(from.split(".")[0] as string)) continue;
+    if (!roots.has(splitPath(from)[0] as string)) continue;
     entries.set(from, { path: from, type: entries.get(to)?.type ?? "any", renamedTo: to });
   }
   for (const entry of overlay.entries ?? []) {
@@ -128,8 +128,7 @@ export function convert(
 
   const parents = new Set<string>();
   for (const path of entries.keys()) {
-    const segs = path.split(".");
-    for (let n = 1; n < segs.length; n++) parents.add(segs.slice(0, n).join("."));
+    for (const parent of ancestors(path)) parents.add(parent);
   }
   for (const path of containers) {
     const entry = entries.get(path) as OptionEntry;

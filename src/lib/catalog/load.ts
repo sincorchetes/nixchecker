@@ -1,3 +1,4 @@
+import { splitPath } from "./path";
 import { planner, shardFile } from "./shard";
 import { addEntries, addRoots, emptyTree, type OptionTree } from "./tree";
 import type { CatalogIndex, OptionEntry, OptionRow, Target } from "./types";
@@ -16,7 +17,7 @@ export interface Catalog {
 
 /** Expands a compact row into an entry, split into path segments for fast matching. */
 export function decodeRow([path, type, extra]: OptionRow): IndexedOption {
-  const entry: IndexedOption = { path, type, segs: path.split(".") };
+  const entry: IndexedOption = { path, type, segs: splitPath(path) };
   if (Array.isArray(extra)) entry.values = extra;
   else if (extra) entry.renamedTo = extra;
   return entry;

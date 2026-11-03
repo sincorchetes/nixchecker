@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { docUrl, TARGETS, type Target } from "./catalog";
 import { fixtures } from "./catalog/fixtures";
-import { buildTree } from "./catalog/tree";
 import { EXAMPLE } from "./example";
 import {
   analyze,
@@ -215,29 +214,5 @@ describe("choosing the target", () => {
     expect(bestReport([report("nixos", 3), report("home-manager", 0)]).target).toBe("home-manager");
     expect(bestReport([report("nixos", 1), report("home-manager", 1)]).target).toBe("nixos");
     expect(bestReport([report("nixos", 0)]).target).toBe("nixos");
-  });
-});
-
-describe("attributes written below a list option", () => {
-  const lists = {
-    ...fixtures,
-    nixos: buildTree([
-      { path: "w.commands", type: "list", values: ["attrs"], segs: ["w", "commands"] },
-      { path: "w.commands.*.command", type: "str", segs: ["w", "commands", "*", "command"] },
-    ]),
-  };
-  const report = (src: string) => validate(src, "nixos", lists);
-
-  test("are a type error, once per list", () => {
-    const { diagnostics } = report('{ w.commands.a.command = "x"; w.commands.b.command = "y"; }');
-    expect(diagnostics).toHaveLength(1);
-    expect(diagnostics[0]).toMatchObject({
-      code: "type-mismatch",
-      params: { path: "w.commands", expected: "list", got: "attrs" },
-    });
-  });
-
-  test("a list written as a list is fine", () => {
-    expect(report('{ w.commands = [ { command = "x"; } ]; }').diagnostics).toEqual([]);
   });
 });

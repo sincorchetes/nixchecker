@@ -204,3 +204,16 @@ describe("extractRenames", () => {
     expect(byPath.kept?.renamedTo).toBeUndefined();
   });
 });
+
+describe("convert names with dots", () => {
+  test("a quoted name that holds dots is one attribute, not a container of its pieces", () => {
+    const entries = convert({
+      'x.cfg."Mod.Web.End".port': { type: "signed integer" },
+      "x.cfg": { type: "attribute set of (submodule)" },
+    });
+    const paths = entries.map((e) => e.path);
+    expect(paths).toEqual(["x.cfg", 'x.cfg."Mod.Web.End".port']);
+    // `x.cfg."Mod.Web.End"` is a container above the port, and not `x.cfg."Mod`.
+    expect(entries.find((e) => e.path === 'x.cfg."Mod.Web.End"')).toBeUndefined();
+  });
+});
