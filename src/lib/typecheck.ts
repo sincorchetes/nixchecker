@@ -1,5 +1,6 @@
 import type { SkipCause } from "./analysis";
 import type { IndexedOption, OptionTree } from "./catalog";
+import { isPatternKind, matches, patternOf } from "./catalog/pattern";
 import { knownPrefix } from "./catalog/tree";
 import type { Assignment, ValueKind } from "./nix/scan";
 
@@ -45,6 +46,9 @@ function elementFits(
   plain: boolean | undefined,
 ): boolean {
   if (kind === "other" || allowed.includes(kind)) return true;
+  if (kind === "str" && allowed.some((k) => isPatternKind(k) && matches(k, value))) return true;
+  if (kind === "str" && allowed.includes("path") && (value === undefined || value.startsWith("/")))
+    return true;
   return allowed.includes("pkg") && packageFits(kind, value, plain);
 }
 
@@ -71,10 +75,14 @@ export function describeGot(entry: IndexedOption, a: Assignment): string {
   return wrong.length > 0 ? `list with ${wrong.map(describeKind).join(" and ")} elements` : a.kind;
 }
 
-const describeKind = (kind: string): string =>
-  kind.startsWith("enum:")
-    ? `enum(${(JSON.parse(kind.slice(5)) as string[]).join(" | ")})`
-    : kind.replace(":", " of ").replace("+", " or ").replaceAll("pkg", "package");
+const describeKind = (kind: string): string => {
+  if (isPatternKind(kind)) return `string matching ${patternOf(kind)}`;
+  if (kind.startsWith("enum:"))
+    return `enum(${(JSON.parse(kind.slice(5)) as string[]).join(" | ")})`;
+  if (kind.startsWith("list:"))
+    return `list of ${kind.slice(5).split("+").map(describeKind).join(" or ")}`;
+  return kind === "pkg" ? "package" : kind;
+};
 
 // An absolute path written as a string starts with a slash (an interpolation is not judged).
 const isAbsolute = (a: Assignment) =>
@@ -87,6 +95,7 @@ function mixMismatch(kinds: string[], a: Assignment): string | undefined {
       const values = JSON.parse(kind.slice("enum:".length)) as string[];
       return a.kind === "str" && (a.value === undefined || values.includes(a.value));
     }
+    if (isPatternKind(kind)) return a.kind === "str" && matches(kind, a.value);
     if (kind === "path") return isAbsolute(a);
     if (kind === "pkg") return packageFits(a.kind, a.value, a.plain);
     if (a.kind !== "list" || !kind.startsWith("list")) return kind === a.kind;

@@ -20,8 +20,16 @@ describe("fromShape", () => {
   test("paths", () => {
     expect(fromShape(["p"])).toEqual({ type: "path" });
     expect(fromShape(["p", "i"])).toEqual({ type: "mix", values: ["path", "int"] });
-    // As list elements they are strings.
-    expect(fromShape([["l", "p"]])).toEqual({ type: "list", values: ["str"] });
+    // As list elements they are paths too.
+    expect(fromShape([["l", "p"]])).toEqual({ type: "list", values: ["path"] });
+  });
+
+  test("strings with a pattern keep it, apart from the `+` and `:` that separate kinds", () => {
+    const kind = "re:%5Ba-z%5D%2B%3A";
+    expect(fromShape([["r", "[a-z]+:"]])).toEqual({ type: "mix", values: [kind] });
+    expect(fromShape(["i", ["r", "x"]])).toEqual({ type: "mix", values: ["int", "re:x"] });
+    expect(fromShape([["l", ["r", "[a-z]+:"]]])).toEqual({ type: "list", values: [kind] });
+    expect(fromShape([["l", ["r", "x"], "i"]])).toEqual({ type: "list", values: ["re:x", "int"] });
   });
 
   test("enums", () => {

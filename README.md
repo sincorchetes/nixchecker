@@ -106,11 +106,12 @@ Limits to know about:
   (`content`) the options of all of them are accepted there, and what the manual describes below a
   device that its type does not declare is dropped, and layouts nested more than six deep are
   not read.
-- The catalogs know the kind of a value (string, integer, list of strings...), not what narrows it: a
-  string that must match a pattern (a unit name such as `x.service`), a `path`, or the elements of
-  a list that nixpkgs defines for itself (`meta.teams`) are checked as their base type. The page lets
-  such a value through; `evaluate` finds it. In the oracle these are the few wrong values (under 1 %)
-  that are let through.
+- A string that must match a pattern (`strMatching`: a host name, a unit name such as `x.service`) is
+  checked against it, and so are the elements of a list of paths. What narrows a value in other ways is
+  checked as its base type, and the page lets such a value through (`evaluate` finds it): the fixed
+  integers of an `enum`, the strings an `enum` allows as elements of a list, the lists nixpkgs defines
+  for itself (`meta.teams`), and everything disko narrows (it serializes its patterns as plain strings).
+  In the oracle these are about 1 % of the wrong values.
 - When a wrong value makes another module's `mkIf` fail (`programs.sway.enable = "yes"` stops what
   `sway` sets, such as `programs.dconf.enable`), Nix reports the first and cannot judge the second
   until that is fixed; the page's static check still marks it.

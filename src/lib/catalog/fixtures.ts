@@ -1,4 +1,5 @@
 import { splitPath } from "./path";
+import { patternKind } from "./pattern";
 import { buildTree, type OptionTree } from "./tree";
 import { type OptionEntry, opt, type Target } from "./types";
 
@@ -20,6 +21,10 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("env.vars", "attrs", { values: ["str", "int"] }),
     opt("mixed.text", "mix", { values: ["str", "list:str"] }),
     opt("files.root", "path"),
+    opt("files.list", "list", { values: ["path"] }),
+    opt("units.name", "mix", { values: [patternKind("^[a-z]+[.]service$")] }),
+    opt("units.after", "list", { values: [patternKind("[a-z]+[.](service|socket)")] }),
+    opt("units.either", "mix", { values: ["int", patternKind("[[:digit:]]+")] }),
     opt("files.either", "mix", { values: ["path", "int"] }),
     opt("mixed.jobs", "mix", { values: ["int", 'enum:["auto"]'] }),
     opt("services.openssh.enable", "bool"),

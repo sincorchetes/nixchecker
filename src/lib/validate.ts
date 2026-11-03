@@ -1,6 +1,7 @@
 import type { Analysis, Diagnostic, Report, Skipped, TargetChoice } from "./analysis";
 import { analyze, resolveTarget } from "./analysis";
 import { docUrl, type IndexedOption, type OptionTree, type Target, type Version } from "./catalog";
+import { splitPath } from "./catalog/path";
 import {
   candidates,
   childrenOf,
@@ -135,7 +136,10 @@ export function check(
     if (cause) skipped.push({ cause, path, line: a.line, col: a.col });
 
     if (exact) {
-      const expected = typeMismatch(exact, a);
+      // A renamed option passes its value on as it is: the value is held to the type of the new one,
+      // when that is known here.
+      const renamed = exact.renamedTo ? findExact(tree, splitPath(exact.renamedTo)) : undefined;
+      const expected = typeMismatch(renamed ?? exact, a);
       if (expected) {
         diagnostics.push({
           severity: "error",

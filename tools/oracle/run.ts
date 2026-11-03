@@ -23,8 +23,9 @@ const KNOWN = new Set<string>([
 const SAMPLE = Number(process.argv[2] ?? 40);
 const SEED = Number(process.argv[3] ?? 1);
 // The share of wrong values Nix rejects that we may let through (what is not checked is not wrong). What
-// is let through are values narrowed by more than their kind: a string with a pattern (unit names), a
-// `path`, a list of nixpkgs' own sets (`meta.teams`). The catalogs hold the base type of those.
+// is let through are values narrowed in ways the catalogs do not hold: the fixed integers of an enum, the
+// elements of a list that are an enum, a list of nixpkgs' own sets (`meta.teams`), and the patterns of disko
+// (which it serializes as plain strings). A small sample of disko can show one as over the share.
 const MAX_MISSED = 0.02;
 
 // `all` runs every release the site has catalogs for; the default is the development branch.

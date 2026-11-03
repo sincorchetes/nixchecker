@@ -44,6 +44,11 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - `evaluate` of a whole system also finds every wrong value in one run: when Nix stops at the first, the options of
   the file are read one by one as well and what they add is merged. (The assertions of the system wait
   until the values are right.)
+- Strings that must match a pattern (`strMatching`: host names, unit names...) are checked against it, with the
+  POSIX classes of Nix read as JavaScript reads them (a pattern that cannot be read is not judged), and the
+  elements of a list of paths must be absolute. The oracle no longer lets through any of the wrong values of
+  `systemd.*.conflicts` or `app_service_config_files`. The catalogs grow by under 2 %.
+- A value written for a renamed option is held to the type of the option it was renamed to (`xdg.userDirs.publishShare = 1` was only "deprecated").
 - No wrong value is left unconfirmed for lack of room: the cap of ten extra options read apart is gone (they are
   read four at a time), and an integration test has twenty wrong values, all confirmed by Nix.
 - A file with no expression in it (empty, or only comments) is a syntax error in the CLI, as Nix says; the

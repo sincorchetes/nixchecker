@@ -81,3 +81,38 @@ describe("value types", () => {
     expect(codes("{ env.vars.A.b = [ ]; }")).toEqual([]);
   });
 });
+
+describe("values narrowed by more than their kind", () => {
+  const got = (src: string) => run(src).diagnostics.map((d) => d.params.expected ?? d.code);
+
+  test("a list of paths takes absolute paths, and what is not written out", () => {
+    expect(got('{ files.list = [ "/etc/x" ./y ]; }')).toEqual([]);
+    expect(got('{ files.list = [ "x" ]; }')).toEqual(["list of path"]);
+    expect(got('{ x, ... }: { files.list = [ "${x}/a" x ]; }')).toEqual([]);
+  });
+
+  test("a string with a pattern has to match it, and says which", () => {
+    expect(got('{ units.name = "a.service"; }')).toEqual([]);
+    expect(got('{ units.name = "a"; }')).toEqual(["string matching ^[a-z]+[.]service$"]);
+    expect(got('{ x, ... }: { units.name = "${x}.service"; }')).toEqual([]);
+    expect(got("{ units.name = 5; }")).toEqual(["string matching ^[a-z]+[.]service$"]);
+  });
+
+  test("the elements of a list are held to the pattern, and a mix takes either kind", () => {
+    expect(got('{ units.after = [ "a.service" "b.socket" ]; }')).toEqual([]);
+    expect(got('{ units.after = [ "a" ]; }')).toEqual([
+      "list of string matching [a-z]+[.](service|socket)",
+    ]);
+    expect(got("{ units.either = 5; }")).toEqual([]);
+    expect(got('{ units.either = "12"; }')).toEqual([]);
+    expect(got('{ units.either = "x"; }')).toEqual(["int | string matching [[:digit:]]+"]);
+  });
+});
+
+describe("renamed options", () => {
+  test("a value is held to the type of the option it was renamed to", () => {
+    const diagnostics = run('{ services.xserver.displayManager.gdm.enable = "yes"; }').diagnostics;
+    expect(diagnostics.map((d) => d.code).sort()).toEqual(["deprecated", "type-mismatch"]);
+    expect(codes("{ services.xserver.displayManager.gdm.enable = true; }")).toEqual(["deprecated"]);
+  });
+});

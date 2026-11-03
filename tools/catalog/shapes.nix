@@ -6,6 +6,7 @@
 #   [ "l" <alt>... ]       a list whose elements are one of the alternatives
 #   [ "m" <alt>... ]       an attribute set whose values are one of the alternatives (`attrsOf`)
 #   [ "e" "x" "y" ]        one of these strings
+#   [ "r" "<regex>" ]      a string that matches the whole of this regular expression (`strMatching`)
 #   "f"                    a float (no value we read is one, so it never tells anything)
 #   "?"                    something that cannot be told apart (a float, a package, anything...)
 { lib }:
@@ -41,6 +42,16 @@ let
       ]
     else if t.name == "path" then
       [ "p" ]
+    else if named "strMatching " then
+      # The name is `strMatching ${lib.escapeNixString regex}`: a JSON string with the `$` escaped.
+      [
+        [
+          "r"
+          (builtins.fromJSON (
+            builtins.replaceStrings [ "\\$" ] [ "$" ] (lib.removePrefix "strMatching " t.name)
+          ))
+        ]
+      ]
     else if lib.any named [
       "str"
       "nonEmptyStr"
