@@ -12,6 +12,8 @@ export interface Assignment {
   value?: string;
   /** The kind of each element of a list written out in full. */
   items?: ValueKind[];
+  /** The text of each element that is a plain string, for those a list has (the others are undefined). */
+  itemValues?: Array<string | undefined>;
 }
 
 /** A name used as a whole value (`a = foo;`) that nothing in scope defines. */
@@ -106,6 +108,7 @@ interface Classified {
   kind: ValueKind;
   value?: string;
   items?: ValueKind[];
+  itemValues?: Array<string | undefined>;
   /** Set when the value is a lone name, to check that it is defined. */
   name?: Extract<Expr, { t: "ident" }>;
 }
@@ -118,8 +121,16 @@ function classify(e: Expr): Classified {
       return e.value === undefined ? { kind: "str" } : { kind: "str", value: e.value };
     case "num":
       return { kind: e.float ? "other" : "int" };
-    case "list":
-      return { kind: "list", items: e.items.map((item) => classify(item).kind) };
+    case "list": {
+      const parts = e.items.map(classify);
+      return {
+        kind: "list",
+        items: parts.map((part) => part.kind),
+        ...(parts.some((part) => part.kind === "str") && {
+          itemValues: parts.map((part) => part.value),
+        }),
+      };
+    }
     case "ident":
       if (e.name === "true" || e.name === "false") return { kind: "bool" };
       return { kind: "other", name: e };

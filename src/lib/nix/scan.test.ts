@@ -109,3 +109,21 @@ describe("scan: merged sets", () => {
     expect(paths("{ p = a // b; q = rec { x = 1; } // c; }")).toEqual(["p:attrs", "q:attrs"]);
   });
 });
+
+describe("scan: the strings in a list", () => {
+  const items = (src: string) => {
+    const [a] = scan(parse(src).ast as never).assignments;
+    return [a?.items, a?.itemValues];
+  };
+
+  test("keep their text, and nothing for what is not a plain string", () => {
+    expect(items('{ a = [ "x" 1 "${y}" ]; }')).toEqual([
+      ["str", "int", "str"],
+      ["x", undefined, undefined],
+    ]);
+  });
+
+  test("a list with no strings has no texts", () => {
+    expect(items("{ a = [ 1 true ]; }")).toEqual([["int", "bool"], undefined]);
+  });
+});

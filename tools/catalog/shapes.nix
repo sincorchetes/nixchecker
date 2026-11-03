@@ -2,6 +2,7 @@
 # sentences of the manuals. The shape of a type is a list of alternatives, one of which a value must be:
 #   "b" "i" "s" "a"        a bool, an integer, a string, an attribute set
 #   "p"                    an absolute path (a string starting with "/", or a path literal)
+#   "k"                    a package: a derivation, or the path of one in the store
 #   [ "l" <alt>... ]       a list whose elements are one of the alternatives
 #   [ "m" <alt>... ]       an attribute set whose values are one of the alternatives (`attrsOf`)
 #   [ "e" "x" "y" ]        one of these strings
@@ -17,7 +18,9 @@ let
     let
       named = n: lib.hasPrefix n t.name;
     in
-    if named "bool" then
+    if t.name == "package" then
+      [ "k" ]
+    else if named "bool" then
       [ "b" ]
     else if lib.any named [
       "int"

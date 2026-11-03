@@ -19,7 +19,14 @@ export interface Shaped {
   values?: string[];
 }
 
-const KIND: Record<string, string> = { b: "bool", i: "int", s: "str", a: "attrs", p: "path" };
+const KIND: Record<string, string> = {
+  b: "bool",
+  i: "int",
+  s: "str",
+  a: "attrs",
+  p: "path",
+  k: "pkg",
+};
 
 const ELEMENT: Record<string, string> = { e: "str", m: "attrs", l: "list" };
 
@@ -69,6 +76,8 @@ export function fromShape(all: Shape): Shaped | undefined {
   const kinds = [...new Set(shape.map(token))];
   if (kinds.includes(undefined)) return { type: "any" };
   const [one] = kinds as string[];
+  // A package is a kind a value can be, not a type of its own: it is held as an alternative of one.
+  if (one === "pkg" && kinds.length === 1) return { type: "mix", values: ["pkg"] };
   if (kinds.length === 1 && one && !/^(list|enum)/.test(one)) return { type: one as OptionType };
   return { type: "mix", values: kinds as string[] };
 }

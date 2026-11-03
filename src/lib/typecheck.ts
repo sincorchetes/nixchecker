@@ -1,7 +1,7 @@
 import type { SkipCause } from "./analysis";
 import type { IndexedOption, OptionTree } from "./catalog";
 import { knownPrefix } from "./catalog/tree";
-import type { Assignment } from "./nix/scan";
+import type { Assignment, ValueKind } from "./nix/scan";
 
 /** Why the catalog entry cannot judge this value, if it cannot: dynamic, `any`, or interpolated. */
 export function skipReason(entry: IndexedOption, a: Assignment): SkipCause | undefined {
@@ -24,17 +24,31 @@ export function ownerReason(owner: IndexedOption, a: Assignment): SkipCause | un
 export const isGroup = (tree: OptionTree, path: string[]): boolean =>
   knownPrefix(tree, path) === path.length;
 
+// What can be a package: a set (a derivation is one), or a string that is the path of one in the store. A
+// string with `${...}` in it is not judged, nor is a name or a call (whatever it is, it is not written out).
+function packageFits(kind: ValueKind, value: string | undefined): boolean {
+  if (kind === "str") return value === undefined || value.startsWith("/nix/store/");
+  return kind === "attrs" || kind === "other";
+}
+
+// Whether an element of a list written out can be one of the kinds the list takes.
+function elementFits(allowed: string[], kind: ValueKind, value: string | undefined): boolean {
+  if (kind === "other" || allowed.includes(kind)) return true;
+  return allowed.includes("pkg") && packageFits(kind, value);
+}
+
 // A list written out in full whose elements are of a kind its option does not take.
 function wrongElements(entry: IndexedOption, a: Assignment): string | undefined {
   const allowed = entry.values;
-  const wrong = allowed && a.items?.some((kind) => kind !== "other" && !allowed.includes(kind));
-  return wrong ? `list of ${allowed.join(" | ")}` : undefined;
+  const wrong =
+    allowed && a.items?.some((kind, n) => !elementFits(allowed, kind, a.itemValues?.[n]));
+  return wrong ? `list of ${allowed.map(describeKind).join(" | ")}` : undefined;
 }
 
 const describeKind = (kind: string): string =>
   kind.startsWith("enum:")
     ? `enum(${(JSON.parse(kind.slice(5)) as string[]).join(" | ")})`
-    : kind.replace(":", " of ").replace("+", " or ");
+    : kind.replace(":", " of ").replace("+", " or ").replaceAll("pkg", "package");
 
 // An absolute path written as a string starts with a slash (an interpolation is not judged).
 const isAbsolute = (a: Assignment) =>
@@ -48,12 +62,13 @@ function mixMismatch(kinds: string[], a: Assignment): string | undefined {
       return a.kind === "str" && (a.value === undefined || values.includes(a.value));
     }
     if (kind === "path") return isAbsolute(a);
+    if (kind === "pkg") return packageFits(a.kind, a.value);
     if (a.kind !== "list" || !kind.startsWith("list")) return kind === a.kind;
     const elements = kind.slice("list:".length).split("+");
     return (
       kind === "list" ||
       !a.items ||
-      a.items.every((item) => item === "other" || elements.includes(item))
+      a.items.every((item, n) => elementFits(elements, item, a.itemValues?.[n]))
     );
   };
   return kinds.some(fits) ? undefined : kinds.map(describeKind).join(" | ");

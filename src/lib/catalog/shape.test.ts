@@ -90,3 +90,12 @@ describe("fromShape", () => {
     expect(elementsOf([["m", "f"]])).toBeUndefined();
   });
 });
+
+describe("a package", () => {
+  test("is a kind a value can be: an option of one is a mix with it, a list of them a list of it", () => {
+    expect(fromShape(["k"])).toEqual({ type: "mix", values: ["pkg"] });
+    expect(fromShape([["l", "k"]])).toEqual({ type: "list", values: ["pkg"] });
+    expect(fromShape(["k", "s"])).toEqual({ type: "mix", values: ["pkg", "str"] });
+    expect(elementsOf([["m", "k"]])).toEqual(["pkg"]);
+  });
+});
