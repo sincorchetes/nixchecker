@@ -9,7 +9,7 @@ NixOS, Home Manager, disko and Nix flakes.
 
 ## Status
 
-Early prototype. The validator parses the file with its own Nix parser (syntax errors come with
+In active development; not for anything that cannot be checked twice. The validator parses the file with its own Nix parser (syntax errors come with
 the exact line and column), collects every `a.b.c = value;` assignment and checks it against catalogs generated from the official sources: `nixosOptionsDoc` for NixOS
 (~27k options), the Home Manager manual (~6k) and the disko module, plus the flake format.
 It reports unknown options with "did you mean" suggestions and the options available there, wrong
@@ -76,8 +76,13 @@ Limits to know about:
 - The page is static: nothing is evaluated, so values built with functions, `mkIf` or `let` are not
   checked, and options defined by modules you import yourself are unknown to it. The command above
   settles those with real Nix.
-- disko documents only its top level; the nested disk layout options come from a hand-written
-  overlay (`tools/catalog/overlay.ts`).
+- disko's manual documents only its top level; the nested options of the disk layouts are read from
+  disko's own serialized types (`tools/catalog/disko.ts`). Where a place may hold several layout types
+  (`content`) the options of all of them are accepted there, and layouts nested more than four deep are
+  not read.
+- For a flake, `evaluate` evaluates its `nixosConfigurations` and `homeConfigurations` only. It does not
+  evaluate `checks`, `packages`, `devShells` or any other output: a flake that passes is not a flake
+  whose every output builds.
 - Renamed options are read from the `mkRenamedOptionModule` calls in the nixpkgs and Home Manager
   sources (about 750 for NixOS); the ones that were removed rather than renamed, and the ones
   hidden without a replacement, get a generic warning.
