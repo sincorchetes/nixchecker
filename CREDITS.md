@@ -10,5 +10,9 @@ Option data and documentation links come from:
 - [disko](https://github.com/nix-community/disko)
 - [Nix manual: flake format](https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-format)
 
+`tools/local/schemas/sarif-2.1.0.json` is the SARIF 2.1.0 JSON schema published by the
+[OASIS SARIF technical committee](https://github.com/oasis-tcs/sarif-spec), vendored unchanged to check
+the SARIF this project prints; it is checked with [Ajv](https://ajv.js.org).
+
 Built with [Astro](https://astro.build), [Bun](https://bun.sh), [Biome](https://biomejs.dev) and
 [devenv](https://devenv.sh). Fonts: Inter and Outfit (SIL Open Font License) via Fontsource.

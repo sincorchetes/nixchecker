@@ -49,7 +49,7 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   generated modules, on every release (`oracle`).
 - The command line against real Nix on an own module, an error in an imported file, `--partial` with
   and without the assertions of a whole system, and a flake with NixOS and Home Manager configurations
-  (`integration`); its SARIF against what SARIF 2.1.0 requires.
+  (`integration`); its SARIF against the official SARIF 2.1.0 schema (OASIS).
 - Browser tests in Chrome and Firefox, with axe-core on every state of the page, in both languages and
   color schemes.
 

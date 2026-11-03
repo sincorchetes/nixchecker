@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { Result } from "./check-file";
 import { toSarif } from "./sarif";
+import { problemsWith } from "./sarif-schema";
 
 const result = (items: Result["items"]): Result => ({
   file: "/work/a.nix",
@@ -11,37 +12,6 @@ const result = (items: Result["items"]): Result => ({
   catalog: { name: "nixos-26.05", source: "x", revisions: {} },
   items,
 });
-
-// What SARIF 2.1.0 requires of a log and of each result that code scanning reads (spec sections 3.13,
-// 3.14, 3.27 and 3.30), checked here by hand: the full schema is not available offline.
-function problemsWith(log: ReturnType<typeof toSarif>): string[] {
-  const problems: string[] = [];
-  const need = (ok: boolean, what: string) => ok || problems.push(what);
-  need(log.version === "2.1.0", "version is 2.1.0");
-  need(typeof log.$schema === "string", "$schema is a string");
-  need(Array.isArray(log.runs) && log.runs.length > 0, "there is a run");
-  for (const run of log.runs) {
-    need(typeof run.tool.driver.name === "string", "the tool has a name");
-    for (const r of run.results) {
-      need(typeof r.ruleId === "string" && r.ruleId.length > 0, "a result has a rule");
-      need(["none", "note", "warning", "error"].includes(r.level), `level ${r.level} is valid`);
-      need(typeof r.message.text === "string" && r.message.text.length > 0, "a message has text");
-      need(r.locations.length > 0, "a result has a location");
-      for (const { physicalLocation: p } of r.locations) {
-        need(typeof p.artifactLocation.uri === "string", "a location has a uri");
-        const region = (p as { region?: { startLine: number; startColumn: number } }).region;
-        if (region) {
-          need(Number.isInteger(region.startLine) && region.startLine >= 1, "startLine is a line");
-          need(
-            Number.isInteger(region.startColumn) && region.startColumn >= 1,
-            "startColumn is a column",
-          );
-        }
-      }
-    }
-  }
-  return problems;
-}
 
 describe("SARIF", () => {
   test("a log with every kind of finding is valid", () => {
@@ -108,9 +78,14 @@ describe("SARIF", () => {
   });
 
   test("a validator that finds problems is not blind", () => {
-    const broken = toSarif([
-      result([{ level: "static", severity: "error", message: "", line: 0, col: 1 }]),
+    const log = toSarif([
+      result([{ level: "static", severity: "error", message: "x", line: 1, col: 1 }]),
     ]);
-    expect(problemsWith(broken).length).toBeGreaterThan(0);
+    // A region must start at line 1 or later: this log is not valid, and the schema must say so.
+    const broken = JSON.parse(JSON.stringify(log));
+    broken.runs[0].results[0].locations[0].physicalLocation.region.startLine = 0;
+    expect(problemsWith(broken).join()).toContain("startLine");
+    expect(problemsWith(log)).toEqual([]);
+    expect(problemsWith({ version: "2.0.0", runs: [] })).not.toEqual([]);
   });
 });

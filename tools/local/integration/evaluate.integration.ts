@@ -3,6 +3,7 @@
 // `devenv shell -- integration` (needs Nix; the first run builds the pinned sources).
 import { beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
+import { problemsWith } from "../sarif-schema";
 import { evaluate, scratch, writeFlake } from "./support";
 
 const TIME = 900_000;
@@ -93,6 +94,8 @@ describe("an error inside an imported file", () => {
         "nixos",
         join(dir, "parent.nix"),
       );
+      // What was printed is valid SARIF by the official schema, and not only what the unit tests build.
+      expect(problemsWith(JSON.parse(run.out))).toEqual([]);
       const [result] = JSON.parse(run.out).runs[0].results;
       expect(result.locations[0].physicalLocation).toMatchObject({
         artifactLocation: { uri: join(dir, "child.nix") },

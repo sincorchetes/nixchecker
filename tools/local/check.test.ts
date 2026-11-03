@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
+import { problemsWith } from "./sarif-schema";
 
 const script = join(import.meta.dir, "check.ts");
 const dir = await Bun.$`mktemp -d`.text().then((t) => t.trim());
@@ -95,6 +96,7 @@ describe("evaluate CLI (formats)", () => {
   test("SARIF places each finding in its file, line and column", async () => {
     const r = await run("--format", "sarif", "--static", join(dir, "bad.nix"), "--target", "nixos");
     const sarif = JSON.parse(r.out);
+    expect(problemsWith(sarif)).toEqual([]);
     expect(sarif.version).toBe("2.1.0");
     const [result] = sarif.runs[0].results;
     expect(result).toMatchObject({ ruleId: "type-mismatch", level: "error" });
