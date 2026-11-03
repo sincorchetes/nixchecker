@@ -64,10 +64,11 @@ is reported in that file, at its line and column.
 - `--format json` (or `--json`) prints the findings as data, `{ "schemaVersion": 1, "results": [...] }` with one result per file, each
   with its coverage and the revisions of the catalog used; `--format sarif` prints SARIF 2.1.0 for code scanning annotations.
 
-Nothing is uploaded: it all runs on your machine. In a whole system Nix stops at the first error it meets, so fix it and
-run again to see the next; with `--partial` every wrong value of the file is found in one run, and so are the
-options that do not exist (Nix stops at those before it looks at any value, so the file is read a
-second time with that check off).
+Nothing is uploaded: it all runs on your machine. Every wrong value of the file, and every option that does not
+exist, is found in one run (Nix stops at the first, so when it does the options of the file are read one by
+one as well, and those that do not exist with the existence check off). A whole system is evaluated up to the
+first problem, so its own assertions (root file system, boot loader) are reached only once the values are
+right: fix those and run again. With `--partial` there is nothing behind to wait for.
 
 ### In your editor
 

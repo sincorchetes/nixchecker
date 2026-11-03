@@ -88,6 +88,29 @@ async function provenance(name: string): Promise<Provenance> {
   return { name, source, revisions };
 }
 
+// What Nix says of a file. A whole system stops at the first wrong value; when that is what it stopped at,
+// the options the file sets are read one by one too, so that every wrong value is in this run (the
+// assertions of the system, which come after, wait until the values are right).
+async function nixFindings(
+  target: Target,
+  file: string,
+  analysis: Analysis,
+  o: Options,
+): Promise<Finding[]> {
+  if (target === "flake") return evaluateFlake(resolve(file), o.allOutputs);
+  const roots = await rootsOf(o);
+  const options = optionPaths(analysis);
+  const found = await evaluate(target as Kind, roots, file, o.partial ? options : undefined);
+  const stoppedOnValues = found.some((f) => f.kind === "unknown-option" || f.kind === "type-error");
+  if (o.partial || !stoppedOnValues) return found;
+
+  const seen = new Set(found.map((f) => `${f.kind}|${f.option ?? f.message}`));
+  const more = (await evaluate(target as Kind, roots, file, options)).filter(
+    (f) => f.kind !== "warning" && !seen.has(`${f.kind}|${f.option ?? f.message}`),
+  );
+  return [...found, ...more];
+}
+
 export async function checkFile(file: string, o: Options): Promise<Result> {
   const text = await Bun.file(file).text();
   const { analysis, target, coverage, ...layer } = await staticLayer(text, o.target, o.version);
@@ -97,15 +120,7 @@ export async function checkFile(file: string, o: Options): Promise<Result> {
   const broken = items.some((i) => i.level === "syntax" && i.severity === "error");
   const evaluated = !broken && !o.static;
   if (evaluated) {
-    const found: Finding[] =
-      target === "flake"
-        ? await evaluateFlake(resolve(file), o.allOutputs)
-        : await evaluate(
-            target as Kind,
-            await rootsOf(o),
-            file,
-            o.partial ? optionPaths(analysis) : undefined,
-          );
+    const found = await nixFindings(target, file, analysis, o);
     for (const finding of found) {
       items.push(fromFinding(finding, await assignmentsOf(finding, file, analysis), file));
     }

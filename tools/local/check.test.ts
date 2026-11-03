@@ -156,8 +156,8 @@ describe("evaluate CLI (what is not there)", () => {
     expect(r.err).not.toContain("    at ");
   });
 
-  test("the way Nix stops is not told when Nix was not asked", async () => {
+  test("what waits behind a whole system is not told when Nix was not asked", async () => {
     const r = await run("--static", join(dir, "bad.nix"), "--target", "nixos");
-    expect(r.out).not.toContain("Nix stops");
+    expect(r.out).not.toContain("evaluated up to");
   });
 });

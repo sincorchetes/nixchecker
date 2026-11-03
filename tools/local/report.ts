@@ -112,9 +112,12 @@ export function printText(items: Located[], coverage: string, how: How): void {
   console.log(`\n${errors} errors, ${items.length - errors} warnings. ${coverage}`);
   if (how === "syntax")
     console.log("Not evaluated: fix the syntax errors first, or pass --static.");
-  // Only a whole system stops at the first error; a part of one (--partial) is read option by option.
+  // A whole system is evaluated up to the first problem; what is behind it (its assertions) waits. A part of
+  // one (--partial) is read option by option, and has no such thing behind.
   const failed = items.some((i) => i.level === "evaluation" && i.severity === "error");
   if (how === "whole" && failed) {
-    console.log("Nix stops at the first error it meets: fix it and run again to see the next one.");
+    console.log(
+      "A whole system is evaluated up to the first problem: once these are fixed, run again to see what is behind.",
+    );
   }
 }

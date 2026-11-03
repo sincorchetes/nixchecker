@@ -96,6 +96,29 @@ describe("an option that does not exist does not hide the wrong values", () => {
   );
 });
 
+describe("a whole system", () => {
+  test(
+    "also reports every wrong value in one run, and the assertions wait",
+    async () => {
+      const run = await evaluate(
+        "--format",
+        "json",
+        "--target",
+        "nixos",
+        join(dir, "two-wrong.nix"),
+      );
+      const confirmed = run.items.filter((i) => i.level === "evaluation");
+      expect(confirmed.map((i) => i.line).sort()).toEqual([2, 3]);
+      const text = confirmed.map((i) => i.message).join("\n");
+      expect(text).toContain("networking.hostName");
+      expect(text).toContain("services.openssh.ports");
+      // The root file system and the boot loader are behind the wrong values, and not said yet.
+      expect(text).not.toContain("fileSystems");
+    },
+    TIME,
+  );
+});
+
 describe("a part of a system", () => {
   test(
     "with --partial, only what the file sets is read",

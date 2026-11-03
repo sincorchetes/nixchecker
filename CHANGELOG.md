@@ -39,6 +39,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   only if it says `type = "derivation"`: `package = { }` is an error, `pkgs.hello // { ... }` is not.
 - disko's layouts are read down to six levels of `content`, and below each device only what its types
   declare exists (the manual described hooks under `nodev` that the module does not have).
+- `evaluate` of a whole system also finds every wrong value in one run: when Nix stops at the first, the options of
+  the file are read one by one as well and what they add is merged. (The assertions of the system wait
+  until the values are right.)
 - `evaluate --partial` finds every wrong value of a file in one run, not only the first one Nix stops at:
   it asks which of the options the file sets fail to evaluate, and for the message of each of them. Options
   that do not exist no longer hide the wrong values of the rest: the file is read again with the module

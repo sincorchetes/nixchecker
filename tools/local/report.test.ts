@@ -113,11 +113,11 @@ describe("what is said after the findings", () => {
     col: 1,
   };
 
-  test("the way Nix stops is told only for a whole system that failed", () => {
-    expect(said([confirmed], "whole")).toContain("Nix stops at the first error");
-    expect(said([], "whole")).not.toContain("Nix stops");
-    expect(said([confirmed], "partial")).not.toContain("Nix stops");
-    expect(said([confirmed], "static")).not.toContain("Nix stops");
+  test("what waits behind is told only for a whole system that failed", () => {
+    expect(said([confirmed], "whole")).toContain("evaluated up to the first problem");
+    expect(said([], "whole")).not.toContain("evaluated up to");
+    expect(said([confirmed], "partial")).not.toContain("evaluated up to");
+    expect(said([confirmed], "static")).not.toContain("evaluated up to");
   });
 
   test("a file not evaluated because of its syntax says so, and one checked statically does not", () => {
