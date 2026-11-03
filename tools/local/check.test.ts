@@ -53,6 +53,29 @@ describe("evaluate CLI (static layer)", () => {
 
   test("usage errors exit 2", async () => {
     expect((await run("--static")).code).toBe(2);
-    expect((await run(join(dir, "good.nix"), join(dir, "bad.nix"))).code).toBe(2);
+  });
+});
+
+describe("evaluate CLI (several files)", () => {
+  test("a directory is searched and each file is named", async () => {
+    const r = await run(dir, "--static", "--target", "nixos");
+    expect(r.code).toBe(1);
+    expect(r.out).toContain(`== ${join(dir, "bad.nix")}`);
+    expect(r.out).toContain(`== ${join(dir, "good.nix")}`);
+  });
+
+  test("several files print a list in JSON", async () => {
+    const r = await run(join(dir, "good.nix"), join(dir, "bad.nix"), "--static", "--json");
+    expect(JSON.parse(r.out).map((x: { file: string }) => x.file)).toEqual([
+      join(dir, "good.nix"),
+      join(dir, "bad.nix"),
+    ]);
+  });
+
+  test("a directory without Nix files is an error", async () => {
+    const empty = await Bun.$`mktemp -d`.text().then((t) => t.trim());
+    const r = await run(empty);
+    expect(r.code).toBe(2);
+    expect(r.err).toContain("no .nix files");
   });
 });

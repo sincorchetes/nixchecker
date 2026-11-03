@@ -1,21 +1,14 @@
-// Checks a Nix file or flake in two layers: the static analysis of the page, and the real module system of
-// the Nix on this machine, which settles what the analysis can only guess (imports, mkIf, merging,
-// priorities, assertions).
-//   bun tools/local/check.ts <file.nix> [--target nixos|home-manager|disko] [--release unstable|26.05|25.11]
+// Checks Nix files or flakes in two layers: the static analysis of the page, and the real module system
+// of the Nix on this machine, which settles what the analysis can only guess (imports, mkIf, merging,
+// priorities, assertions). Directories are searched for .nix files.
+//   bun tools/local/check.ts <file.nix|dir>... [--target nixos|home-manager|disko] [--release unstable|26.05|25.11]
 //        [--nixpkgs DIR] [--home-manager DIR] [--disko DIR] [--static] [--json]
 // Without --nixpkgs (and --home-manager) the pinned sources of --release are built (needs Nix).
-import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { loadCatalog } from "../../src/lib/catalog/load";
 import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
-import type { Finding } from "../../src/lib/evaluation";
-import { analyze, check, resolveTarget, type TargetChoice } from "../../src/lib/validate";
-import { diskoRoot, releaseRoots } from "../corpus/sources";
-import type { Kind } from "./expressions";
-import { evaluateFlake } from "./flake";
-import { reconcile } from "./reconcile";
-import { fromDiagnostic, fromFinding, type Located, printText } from "./report";
-import { evaluate } from "./run-nix";
+import { checkFile, type Result } from "./check-file";
+import { nixFiles } from "./files";
+import { printText } from "./report";
 
 const { values: opts, positionals } = parseArgs({
   args: process.argv.slice(2),
@@ -30,57 +23,40 @@ const { values: opts, positionals } = parseArgs({
     json: { type: "boolean" },
   },
 });
-const file = positionals[0];
-if (!file || positionals.length > 1) {
-  console.error("usage: check.ts <file.nix> [--target T] [--release V] [--static] [--json]");
+if (positionals.length === 0) {
+  console.error("usage: check.ts <file.nix|dir>... [--target T] [--release V] [--static] [--json]");
   process.exit(2);
 }
 const version = (opts.release ?? DEFAULT_VERSION) as Version;
 if (!VERSIONS.includes(version)) throw new Error(`unknown release ${version}`);
 
-const source = await Bun.file(file).text();
-const analysis = analyze(source);
-const target = resolveTarget(analysis, (opts.target ?? "auto") as TargetChoice);
-
-// 1. The static layer, against the catalog of the release.
-const publicDir = join(import.meta.dir, "..", "..", "public");
-const files = (async (url) => new Response(Bun.file(join(publicDir, String(url))))) as typeof fetch;
-const catalog = await loadCatalog(
-  target,
-  version,
-  "/",
-  analysis.assignments.map((a) => a.path),
-  files,
-);
-const report = check(analysis, target, catalog.tree, version);
-let items: Located[] = report.diagnostics.map(fromDiagnostic);
-const { total, skipped } = report.coverage;
-const coverage = `${total - skipped.length} of ${total} assignments checked statically.`;
-
-// 2. The real evaluation, unless the text does not even parse.
-const broken = items.some((i) => i.level === "syntax" && i.severity === "error");
-const evaluated = !broken && !opts.static;
-// A flake brings its own inputs; a module is built with the sources of the release.
-async function findings(): Promise<Finding[]> {
-  if (target === "flake") return evaluateFlake(resolve(file as string));
-  const [nixpkgs, homeManager] =
-    opts.nixpkgs && opts["home-manager"]
-      ? [opts.nixpkgs, opts["home-manager"]]
-      : await releaseRoots(version);
-  const roots = {
-    nixpkgs: nixpkgs as string,
-    homeManager: homeManager as string,
-    disko: opts.disko ?? (await diskoRoot()),
-  };
-  return evaluate(target as Kind, roots, file as string);
+const paths = await nixFiles(positionals);
+if (paths.length === 0) {
+  console.error("no .nix files found");
+  process.exit(2);
 }
-if (evaluated) {
-  for (const finding of await findings()) {
-    items.push(fromFinding(finding, analysis.assignments, file));
+const results: Result[] = [];
+for (const path of paths) {
+  results.push(
+    await checkFile(path, {
+      target: opts.target,
+      version,
+      nixpkgs: opts.nixpkgs,
+      homeManager: opts["home-manager"],
+      disko: opts.disko,
+      static: opts.static,
+    }),
+  );
+}
+
+// One file keeps the object a run always printed; several are a list of those objects.
+if (opts.json) {
+  const shown = results.map(({ coverage: _, ...result }) => result);
+  console.log(JSON.stringify(shown.length === 1 ? shown[0] : shown, null, 2));
+} else {
+  for (const r of results) {
+    if (results.length > 1) console.log(`\n== ${r.file}`);
+    printText(r.items, r.coverage, r.evaluated || !!opts.static);
   }
-  items = reconcile(items, true).items;
 }
-
-if (opts.json) console.log(JSON.stringify({ target, version, evaluated, items }, null, 2));
-else printText(items, coverage, evaluated || !!opts.static);
-process.exit(items.some((i) => i.severity === "error") ? 1 : 0);
+process.exit(results.some((r) => r.items.some((i) => i.severity === "error")) ? 1 : 0);
