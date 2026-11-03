@@ -1,16 +1,18 @@
-// Checks a Nix file in two layers: the static analysis of the page, and the real module system of
+// Checks a Nix file or flake in two layers: the static analysis of the page, and the real module system of
 // the Nix on this machine, which settles what the analysis can only guess (imports, mkIf, merging,
 // priorities, assertions).
 //   bun tools/local/check.ts <file.nix> [--target nixos|home-manager|disko] [--release unstable|26.05|25.11]
 //        [--nixpkgs DIR] [--home-manager DIR] [--disko DIR] [--static] [--json]
 // Without --nixpkgs (and --home-manager) the pinned sources of --release are built (needs Nix).
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { loadCatalog } from "../../src/lib/catalog/load";
 import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
+import type { Finding } from "../../src/lib/evaluation";
 import { analyze, check, resolveTarget, type TargetChoice } from "../../src/lib/validate";
 import { diskoRoot, releaseRoots } from "../corpus/sources";
 import type { Kind } from "./expressions";
+import { evaluateFlake } from "./flake";
 import { reconcile } from "./reconcile";
 import { fromDiagnostic, fromFinding, type Located, printText } from "./report";
 import { evaluate } from "./run-nix";
@@ -39,8 +41,6 @@ if (!VERSIONS.includes(version)) throw new Error(`unknown release ${version}`);
 const source = await Bun.file(file).text();
 const analysis = analyze(source);
 const target = resolveTarget(analysis, (opts.target ?? "auto") as TargetChoice);
-if (target === "flake")
-  throw new Error("flakes are not evaluated yet: pass a module of the system");
 
 // 1. The static layer, against the catalog of the release.
 const publicDir = join(import.meta.dir, "..", "..", "public");
@@ -60,7 +60,9 @@ const coverage = `${total - skipped.length} of ${total} assignments checked stat
 // 2. The real evaluation, unless the text does not even parse.
 const broken = items.some((i) => i.level === "syntax" && i.severity === "error");
 const evaluated = !broken && !opts.static;
-if (evaluated) {
+// A flake brings its own inputs; a module is built with the sources of the release.
+async function findings(): Promise<Finding[]> {
+  if (target === "flake") return evaluateFlake(resolve(file as string));
   const [nixpkgs, homeManager] =
     opts.nixpkgs && opts["home-manager"]
       ? [opts.nixpkgs, opts["home-manager"]]
@@ -70,7 +72,10 @@ if (evaluated) {
     homeManager: homeManager as string,
     disko: opts.disko ?? (await diskoRoot()),
   };
-  for (const finding of await evaluate(target as Kind, roots, file)) {
+  return evaluate(target as Kind, roots, file as string);
+}
+if (evaluated) {
+  for (const finding of await findings()) {
     items.push(fromFinding(finding, analysis.assignments, file));
   }
   items = reconcile(items, true).items;
