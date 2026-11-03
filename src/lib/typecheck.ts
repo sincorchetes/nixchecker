@@ -85,7 +85,7 @@ const describeKind = (kind: string): string => {
   if (kind.startsWith("enum:")) return `enum(${enumValues(kind).join(" | ")})`;
   if (kind.startsWith("list:"))
     return `list of ${kind.slice(5).split("+").map(describeKind).join(" or ")}`;
-  return kind === "pkg" ? "package" : kind;
+  return ({ pkg: "package", fn: "function" } as Record<string, string>)[kind] ?? kind;
 };
 
 // An absolute path written as a string starts with a slash (an interpolation is not judged).

@@ -2,6 +2,7 @@
 # sentences of the manuals. The shape of a type is a list of alternatives, one of which a value must be:
 #   "b" "i" "s" "a"        a bool, an integer, a string, an attribute set
 #   "p"                    an absolute path (a string starting with "/", or a path literal)
+#   "u"                    a function (what a `nixpkgs-overlay` is)
 #   "k"                    a package: a derivation, or the path of one in the store
 #   [ "l" <alt>... ]       a list whose elements are one of the alternatives
 #   [ "m" <alt>... ]       an attribute set whose values are one of the alternatives (`attrsOf`)
@@ -21,6 +22,8 @@ let
     in
     if t.name == "package" then
       [ "k" ]
+    else if t.name == "nixpkgs-overlay" then
+      [ "u" ]
     else if named "bool" then
       [ "b" ]
     else if lib.any named [
@@ -40,7 +43,7 @@ let
         "i"
         "f"
       ]
-    else if t.name == "path" then
+    else if t.name == "path" || t.name == "passwdEntry path" then
       [ "p" ]
     else if named "strMatching " then
       # The name is `strMatching ${lib.escapeNixString regex}`: a JSON string with the `$` escaped.
@@ -70,8 +73,10 @@ let
     else
       [ "?" ];
 
+  # `shallow`: the type is the one a value is coerced from (`coercedTo`), which is only asked whether the value is
+  # a list or a set, not what is in it: the elements are never checked, so they tell nothing.
   walk =
-    depth: t:
+    shallow: depth: t:
     let
       nested = t.nestedTypes or { };
       values = t.functor.payload.values or [ null ];
@@ -79,15 +84,19 @@ let
     if depth > 8 then
       [ "?" ]
     else if t.name == "either" then
-      walk (depth + 1) nested.left ++ walk (depth + 1) nested.right
+      walk shallow (depth + 1) nested.left ++ walk shallow (depth + 1) nested.right
     else if t.name == "nullOr" then
-      walk (depth + 1) nested.elemType
+      walk shallow (depth + 1) nested.elemType
     else if t.name == "coercedTo" then
-      walk (depth + 1) nested.finalType ++ walk (depth + 1) nested.coercedType
+      walk shallow (depth + 1) nested.finalType ++ walk true (depth + 1) nested.coercedType
+    else if shallow && (t.name == "listOf" || t.name == "nonEmptyListOf") then
+      [ [ "l" "?" ] ]
+    else if shallow && (t.name == "attrsOf" || t.name == "lazyAttrsOf") then
+      [ "a" ]
     else if t.name == "listOf" || t.name == "nonEmptyListOf" then
-      [ ([ "l" ] ++ walk (depth + 1) nested.elemType) ]
+      [ ([ "l" ] ++ walk shallow (depth + 1) nested.elemType) ]
     else if t.name == "attrsOf" || t.name == "lazyAttrsOf" then
-      [ ([ "m" ] ++ walk (depth + 1) nested.elemType) ]
+      [ ([ "m" ] ++ walk shallow (depth + 1) nested.elemType) ]
     else if t.name == "enum" && lib.all lib.isString values then
       [ ([ "e" ] ++ values) ]
     else if t.name == "enum" && lib.all lib.isInt values then
@@ -110,7 +119,7 @@ let
         [
           {
             name = lib.showOption opt.loc;
-            value = lib.unique (walk 0 opt.type);
+            value = lib.unique (walk false 0 opt.type);
           }
         ]
         ++ lib.optionals (sub != { }) (options (depth + 1) (lib.collect lib.isOption sub))

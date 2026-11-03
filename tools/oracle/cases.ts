@@ -18,6 +18,20 @@ export const CASES: string[] = [
   "{ hardware.bluetooth.enable = true; }",
   '{ system.stateVersion = "24.11"; }',
   "{ security.sudo.wheelNeedsPassword = false; }",
+  // values narrowed by more than their kind: patterns, absolute paths, functions, enums as elements
+  '{ networking.hostName = "my-box"; }',
+  '{ systemd.services.x.after = [ "network.target" ]; systemd.services.x.serviceConfig.Type = "oneshot"; }',
+  '{ users.users.alice = { isNormalUser = true; home = "/srv/alice"; }; }',
+  "{ nixpkgs.overlays = [ (final: prev: { }) ]; }",
+  "{ nixpkgs.overlays = [ ]; }",
+  // a list coerced into a string: its elements are never checked
+  "{ services.borgbackup.jobs.x.extraCreateArgs = [ 1 ]; }",
+  // wrong values the page can tell
+  '{ networking.hostName = "Not A Host"; }',
+  '{ systemd.services.x.after = [ "network" ]; }',
+  '{ users.users.alice = { isNormalUser = true; home = "alice"; }; }',
+  '{ nixpkgs.overlays = [ "overlay" ]; }',
+  '{ fileSystems."/".device = "/dev/sda1"; fileSystems."/".fsType = "ext4"; fileSystems."/".options = [ 1 ]; }',
   // unknown options
   "{ services.openssh.enabel = true; }",
   "{ servces.openssh.enable = true; }",

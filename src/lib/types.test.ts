@@ -91,6 +91,13 @@ describe("values narrowed by more than their kind", () => {
     expect(got('{ x, ... }: { files.list = [ "${x}/a" x ]; }')).toEqual([]);
   });
 
+  test("a function is anything that is not written out as another kind", () => {
+    expect(got("{ x, ... }: { mixed.overlays = [ (final: prev: { }) x ./o.nix ]; }")).toEqual([]);
+    expect(got('{ mixed.overlays = [ "x" 1 ]; }')).toEqual(["list of function"]);
+    expect(got("{ mixed.hook = 5; }")).toEqual(["function"]);
+    expect(got("{ mixed.hook = a: a; }")).toEqual([]);
+  });
+
   test("the elements of a list can be held to an enum", () => {
     expect(got('{ mixed.shells = [ "bash" "zsh+fzf" ]; }')).toEqual([]);
     expect(got('{ x, ... }: { mixed.shells = [ "${x}" x ]; }')).toEqual([]);

@@ -50,6 +50,10 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   `systemd.*.conflicts` or `app_service_config_files`. The catalogs grow by under 2 %.
 - A value written for a renamed option is held to the type of the option it was renamed to (`xdg.userDirs.publishShare = 1` was only "deprecated").
 - The elements of a list that is an `enum` of strings are held to those strings (`programs.browserpass.browsers`).
+- `nixpkgs.overlays` takes functions, and a user's `home` an absolute path (`passwdEntry path`); the oracle has
+  hand-written cases for both, valid and not.
+- The type a value is coerced from (`coercedTo`) is read shallowly: Nix only asks whether it is a list, so the elements of
+  `extraCreateArgs = [ 1 ]` are not wrong (a false positive of the oracle, found on a sample of 150 options).
 - No wrong value is left unconfirmed for lack of room: the cap of ten extra options read apart is gone (they are
   read four at a time), and an integration test has twenty wrong values, all confirmed by Nix.
 - A file with no expression in it (empty, or only comments) is a syntax error in the CLI, as Nix says; the

@@ -22,6 +22,8 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("mixed.text", "mix", { values: ["str", "list:str"] }),
     opt("files.root", "path"),
     opt("files.list", "list", { values: ["path"] }),
+    opt("mixed.overlays", "list", { values: ["fn"] }),
+    opt("mixed.hook", "mix", { values: ["fn"] }),
     opt("mixed.shells", "list", { values: [enumElementKind(["bash", "zsh+fzf"])] }),
     opt("units.name", "mix", { values: [patternKind("^[a-z]+[.]service$")] }),
     opt("units.after", "list", { values: [patternKind("[a-z]+[.](service|socket)")] }),

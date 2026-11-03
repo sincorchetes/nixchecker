@@ -27,6 +27,7 @@ const KIND: Record<string, string> = {
   a: "attrs",
   p: "path",
   k: "pkg",
+  u: "fn",
 };
 
 const ELEMENT: Record<string, string> = { m: "attrs", l: "list" };
@@ -83,8 +84,8 @@ export function fromShape(all: Shape): Shaped | undefined {
   const kinds = [...new Set(shape.map(token))];
   if (kinds.includes(undefined)) return { type: "any" };
   const [one] = kinds as string[];
-  // A package is a kind a value can be, not a type of its own: it is held as an alternative of one.
-  if (one === "pkg" && kinds.length === 1) return { type: "mix", values: ["pkg"] };
+  // A package or a function is a kind a value can be, not a type of its own: held as an alternative of one.
+  if ((one === "pkg" || one === "fn") && kinds.length === 1) return { type: "mix", values: [one] };
   if (kinds.length === 1 && one && !/^(list|enum|re:)/.test(one))
     return { type: one as OptionType };
   return { type: "mix", values: kinds as string[] };

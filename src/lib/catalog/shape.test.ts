@@ -67,6 +67,11 @@ describe("fromShape", () => {
     });
   });
 
+  test("a function is a kind a value can be, alone or as the element of a list", () => {
+    expect(fromShape(["u"])).toEqual({ type: "mix", values: ["fn"] });
+    expect(fromShape([["l", "u"]])).toEqual({ type: "list", values: ["fn"] });
+  });
+
   test("a list of an enum keeps its values, whatever characters they have", () => {
     expect(fromShape([["l", ["e", "a+b", "c:d"]]])).toEqual({
       type: "list",
