@@ -35,6 +35,28 @@ describe("more than the first error", () => {
   );
 });
 
+describe("a file with many wrong values", () => {
+  test(
+    "has every one confirmed by Nix, none left out",
+    async () => {
+      const names =
+        "mtr tmux zsh fish nano vim mosh htop iftop iotop java less neovim starship git xonsh nm-applet bandwhich wireshark firejail".split(
+          " ",
+        );
+      const file = join(dir, "twenty-wrong.nix");
+      await Bun.write(
+        file,
+        `{\n${names.map((n) => `  programs.${n}.enable = "yes";`).join("\n")}\n}\n`,
+      );
+      const run = await evaluate("--format", "json", "--partial", "--target", "nixos", file);
+      const confirmed = run.items.filter((i) => i.level === "evaluation");
+      expect(confirmed.map((i) => i.line)).toEqual(names.map((_, n) => n + 2));
+      expect(run.items.filter((i) => i.level === "static")).toEqual([]);
+    },
+    TIME,
+  );
+});
+
 describe("options written under config", () => {
   test(
     "are found, and placed where they are written",

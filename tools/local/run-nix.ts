@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { type Finding, parseEvaluation } from "../../src/lib/evaluation";
 import { type Kind, type Roots, systemExpression } from "./expressions";
+import { mapLimit } from "./pool";
 
 // Builds the derivation of the system: that only evaluates when every assertion of it holds.
 const WHOLE = "top";
@@ -16,8 +17,9 @@ const PARTIAL = `let vals = map (p: builtins.foldl' (c: n: c.\${n}) config p) pa
 // module system does on a wrong value, is caught here; its message is not, and is asked for apart).
 const PROBE = `let get = p: builtins.foldl' (c: n: c.\${n}) config p; in map (p: (builtins.tryEval (builtins.deepSeq (get p) true)).success) paths`;
 
-// How many more failing options are asked about, after the first one Nix stopped at.
-const MORE = 10;
+// How many failing options are read at once, after the first one Nix stopped at: all of them are asked
+// about, none is left out.
+const CONCURRENCY = 4;
 
 // Something every system has, to read first: an unknown option is found by reading any of them.
 const BASE: Record<Kind, string[]> = {
@@ -94,15 +96,15 @@ async function wrongValues(
     "paths",
     nixList([BASE[kind], ...options]),
   ]);
+  const failing = options.filter((_, n) => answers[n + 1] === false);
   const more: Finding[] = [];
-  for (const [n, path] of options.entries()) {
-    if (answers[n + 1] !== false || more.length >= MORE) continue;
-    for (const finding of await read([path], false)) {
-      const key = finding.option ?? finding.message;
-      if (finding.kind === "warning" || reported.has(key)) continue;
-      reported.add(key);
-      more.push(finding);
-    }
+  for (const finding of (
+    await mapLimit(failing, CONCURRENCY, (path) => read([path], false))
+  ).flat()) {
+    const key = finding.option ?? finding.message;
+    if (finding.kind === "warning" || reported.has(key)) continue;
+    reported.add(key);
+    more.push(finding);
   }
   return [...found, ...more];
 }

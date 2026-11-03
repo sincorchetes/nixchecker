@@ -50,6 +50,13 @@ describe("value types", () => {
     expect(codes("{ mixed.jobs = [ ]; }")).toEqual(["type-mismatch"]);
   });
 
+  test("a list says which of its elements are of a kind the option does not take", () => {
+    const [d] = run('{ networking.firewall.allowedTCPPorts = [ 22 "80" true "x" ]; }').diagnostics;
+    expect(d?.params.got).toBe("list with str and bool elements");
+    const [plain] = run("{ networking.firewall.allowedTCPPorts = 5; }").diagnostics;
+    expect(plain?.params.got).toBe("int");
+  });
+
   test("checks the elements of a list and the kinds a mix takes", () => {
     expect(codes("{ networking.firewall.allowedTCPPorts = [ 22 80 ]; }")).toEqual([]);
     expect(codes('{ networking.firewall.allowedTCPPorts = [ "ssh" ]; }')).toEqual([

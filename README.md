@@ -106,6 +106,14 @@ Limits to know about:
   (`content`) the options of all of them are accepted there, and what the manual describes below a
   device that its type does not declare is dropped, and layouts nested more than six deep are
   not read.
+- The catalogs know the kind of a value (string, integer, list of strings...), not what narrows it: a
+  string that must match a pattern (a unit name such as `x.service`), a `path`, or the elements of
+  a list that nixpkgs defines for itself (`meta.teams`) are checked as their base type. The page lets
+  such a value through; `evaluate` finds it. In the oracle these are the few wrong values (under 1 %)
+  that are let through.
+- When a wrong value makes another module's `mkIf` fail (`programs.sway.enable = "yes"` stops what
+  `sway` sets, such as `programs.dconf.enable`), Nix reports the first and cannot judge the second
+  until that is fixed; the page's static check still marks it.
 - For a flake, `evaluate` evaluates its `nixosConfigurations` and `homeConfigurations`; with
   `--all-outputs` also its `packages`, `checks` and `devShells` for the system it runs on. Evaluating a
   derivation instantiates it, it does not build it: a package that evaluates but fails to build passes.

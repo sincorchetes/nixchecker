@@ -52,6 +52,20 @@ describe("parseEvaluation", () => {
     ]);
   });
 
+  test("an option removed or renamed upstream is named, to be placed where it is written", () => {
+    const removed =
+      "error: The option `programs.light' can no longer be used since it's been removed.\n more";
+    expect(parseEvaluation(removed)).toEqual([
+      {
+        kind: "error",
+        option: "programs.light",
+        message: "The option `programs.light' can no longer be used since it's been removed.",
+      },
+    ]);
+    const renamed = "error: The option `a.b' defined in `/x.nix' has been renamed to `a.c'.";
+    expect(parseEvaluation(renamed)[0]?.option).toBe("a.b");
+  });
+
   test("any other error keeps its first line; no error leaves only the warnings", () => {
     expect(parseEvaluation("error: something broke\n  more detail")).toEqual([
       { kind: "error", message: "something broke" },

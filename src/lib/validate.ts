@@ -13,7 +13,14 @@ import {
 import { foldUnrelated } from "./fold";
 import { byName } from "./sort";
 import { closest, distance } from "./suggest";
-import { isGroup, ownerReason, skipReason, typeMismatch, valueMismatch } from "./typecheck";
+import {
+  describeGot,
+  isGroup,
+  ownerReason,
+  skipReason,
+  typeMismatch,
+  valueMismatch,
+} from "./typecheck";
 
 export {
   type Analysis,
@@ -134,7 +141,7 @@ export function check(
           severity: "error",
           code: "type-mismatch",
           ...at,
-          params: { path, expected, got: a.kind },
+          params: { path, expected, got: describeGot(exact, a) },
           docUrl: docUrl(target, exact.path, version),
         });
       }

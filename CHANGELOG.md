@@ -44,6 +44,11 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - `evaluate` of a whole system also finds every wrong value in one run: when Nix stops at the first, the options of
   the file are read one by one as well and what they add is merged. (The assertions of the system wait
   until the values are right.)
+- No wrong value is left unconfirmed for lack of room: the cap of ten extra options read apart is gone (they are
+  read four at a time), and an integration test has twenty wrong values, all confirmed by Nix.
+- A file with no expression in it (empty, or only comments) is a syntax error in the CLI, as Nix says; the
+  text output says what a misspelled option probably was; a list says which of its elements do not fit
+  (`list with str elements`); an option removed or renamed upstream is placed where it is written.
 - `evaluate --partial` finds every wrong value of a file in one run, not only the first one Nix stops at:
   it asks which of the options the file sets fail to evaluate, and for the message of each of them. Options
   that do not exist no longer hide the wrong values of the rest: the file is read again with the module

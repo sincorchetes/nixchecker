@@ -90,7 +90,13 @@ function classify(text: string): Finding[] {
       message,
     }));
   }
-  return [{ kind: "error", message: text.split("\n")[0] as string }];
+  // An option removed or renamed upstream fails where it is used: it is known which one it is.
+  const gone =
+    /^The option `([^']+)' (?:defined in `[^']+' )?(?:can no longer be used|has been renamed)/.exec(
+      text,
+    );
+  const option = gone?.[1];
+  return [{ kind: "error", ...(option && { option }), message: text.split("\n")[0] as string }];
 }
 
 // The lines `--log-format internal-json` prints: `@nix {"action":"msg","level":0,"raw_msg":"..."}`.

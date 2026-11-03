@@ -48,13 +48,27 @@ function elementFits(
   return allowed.includes("pkg") && packageFits(kind, value, plain);
 }
 
+// The kinds of the elements of a list written out that its option does not take.
+function wrongKinds(entry: IndexedOption, a: Assignment): string[] {
+  const allowed = entry.values ?? [];
+  const wrong = (a.items ?? []).filter(
+    (kind, n) => !elementFits(allowed, kind, a.itemValues?.[n], a.itemPlain?.[n]),
+  );
+  return [...new Set(wrong)];
+}
+
 // A list written out in full whose elements are of a kind its option does not take.
 function wrongElements(entry: IndexedOption, a: Assignment): string | undefined {
   const allowed = entry.values;
-  const wrong =
-    allowed &&
-    a.items?.some((kind, n) => !elementFits(allowed, kind, a.itemValues?.[n], a.itemPlain?.[n]));
-  return wrong ? `list of ${allowed.map(describeKind).join(" | ")}` : undefined;
+  return allowed && wrongKinds(entry, a).length > 0
+    ? `list of ${allowed.map(describeKind).join(" | ")}`
+    : undefined;
+}
+
+/** What was written, for a message: its kind, and for a list the kinds of the elements that do not fit. */
+export function describeGot(entry: IndexedOption, a: Assignment): string {
+  const wrong = entry.type === "list" && a.kind === "list" ? wrongKinds(entry, a) : [];
+  return wrong.length > 0 ? `list with ${wrong.map(describeKind).join(" and ")} elements` : a.kind;
 }
 
 const describeKind = (kind: string): string =>
