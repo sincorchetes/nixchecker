@@ -15,6 +15,7 @@ import {
   type Range,
   toLsp,
 } from "./diagnostics";
+import { hoverAt } from "./hover";
 import { type Message, readMessages, send } from "./rpc";
 
 const texts = new Map<string, string>();
@@ -60,6 +61,26 @@ function quickFixes(uri: string, range: Range) {
       },
     ];
   });
+}
+
+// What the catalog says about the option under the cursor, or nothing (null) when there is none.
+async function hover(id: number | string, params: Message["params"]): Promise<void> {
+  const text = texts.get(documentOf(params).uri) ?? "";
+  const { line, character } = (params?.position ?? { line: 0, character: 0 }) as {
+    line: number;
+    character: number;
+  };
+  const found = await hoverAt(
+    text,
+    offsetOf(text, line + 1, character + 1),
+    options.target,
+    options.release ?? DEFAULT_VERSION,
+  ).catch(() => undefined);
+  const result = found && {
+    contents: { kind: "markdown", value: found.value },
+    range: { start: position(text, found.start), end: position(text, found.end) },
+  };
+  send({ id, result: result ?? null });
 }
 
 // The options the catalog has where the cursor is, if a name is being written there.
@@ -113,6 +134,7 @@ function handle({ id, method, params }: Message): void {
           textDocumentSync: 1,
           codeActionProvider: { codeActionKinds: ["quickfix"] },
           completionProvider: { triggerCharacters: ["."] },
+          hoverProvider: true,
         },
         serverInfo: { name: "nixchecker" },
       });
@@ -140,6 +162,9 @@ function handle({ id, method, params }: Message): void {
       cleared(uri);
       break;
     }
+    case "textDocument/hover":
+      if (id !== undefined) void hover(id, params);
+      break;
     case "textDocument/completion":
       if (id !== undefined) void complete(id, params);
       break;

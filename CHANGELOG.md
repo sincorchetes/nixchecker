@@ -26,7 +26,7 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   system (its options are read; the assertions of a whole system are skipped).
 - The page validates by itself when the text rests for a moment (the button still validates at once).
 - `devenv shell -- lsp`: a Language Server that publishes the static findings as diagnostics in any editor,
-  with the certain fixes (misspelled or renamed options) as quick fixes, and completes option names from the catalog.
+  with the certain fixes (misspelled or renamed options) as quick fixes, completes option names from the catalog and shows the type of an option on hover.
 - The analysis runs in a Web Worker (in the page where one cannot start), and a service worker keeps
   the page and the catalogs used so it works with no connection after the first visit.
 - Syntax colors in the editor (comments, strings, numbers, keywords, paths) and the findings underlined

@@ -69,7 +69,7 @@ describe("language server", () => {
 
   test("answers a request it does not know with an error, and ignores a notification", async () => {
     write({ method: "$/setTrace", params: {} });
-    write({ id: 9, method: "textDocument/hover", params: {} });
+    write({ id: 9, method: "textDocument/definition", params: {} });
     expect(await next()).toMatchObject({ id: 9, error: { code: -32601 } });
   });
 });
@@ -162,6 +162,53 @@ describe("language server completion", () => {
 
   test("offers nothing in a value", async () => {
     expect(await complete("{ networking.hostName = foo.ba }", 0, 30)).toEqual([]);
+  });
+});
+
+describe("language server hover", () => {
+  const hover = async (text: string, line: number, character: number) => {
+    write({
+      method: "textDocument/didOpen",
+      params: { textDocument: { uri: "file:///d.nix", text } },
+    });
+    await next();
+    write({
+      id: 40,
+      method: "textDocument/hover",
+      params: { textDocument: { uri: "file:///d.nix" }, position: { line, character } },
+    });
+    const { result } = await next<{ result: { contents: { value: string } } | null }>();
+    return result?.contents.value;
+  };
+
+  test("says what an option is and where to read more", async () => {
+    const shown = await hover("{ services.openssh.enable = true; }", 0, 22);
+    expect(shown).toContain("**services.openssh.enable**");
+    expect(shown).toContain("Type: `bool`");
+    expect(shown).toContain(
+      "https://search.nixos.org/options?channel=26.05&query=services.openssh.enable",
+    );
+  });
+
+  test("on a name in the middle, it is about the path up to it", async () => {
+    const shown = await hover("{ services.openssh.enable = true; }", 0, 14);
+    expect(shown).toContain("**services.openssh**");
+    expect(shown).toMatch(/A group of \d+ options/);
+  });
+
+  test("below the set an option is assigned to, the whole path counts", async () => {
+    const shown = await hover("{ services.openssh = {\n  enable = true;\n}; }", 1, 4);
+    expect(shown).toContain("**services.openssh.enable**");
+  });
+
+  test("a renamed option points to its replacement", async () => {
+    const shown = await hover('{ networking.extraResolvconfConf = "x"; }', 0, 20);
+    expect(shown).toContain("use `networking.resolvconf.extraConfig`");
+  });
+
+  test("nothing is said of a value or of an option that does not exist", async () => {
+    expect(await hover("{ networking.hostName = foo; }", 0, 26)).toBeUndefined();
+    expect(await hover("{ services.opensh.enabel = true; }", 0, 20)).toBeUndefined();
   });
 });
 
