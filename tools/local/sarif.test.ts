@@ -88,4 +88,22 @@ describe("SARIF", () => {
     expect(problemsWith(log)).toEqual([]);
     expect(problemsWith({ version: "2.0.0", runs: [] })).not.toEqual([]);
   });
+
+  test("other places an option may be set are related locations", () => {
+    const log = toSarif([
+      result([
+        {
+          level: "evaluation",
+          severity: "error",
+          message: "x",
+          line: 2,
+          col: 3,
+          alternatives: [{ line: 7, col: 3 }],
+        },
+      ]),
+    ]);
+    expect(problemsWith(log)).toEqual([]);
+    const [one] = log.runs[0]?.results ?? [];
+    expect(one?.relatedLocations?.[0]?.physicalLocation.region.startLine).toBe(7);
+  });
 });

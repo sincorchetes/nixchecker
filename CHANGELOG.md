@@ -28,6 +28,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - `evaluate` asks Nix for its messages as data (`--log-format internal-json`) instead of cutting the text
   at the last `error:`: no colors or trace to skip, and the definitions Nix lists (where the option is set,
   and to what) and its "did you mean" are kept. Plain text is still read where Nix gives no data.
+- When an option is set in several places of a file, `evaluate` picks the one whose value is what Nix
+  printed (by its kind, and by its text for a string) and, if it still cannot tell, reports the other
+  places too (`alternatives` in the JSON, related locations in SARIF) instead of choosing silently.
 - `evaluate --help`, `--version` and `--jobs`: every mistake in the command is one line with exit status 2,
   and several files are checked concurrently.
 - A flake with the packaged command line and language server: `nix run github:sincorchetes/nixchecker`

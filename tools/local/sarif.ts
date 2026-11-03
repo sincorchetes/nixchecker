@@ -17,6 +17,15 @@ export function toSarif(results: Result[]) {
             level: LEVEL[item.severity],
             message: { text: item.message },
             ...(item.config && { properties: { configuration: item.config } }),
+            // Other places the same option is set, when the finding could be about any of them.
+            ...(item.alternatives && {
+              relatedLocations: item.alternatives.map(({ line, col }) => ({
+                physicalLocation: {
+                  artifactLocation: { uri: item.file ?? r.file },
+                  region: { startLine: line, startColumn: col },
+                },
+              })),
+            }),
             locations: [
               {
                 physicalLocation: {
