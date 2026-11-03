@@ -9,6 +9,8 @@ export interface Finding {
   option?: string;
   /** The type that was expected, for a type error. */
   expected?: string;
+  /** The file that defines the option, as Nix names it (the module system gives no line). */
+  file?: string;
   message: string;
 }
 
@@ -37,13 +39,16 @@ export function parseEvaluation(output: string): Finding[] {
   if (at < 0) return findings;
   const text = output.slice(at + "error:".length).trim();
 
+  const file = /^\s*- In `([^']+)'/m.exec(text)?.[1];
   const missing = /^The options? (.+?) (?:does|do) not exist/.exec(text);
   const wrongType = /^A definition for option `([^']+)' is not of type `(.+?)'\./.exec(text);
   if (missing) {
-    for (const option of quoted(missing[1] as string)) {
+    const options = quoted(missing[1] as string);
+    for (const option of options) {
       findings.push({
         kind: "unknown-option",
         option,
+        ...(file && options.length === 1 && { file }),
         message: `The option ${option} does not exist`,
       });
     }
@@ -53,6 +58,7 @@ export function parseEvaluation(output: string): Finding[] {
       kind: "type-error",
       option,
       expected,
+      ...(file && { file }),
       message: `A definition for ${option} is not of type ${expected}`,
     });
   } else if (text.startsWith("Failed assertions:")) {

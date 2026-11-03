@@ -71,7 +71,7 @@ if (evaluated) {
     disko: opts.disko ?? (await diskoRoot()),
   };
   for (const finding of await evaluate(target as Kind, roots, file)) {
-    items.push(fromFinding(finding, analysis.assignments));
+    items.push(fromFinding(finding, analysis.assignments, file));
   }
   items = reconcile(items, true).items;
 }

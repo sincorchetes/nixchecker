@@ -9,6 +9,7 @@ describe("parseEvaluation", () => {
       {
         kind: "unknown-option",
         option: "networking.hostname",
+        file: "f.nix",
         message: "The option networking.hostname does not exist",
       },
     ]);
@@ -17,6 +18,11 @@ describe("parseEvaluation", () => {
   test("several missing options", () => {
     const out = "error: The options `a.b', `c.d' do not exist. Definition values:";
     expect(parseEvaluation(out).map((f) => f.option)).toEqual(["a.b", "c.d"]);
+  });
+
+  test("several missing options do not share one file", () => {
+    const out = "error: The options `a', `b' do not exist. Definition values:\n- In `f.nix': 1";
+    expect(parseEvaluation(out).some((f) => f.file)).toBe(false);
   });
 
   test("a value of the wrong type", () => {
@@ -28,6 +34,7 @@ describe("parseEvaluation", () => {
         kind: "type-error",
         option: "networking.hostName",
         expected: "string matching the pattern ^$|^[a-z]",
+        file: "f.nix",
         message:
           "A definition for networking.hostName is not of type string matching the pattern ^$|^[a-z]",
       },

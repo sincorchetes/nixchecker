@@ -1,4 +1,5 @@
 // Prints what the static analysis and the real evaluation found, by how sure each one is.
+import { resolve } from "node:path";
 import type { Finding } from "../../src/lib/evaluation";
 import { format, messages } from "../../src/lib/i18n";
 import type { Assignment } from "../../src/lib/nix/scan";
@@ -33,13 +34,14 @@ function whereIs(option: string | undefined, assignments: Assignment[]) {
 }
 
 /** A finding of the real evaluation, placed in the file when its option is written there. */
-export function fromFinding(f: Finding, assignments: Assignment[]): Located {
-  const at = whereIs(f.option, assignments);
+export function fromFinding(f: Finding, assignments: Assignment[], checked: string): Located {
+  const imported = f.file !== undefined && resolve(f.file) !== resolve(checked);
+  const at = imported ? undefined : whereIs(f.option, assignments);
   const severity = f.kind === "warning" ? "warning" : "error";
   return {
     level: "evaluation",
     severity,
-    message: f.message,
+    message: imported ? `${f.message} (defined in ${f.file})` : f.message,
     ...(at && { line: at.line, col: at.col }),
   };
 }
