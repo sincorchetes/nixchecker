@@ -34,7 +34,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 - Open a `.nix` file with a picker or by dropping it on the editor (read in the browser, up to 512 KB),
   download the report as JSON, and, if asked, keep the text between visits in this browser.
 - `evaluate --format json|sarif`: the JSON carries the coverage and the revisions of the catalog used;
-  SARIF feeds code scanning annotations.
+  SARIF feeds code scanning annotations. The JSON is always `{ "schemaVersion": 1, "results": [...] }`,
+  one result per file.
 - The nested options of disko's disk layouts (partitions, `content`, subvolumes, datasets...) are read
   from disko's own serialized types instead of a hand-written overlay.
 

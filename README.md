@@ -42,8 +42,8 @@ names its file.
   read, so the assertions of a whole system (root file system, boot loader) do not get in the way.
 - `--target` is `nixos`, `home-manager` or `disko`; `--release` picks the pinned nixpkgs and Home
   Manager (or give `--nixpkgs DIR --home-manager DIR`); `--static` skips the evaluation.
-- `--format json` (or `--json`) prints the findings as data, with the coverage and the revisions of
-  the catalog used; `--format sarif` prints SARIF 2.1.0 for code scanning annotations.
+- `--format json` (or `--json`) prints the findings as data, `{ "schemaVersion": 1, "results": [...] }` with one result per file, each
+  with its coverage and the revisions of the catalog used; `--format sarif` prints SARIF 2.1.0 for code scanning annotations.
 
 Nothing is uploaded: it all runs on your machine. Nix stops at the first error it meets, so fix it and
 run again to see the next.

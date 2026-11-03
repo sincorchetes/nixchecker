@@ -42,14 +42,15 @@ describe("evaluate CLI (static layer)", () => {
   test("--json prints the items", async () => {
     const r = await run("--json", "--static", join(dir, "bad.nix"), "--target", "nixos");
     const json = JSON.parse(r.out);
-    expect(json.evaluated).toBe(false);
-    expect(json.items[0].severity).toBe("error");
+    expect(json.schemaVersion).toBe(1);
+    expect(json.results[0].evaluated).toBe(false);
+    expect(json.results[0].items[0].severity).toBe("error");
   });
 
   test("a syntax error is reported and nothing is evaluated", async () => {
     const r = await run(join(dir, "broken.nix"), "--target", "nixos", "--json");
     expect(r.code).toBe(1);
-    expect(JSON.parse(r.out).evaluated).toBe(false);
+    expect(JSON.parse(r.out).results[0].evaluated).toBe(false);
   });
 
   test("usage errors exit 2", async () => {
@@ -67,7 +68,7 @@ describe("evaluate CLI (several files)", () => {
 
   test("several files print a list in JSON", async () => {
     const r = await run(join(dir, "good.nix"), join(dir, "bad.nix"), "--static", "--json");
-    expect(JSON.parse(r.out).map((x: { file: string }) => x.file)).toEqual([
+    expect(JSON.parse(r.out).results.map((x: { file: string }) => x.file)).toEqual([
       join(dir, "good.nix"),
       join(dir, "bad.nix"),
     ]);
@@ -84,7 +85,7 @@ describe("evaluate CLI (several files)", () => {
 describe("evaluate CLI (formats)", () => {
   test("JSON carries the coverage and where the catalog comes from", async () => {
     const r = await run("--format", "json", "--static", join(dir, "bad.nix"), "--target", "nixos");
-    const json = JSON.parse(r.out);
+    const [json] = JSON.parse(r.out).results;
     expect(json.coverage).toEqual({ checked: 1, total: 1 });
     expect(json.catalog.name).toMatch(/^nixos-/);
     expect(json.catalog.source).toContain("nixpkgs");
@@ -112,7 +113,7 @@ describe("evaluate CLI (formats)", () => {
 describe("evaluate CLI (target)", () => {
   test("a file that could be NixOS or Home Manager goes where it has fewer errors, as on the page", async () => {
     const r = await run("--format", "json", "--static", join(dir, "hm.nix"));
-    expect(JSON.parse(r.out).target).toBe("home-manager");
+    expect(JSON.parse(r.out).results[0].target).toBe("home-manager");
     expect(r.code).toBe(0);
   });
 });

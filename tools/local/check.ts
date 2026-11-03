@@ -61,10 +61,9 @@ for (const path of paths) {
   );
 }
 
-// One file keeps the object a run always printed; several are a list of those objects.
+// The JSON has one shape, whatever the number of files: bump `schemaVersion` if it ever changes.
 if (format === "sarif") console.log(JSON.stringify(toSarif(results), null, 2));
-else if (format === "json")
-  console.log(JSON.stringify(results.length === 1 ? results[0] : results, null, 2));
+else if (format === "json") console.log(JSON.stringify({ schemaVersion: 1, results }, null, 2));
 else {
   for (const r of results) {
     if (results.length > 1) console.log(`\n== ${r.file}`);
