@@ -7,6 +7,8 @@ const dir = await Bun.$`mktemp -d`.text().then((t) => t.trim());
 await Bun.write(join(dir, "good.nix"), '{ networking.hostName = "box"; }\n');
 await Bun.write(join(dir, "bad.nix"), "{ networking.hostName = 5; }\n");
 await Bun.write(join(dir, "hm.nix"), '{ programs.git.userEmail = "a@b.c"; }\n');
+await Bun.write(join(dir, "typo.nix"), '{ networking.hostNme = "x"; }\n');
+await Bun.write(join(dir, "empty.nix"), "# nothing but a comment\n");
 await Bun.write(join(dir, "broken.nix"), "{ networking.hostName = ; }\n");
 
 async function run(...args: string[]) {
@@ -52,6 +54,17 @@ describe("evaluate CLI (static layer)", () => {
     const r = await run(join(dir, "broken.nix"), "--target", "nixos", "--json");
     expect(r.code).toBe(1);
     expect(JSON.parse(r.out).results[0].evaluated).toBe(false);
+  });
+
+  test("a file with no expression is a syntax error, as Nix says", async () => {
+    const r = await run(join(dir, "empty.nix"), "--static", "--target", "nixos");
+    expect(r.code).toBe(1);
+    expect(r.out).toContain("The file ends before the expression is complete.");
+  });
+
+  test("a misspelled option says what was probably meant", async () => {
+    const r = await run(join(dir, "typo.nix"), "--static", "--target", "nixos");
+    expect(r.out).toContain("Did you mean “networking.hostName”?");
   });
 
   test("usage errors exit 2", async () => {

@@ -4,12 +4,13 @@ import { join, resolve } from "node:path";
 import type { Target } from "../../src/lib/catalog";
 import { catalogName, type Version } from "../../src/lib/catalog/versions";
 import type { Finding } from "../../src/lib/evaluation";
+import { parse } from "../../src/lib/nix/parse";
 import { type Analysis, analyze } from "../../src/lib/validate";
 import { diskoRoot, releaseRoots } from "../corpus/sources";
 import type { Kind, Roots } from "./expressions";
 import { evaluateFlake } from "./flake";
 import { reconcile } from "./reconcile";
-import { fromFinding, isImported, type Located } from "./report";
+import { fromDiagnostic, fromFinding, isImported, type Located } from "./report";
 import { evaluate } from "./run-nix";
 import { publicDir, staticLayer } from "./static-layer";
 
@@ -115,6 +116,17 @@ export async function checkFile(file: string, o: Options): Promise<Result> {
   const text = await Bun.file(file).text();
   const { analysis, target, coverage, ...layer } = await staticLayer(text, o.target, o.version);
   let { items } = layer;
+  // Nix rejects a file with no expression in it (empty, or only comments); the page does not, for an empty editor.
+  if (!parse(text).ast && items.length === 0) {
+    const eof = {
+      severity: "error",
+      code: "syntax-unexpected-eof",
+      line: 1,
+      col: 1,
+      params: {},
+    } as const;
+    items.push(fromDiagnostic(eof));
+  }
 
   // The real evaluation, unless the text does not even parse. A flake brings its own inputs.
   const broken = items.some((i) => i.level === "syntax" && i.severity === "error");

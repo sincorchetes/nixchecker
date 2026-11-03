@@ -12,6 +12,8 @@ export interface Located {
   message: string;
   /** The static diagnostic code, when it comes from the analysis. */
   code?: string;
+  /** What the catalog suggests instead, for a misspelled option. */
+  suggestion?: string;
   /** The file it is in, when that is not the one checked (an imported module). */
   file?: string;
   /** The configuration of a flake it was found in. */
@@ -28,7 +30,15 @@ const SYNTAX = /^(syntax-|undefined-variable|not-callable|list-plus|concat-non-l
 export function fromDiagnostic(d: Diagnostic): Located {
   const message = format(messages.en[`diag.${d.code}` as keyof typeof messages.en], d.params);
   const level = SYNTAX.test(d.code) ? "syntax" : "static";
-  return { level, severity: d.severity, message, code: d.code, line: d.line, col: d.col };
+  return {
+    level,
+    severity: d.severity,
+    message,
+    code: d.code,
+    ...(d.suggestion && { suggestion: d.suggestion }),
+    line: d.line,
+    col: d.col,
+  };
 }
 
 // Every place the file assigns the option a finding is about (or something below it).
@@ -100,11 +110,12 @@ export function printText(items: Located[], coverage: string, how: How): void {
       const place = item.line ? `${item.line}:${item.col}` : "";
       const where = item.file ? `${item.file}${place && `:${place}`}  ` : place && `${place}  `;
       const config = item.config ? `${item.config}: ` : "";
+      const maybe = item.suggestion ? ` Did you mean “${item.suggestion}”?` : "";
       const also = item.alternatives?.length
         ? ` (or at ${item.alternatives.map((a) => `${a.line}:${a.col}`).join(", ")})`
         : "";
       console.log(
-        `${item.severity.padEnd(7)} ${where}${config}${item.message}${also}  [${LABEL[level]}]`,
+        `${item.severity.padEnd(7)} ${where}${config}${item.message}${maybe}${also}  [${LABEL[level]}]`,
       );
     }
   }
