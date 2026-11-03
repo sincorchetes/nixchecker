@@ -15,12 +15,17 @@ const flakeEntries: OptionEntry[] = [
   opt("nixConfig.flake-registry", "str"),
 ];
 
-// Keys of the module system itself, which no manual lists as options.
+// Keys of the module system itself, and options that exist but are internal, which no manual lists:
+// `assertions` and `warnings` are what a module of your own writes to say that something is wrong, and
+// `meta` (`maintainers`, `doc`, `buildDocsInSandbox`) is about the module.
 const moduleEntries: OptionEntry[] = [
   opt("imports", "list"),
   opt("disabledModules", "list"),
   opt("options", "any"),
   opt("config", "any"),
+  opt("assertions", "list"),
+  opt("warnings", "list", { values: ["str"] }),
+  opt("meta", "attrs"),
 ];
 
 export const overlays: Record<Target, Overlay> = {

@@ -32,6 +32,10 @@ describe("generated catalogs (public/catalog)", () => {
     expect(await has("home-manager-unstable", "programs.git.enable", "bool")).toBe(true);
     expect(await has("disko", "disko.devices.disk.*.device", "path")).toBe(true);
     expect(await has("flake", "inputs.*.url", "str")).toBe(true);
+    // Internal options a module of your own writes are there, though the manuals leave them out.
+    expect(await has("nixos-unstable", "assertions", "list")).toBe(true);
+    expect(await has("home-manager-unstable", "warnings", "list")).toBe(true);
+    expect(await has("nixos-unstable", "meta", "attrs")).toBe(true);
     // Every release ships both catalogs, and an option can exist in one release only.
     for (const version of VERSIONS) {
       expect(await has(`nixos-${version}`, "services.openssh.enable", "bool")).toBe(true);
