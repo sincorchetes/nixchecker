@@ -69,6 +69,8 @@ export const en: Record<MessageKey, string> = {
   "result.fileTooBig": "That file is too large (maximum size: {max} KB).",
   "result.fileError": "The file could not be read.",
   "result.loadError": "Could not load the catalog. Check your connection and try again.",
+  "result.internalError":
+    "An internal error occurred while validating. It is a bug in nixchecker, not a problem with your file: if it happens again, please open an issue.",
   "result.line": "Line {line}, column {col}",
   "result.suggest": "Did you mean {suggestion}?",
   "result.docs": "Official documentation",

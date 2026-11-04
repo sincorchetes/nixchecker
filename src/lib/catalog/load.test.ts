@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { loadCatalog } from "./load";
+import { CatalogError, loadCatalog } from "./load";
 import { bucketOf } from "./shard";
 
 describe("loadCatalog", () => {
@@ -72,5 +72,22 @@ describe("loadCatalog", () => {
     await expect(load()).rejects.toThrow("HTTP 503");
     failing.clear();
     expect((await load()).entries.length).toBe(1);
+  });
+
+  test("a catalog that cannot be had is a CatalogError, whatever the way it fails", async () => {
+    const load = (fetcher: typeof fetch) =>
+      loadCatalog("flake", "unstable", "/never/", [["a"]], fetcher);
+    const down = (async () => {
+      throw new TypeError("network down");
+    }) as unknown as typeof fetch;
+    const refused = (async () => new Response("no", { status: 503 })) as unknown as typeof fetch;
+    const garbage = (async () => new Response("<html>")) as unknown as typeof fetch;
+    for (const fetcher of [down, refused, garbage]) {
+      const error = await load(fetcher).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(CatalogError);
+      expect((error as Error).name).toBe("CatalogError");
+    }
+    await expect(load(down)).rejects.toThrow("network down");
+    await expect(load(garbage)).rejects.toThrow("not a catalog");
   });
 });

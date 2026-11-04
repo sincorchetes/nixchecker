@@ -1,4 +1,5 @@
 import type { Version } from "../../lib/catalog";
+import { CatalogError } from "../../lib/catalog";
 import { EXAMPLE } from "../../lib/example";
 import { format } from "../../lib/i18n";
 import type { TargetChoice } from "../../lib/validate";
@@ -85,9 +86,12 @@ if (root?.dataset.messages && source && target && version && results && gutter &
         release: version.value as Version,
         base: root.dataset.base ?? "/",
       });
-    } catch {
-      if (current === run) say("result.loadError");
-      return;
+    } catch (error) {
+      if (current !== run) return;
+      if (error instanceof CatalogError) return say("result.loadError");
+      // A bug of ours, not the connection: said as such, and logged for whoever reports it.
+      console.error("nixchecker: internal error while validating", error);
+      return say("result.internalError");
     } finally {
       if (current === run) results.removeAttribute("aria-busy");
     }

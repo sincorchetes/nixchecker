@@ -15,6 +15,7 @@ import {
   type Range,
   toLsp,
 } from "./diagnostics";
+import { logFailure } from "./failure";
 import { hoverAt } from "./hover";
 import { type Message, readMessages, send } from "./rpc";
 
@@ -23,10 +24,15 @@ const texts = new Map<string, string>();
 const published = new Map<string, { diagnostics: Diagnostic[]; shown: LspDiagnostic[] }>();
 // Only the latest text of a document may be published: analyzing is asynchronous.
 const latest = new Map<string, number>();
+// A burst of changes (typing) is analyzed once, when it pauses: each one analyzed would be thrown away.
+const PAUSE_MS = 150;
+const pending = new Map<string, ReturnType<typeof setTimeout>>();
 let options: { target?: string | undefined; release?: Version | undefined } = {};
 let shuttingDown = false;
 
 async function publish(uri: string): Promise<void> {
+  // A document that was closed while it waited has nothing to publish.
+  if (!texts.has(uri)) return;
   const token = (latest.get(uri) ?? 0) + 1;
   latest.set(uri, token);
   const text = texts.get(uri) ?? "";
@@ -36,8 +42,9 @@ async function publish(uri: string): Promise<void> {
     const layer = await staticLayer(text, options.target, options.release ?? DEFAULT_VERSION);
     diagnostics = toLsp(text, layer.items);
     found = layer.diagnostics;
-  } catch {
-    // A catalog that cannot be read is no reason to flag the file.
+  } catch (error) {
+    // Neither a catalog that cannot be read nor a bug of ours is a reason to flag the file.
+    logFailure("diagnostics", error);
   }
   if (latest.get(uri) !== token) return;
   published.set(uri, { diagnostics: found, shown: diagnostics });
@@ -75,7 +82,7 @@ async function hover(id: number | string, params: Message["params"]): Promise<vo
     offsetOf(text, line + 1, character + 1),
     options.target,
     options.release ?? DEFAULT_VERSION,
-  ).catch(() => undefined);
+  ).catch((error) => logFailure("hover", error));
   const result = found && {
     contents: { kind: "markdown", value: found.value },
     range: { start: position(text, found.start), end: position(text, found.end) },
@@ -98,7 +105,10 @@ async function complete(id: number | string, params: Message["params"]): Promise
     const names = await candidates(text, options.target, options.release ?? DEFAULT_VERSION, [
       ...context.enclosing,
       ...context.written,
-    ]).catch(() => []);
+    ]).catch((error) => {
+      logFailure("completion", error);
+      return [];
+    });
     // The name being typed is what the client replaces, whatever it takes a word to be.
     const range = {
       start: position(text, offset - context.partial.length),
@@ -116,6 +126,18 @@ async function complete(id: number | string, params: Message["params"]): Promise
 
 type Document = { uri: string; text: string };
 const documentOf = (params: Message["params"]) => (params?.textDocument ?? { uri: "" }) as Document;
+
+// Analyzes a document after the typing pauses: a newer change starts the wait again.
+function publishSoon(uri: string): void {
+  clearTimeout(pending.get(uri));
+  pending.set(
+    uri,
+    setTimeout(() => {
+      pending.delete(uri);
+      void publish(uri);
+    }, PAUSE_MS),
+  );
+}
 
 function handle({ id, method, params }: Message): void {
   const reply = (result: unknown) => {
@@ -150,13 +172,15 @@ function handle({ id, method, params }: Message): void {
       const { uri } = documentOf(params);
       const changes = (params?.contentChanges ?? []) as Array<{ text: string }>;
       texts.set(uri, changes[changes.length - 1]?.text ?? "");
-      void publish(uri);
+      publishSoon(uri);
       break;
     }
     case "textDocument/didClose": {
       const { uri } = documentOf(params);
       texts.delete(uri);
       published.delete(uri);
+      clearTimeout(pending.get(uri));
+      pending.delete(uri);
       // Whatever is still being analyzed for it must not be published after this.
       latest.set(uri, (latest.get(uri) ?? 0) + 1);
       cleared(uri);

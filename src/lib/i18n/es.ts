@@ -46,7 +46,7 @@ export const es = {
   "result.viewProblems": "Problemas",
   "result.viewProblemsN": "Problemas ({n})",
   "result.details": "Detalles",
-  "checker.replaced": "Se reemplazó el texto.",
+  "checker.replaced": "Se ha sustituido el texto.",
   "checker.undo": "Deshacer",
   "result.divider": "Ancho del panel de resultados",
   "result.example": "Ejemplo de diagnóstico:",
@@ -68,6 +68,8 @@ export const es = {
   "result.fileTooBig": "Ese archivo pesa demasiado (máximo {max} KB).",
   "result.fileError": "No se pudo leer el archivo.",
   "result.loadError": "No se pudo cargar el catálogo. Revisa tu conexión e inténtalo de nuevo.",
+  "result.internalError":
+    "Ocurrió un error interno al validar. Es un fallo de nixchecker, no de tu archivo: si se repite, abre una incidencia.",
   "result.line": "Línea {line}, columna {col}",
   "result.suggest": "¿Quisiste decir {suggestion}?",
   "result.docs": "Documentación oficial",

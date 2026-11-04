@@ -32,10 +32,27 @@ interface State {
 
 const states = new Map<string, State>();
 
+/**
+ * A part of a catalog that could not be had: the network is down, the server answered with an error, or what
+ * came was not a catalog. It is what a caller expects and can tell the user about; any other error is a bug.
+ */
+export class CatalogError extends Error {
+  override name = "CatalogError";
+}
+
 async function getJson<T>(fetcher: typeof fetch, url: string): Promise<T> {
-  const response = await fetcher(url);
-  if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
-  return (await response.json()) as T;
+  let response: Response;
+  try {
+    response = await fetcher(url);
+  } catch (cause) {
+    throw new CatalogError(`${url}: ${(cause as Error).message}`, { cause });
+  }
+  if (!response.ok) throw new CatalogError(`${url}: HTTP ${response.status}`);
+  try {
+    return (await response.json()) as T;
+  } catch (cause) {
+    throw new CatalogError(`${url}: not a catalog`, { cause });
+  }
 }
 
 /**

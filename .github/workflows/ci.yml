@@ -61,6 +61,8 @@ jobs:
         run: devenv shell -- oracle
       - name: The package builds and its command line works
         run: nix flake check --extra-experimental-features "nix-command flakes"
+      - name: The package evaluates for every platform it declares (it is only built for this one)
+        run: nix flake check --all-systems --no-build --extra-experimental-features "nix-command flakes"
       - name: The command line works against real Nix (own modules, imports, --partial, flakes)
         run: devenv shell -- integration
 

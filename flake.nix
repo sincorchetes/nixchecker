@@ -8,10 +8,10 @@
   outputs =
     { self, nixpkgs }:
     let
+      # The platforms nixpkgs supports (it dropped x86_64-darwin with 26.11); `nix flake check --all-systems` evaluates them all.
       systems = [
         "x86_64-linux"
         "aarch64-linux"
-        "x86_64-darwin"
         "aarch64-darwin"
       ];
       forAll = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
@@ -66,18 +66,20 @@
       apps = forAll (pkgs: {
         default = {
           type = "app";
-          program = "${self.packages.${pkgs.system}.nixchecker}/bin/nixchecker";
+          program = "${self.packages.${pkgs.stdenv.hostPlatform.system}.nixchecker}/bin/nixchecker";
+          meta.description = "Check a Nix file against the official options";
         };
         lsp = {
           type = "app";
-          program = "${self.packages.${pkgs.system}.nixchecker}/bin/nixchecker-lsp";
+          program = "${self.packages.${pkgs.stdenv.hostPlatform.system}.nixchecker}/bin/nixchecker-lsp";
+          meta.description = "A language server that checks Nix files as you type";
         };
       });
 
       # What `nix flake check` runs: the packaged command line on a file, so a package that does not work
       # cannot be released.
       checks = forAll (pkgs: {
-        cli = pkgs.runCommand "nixchecker-cli-check" { nativeBuildInputs = [ self.packages.${pkgs.system}.nixchecker ]; } ''
+        cli = pkgs.runCommand "nixchecker-cli-check" { nativeBuildInputs = [ self.packages.${pkgs.stdenv.hostPlatform.system}.nixchecker ]; } ''
           export HOME=$TMPDIR
           echo '{ networking.hostName = 5; }' > bad.nix
           echo '{ networking.hostName = "box"; }' > good.nix

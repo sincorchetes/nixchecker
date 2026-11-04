@@ -7,6 +7,13 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- A text that cannot be validated says why, apart from a catalog that cannot be downloaded: a bug of ours is now an
+  "internal error" with its own message and a log line (in the page, and in the language server's output), where
+  every failure used to read as a connection problem. The language server analyzes a document once the typing
+  pauses (150 ms), not on each keystroke, and not a document that was closed meanwhile.
+- The flake evaluates for every platform it declares (`nix flake check --all-systems --no-build` runs in the CI):
+  `x86_64-darwin` is out, as nixpkgs dropped it with 26.11; the apps have a description and no longer use the
+  deprecated `pkgs.system`.
 - A pass over the wording, in both languages: the headline says "your Nix configuration", the message for a file
   that is not a module is plainer, "Remember on this device" is "Save draft on this device", the hint about renamed
   options and the file-size message read more naturally, and a few labels are more direct ("Example diagnostic:",

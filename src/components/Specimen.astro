@@ -22,4 +22,3 @@ const { line, code, at, length, severity, label, message, hint } = Astro.props;
   <pre class="listing"><span class="row"><span class="ln">{line}</span>{code.slice(0, at)}<mark>{code.slice(at, at + length)}</mark>{code.slice(at + length)}</span><span class="row"><span class="ln"></span><span class="caret">{" ".repeat(at)}{"^".repeat(length)}</span></span></pre>
   {hint && <p class="hint">{hint}</p>}
 </figure>
-

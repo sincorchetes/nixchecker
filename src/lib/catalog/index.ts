@@ -1,7 +1,7 @@
 import type { Target } from "./types";
 import type { Version } from "./versions";
 
-export { type Catalog, type IndexedOption, loadCatalog } from "./load";
+export { type Catalog, CatalogError, type IndexedOption, loadCatalog } from "./load";
 export { buildTree, type OptionTree } from "./tree";
 export type { OptionEntry, OptionType, Target } from "./types";
 export { catalogName, DEFAULT_VERSION, VERSIONS, type Version } from "./versions";
