@@ -2,7 +2,10 @@
 // and fails when they disagree about unknown options or wrong types. Two sets for each: the
 // hand-written cases, and modules generated from a sample of the catalog, counted as false positives
 // and as wrong values let through.
-//   bun tools/oracle/run.ts [options to sample] [seed] [all]   (needs Nix; `devenv shell -- oracle`)
+//   bun tools/oracle/run.ts [options to sample] [seed] [all] [renamed]   (needs Nix; `devenv shell -- oracle`)
+// `renamed` samples only the options that were renamed, whose values are held to the type of the new name.
+// Many of those new names are free-form or not in the catalogs, so what is let through is not held to the
+// share there: that run is for the false positives.
 // ORACLE_MISSES=1 lists every wrong value we let through.
 import { VERSIONS, type Version } from "../../src/lib/catalog/versions";
 import { diskoRoot, releaseRoots } from "../corpus/sources";
@@ -29,7 +32,8 @@ const SEED = Number(process.argv[3] ?? 1);
 const MAX_MISSED = 0.02;
 
 // `all` runs every release the site has catalogs for; the default is the development branch.
-const RELEASES: readonly Version[] = process.argv[4] === "all" ? VERSIONS : ["unstable"];
+const FLAGS = process.argv.slice(4);
+const RELEASES: readonly Version[] = FLAGS.includes("all") ? VERSIONS : ["unstable"];
 
 interface Target {
   kind: Kind;
@@ -95,7 +99,7 @@ for (const { kind, version, cases, catalog } of TARGETS) {
   });
 
   // 2. Modules made from the catalog: a false positive is a failure, a miss is counted.
-  const options = await sampleOptions(catalog, SAMPLE, SEED);
+  const options = await sampleOptions(catalog, SAMPLE, SEED, FLAGS.includes("renamed"));
   const generated = options.flatMap(modulesFor);
   let falsePositives = 0;
   let missed = 0;
@@ -117,7 +121,7 @@ for (const { kind, version, cases, catalog } of TARGETS) {
   await oracle.close();
 
   const share = wrong === 0 ? 0 : missed / wrong;
-  tooLoose ||= share > MAX_MISSED;
+  tooLoose ||= !FLAGS.includes("renamed") && share > MAX_MISSED;
   console.log(
     `${name}: ${cases.length} written modules, ${generated.length} generated from ${options.length} options:`,
     `${falsePositives} false positives, ${missed} of ${wrong} wrong values let through`,

@@ -112,6 +112,10 @@ Limits to know about:
   integers of an `enum`, a few options with a type of their own
   (`ibus.engines`, `helix.languages`), and everything disko narrows (it serializes its patterns as plain strings).
   In the oracle these are about 1 % of the wrong values.
+- A value written for a renamed option is held to the type of its new name. About four in five of the
+  renamed options of NixOS have a new name the catalogs type; the rest point to a free-form set
+  (`settings`), to an option the manuals hide, or to one they do not list, and a wrong value there is
+  only marked as deprecated (`evaluate` finds it). The oracle tries all of them (`renamed` mode).
 - When a wrong value makes another module's `mkIf` fail (`programs.sway.enable = "yes"` stops what
   `sway` sets, such as `programs.dconf.enable`), Nix reports the first and cannot judge the second
   until that is fixed; the page's static check still marks it.

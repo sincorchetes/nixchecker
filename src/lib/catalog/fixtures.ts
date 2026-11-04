@@ -29,6 +29,8 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("mixed.flag", "bool"),
     opt("mixed.lost", "any", { renamedTo: "mixed.nowhere" }),
     opt("mixed.loop", "any", { renamedTo: "mixed.loop" }),
+    opt("mixed.viaEnv", "any", { renamedTo: "env.vars.KEY" }),
+    opt("mixed.viaNowhere", "any", { renamedTo: "mixed.free.deep.er" }),
     opt("mixed.shells", "list", { values: [enumElementKind(["bash", "zsh+fzf"])] }),
     opt("units.name", "mix", { values: [patternKind("^[a-z]+[.]service$")] }),
     opt("units.after", "list", { values: [patternKind("[a-z]+[.](service|socket)")] }),

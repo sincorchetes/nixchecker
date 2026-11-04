@@ -23,17 +23,23 @@ function random(seed: number): () => number {
 }
 
 /** The options of a catalog worth trying a value on: real, settable options with a type we check. */
-export async function sampleOptions(name: string, count: number, seed: number): Promise<string[]> {
+export async function sampleOptions(
+  name: string,
+  count: number,
+  seed: number,
+  renamedOnly = false,
+): Promise<string[]> {
   const dir = join(catalogDir, name);
   const paths: string[] = [];
   for (const file of readdirSync(dir)) {
     if (file === "index.json") continue;
     const rows = (await Bun.file(join(dir, file)).json()) as OptionRow[];
     for (const [path, type, extra] of rows) {
-      // A renamed option is tried whatever its own type says: its value is held to the type of the new one.
-      if (!["hidden", "any", "set"].includes(type) || typeof extra === "string") paths.push(path);
+      // Renamed options have a mode of their own: their new names are often free-form or not in the catalog.
+      const renamed = typeof extra === "string";
+      if (renamedOnly ? renamed : !["hidden", "any", "set"].includes(type)) paths.push(path);
       // An attribute set of something: also try a key below it, where its values are checked.
-      if (type === "attrs" && Array.isArray(extra)) paths.push(`${path}.k`);
+      if (!renamedOnly && type === "attrs" && Array.isArray(extra)) paths.push(`${path}.k`);
     }
   }
   paths.sort();

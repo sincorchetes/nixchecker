@@ -135,5 +135,9 @@ describe("renamed options", () => {
     // The new name is not in the catalog, or the renames go round: the value is not judged.
     expect(codes("{ mixed.lost = 5; }")).toEqual(["deprecated"]);
     expect(codes("{ mixed.loop = 5; }")).toEqual(["deprecated"]);
+    // A key of an `attrsOf` is held to what its values may be; a free-form place judges nothing.
+    expect(codes("{ mixed.viaEnv = [ ]; }").sort()).toEqual(["deprecated", "type-mismatch"]);
+    expect(codes('{ mixed.viaEnv = "x"; }')).toEqual(["deprecated"]);
+    expect(codes("{ mixed.viaNowhere = 5; }")).toEqual(["deprecated"]);
   });
 });

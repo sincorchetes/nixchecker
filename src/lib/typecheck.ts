@@ -1,7 +1,8 @@
 import type { SkipCause } from "./analysis";
 import type { IndexedOption, OptionTree } from "./catalog";
+import { splitPath } from "./catalog/path";
 import { enumValues, isPatternKind, matches, patternOf } from "./catalog/pattern";
-import { knownPrefix } from "./catalog/tree";
+import { findExact, findOwner, knownPrefix } from "./catalog/tree";
 import type { Assignment, ValueKind } from "./nix/scan";
 
 /** Why the catalog entry cannot judge this value, if it cannot: dynamic, `any`, or interpolated. */
@@ -131,4 +132,28 @@ export function typeMismatch(entry: IndexedOption, a: Assignment): string | unde
   if (type === "list" && a.kind === "list") return wrongElements(entry, a);
   const expected = type === "set" ? "attrs" : type;
   return expected === a.kind ? undefined : expected;
+}
+
+/**
+ * A renamed option passes its value on as it is, so the value is held to the type of the option it was
+ * renamed to (through the renames of renames): its own entry, or the `attrsOf` it is a key of. A new name
+ * that is not known here, or is free-form, leaves the value unjudged.
+ */
+export function renamedMismatch(
+  tree: OptionTree,
+  entry: IndexedOption,
+  a: Assignment,
+): string | undefined {
+  let at = entry;
+  for (let hops = 0; at.renamedTo && hops < 4; hops++) {
+    const path = splitPath(at.renamedTo);
+    const next = findExact(tree, path);
+    if (!next) {
+      const owner = findOwner(tree, path);
+      // Not known as an option of its own: a key of an `attrsOf`, or else the type the rename carries.
+      return (owner && valueMismatch(owner, { ...a, path })) ?? typeMismatch(at, a);
+    }
+    at = next;
+  }
+  return typeMismatch(at, a);
 }
