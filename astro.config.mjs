@@ -6,6 +6,8 @@ export default defineConfig({
   site: process.env.SITE ?? "https://nixchecker.sincorchetes.tech",
   base: process.env.BASE ?? "/",
   output: "static",
+  // The page's policy allows fonts from itself only: a small font file must not become a `data:` URL.
+  vite: { build: { assetsInlineLimit: 0 } },
   trailingSlash: "always",
   i18n: {
     defaultLocale: "es",

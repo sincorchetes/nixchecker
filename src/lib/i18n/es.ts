@@ -9,7 +9,7 @@ export const es = {
   "nav.source": "Código fuente",
   "nav.main": "Navegación principal",
 
-  "hero.eyebrow": "Análisis estático, sin enviar nada",
+  "hero.title": "Valida tu Nix antes de reconstruir.",
   "hero.subtitle":
     "Pega tu flake.nix o tu configuración y comprueba cada opción contra la documentación oficial de NixOS, Home Manager, disko y flakes.",
 
@@ -35,7 +35,13 @@ export const es = {
   "result.empty": "Pega algo de Nix para empezar.",
   "result.ok":
     "No se detectaron problemas estáticos en las partes analizables. Los valores dinámicos, las funciones y los conjuntos rec no se evalúan: esto no garantiza que la configuración funcione.",
-  "result.summary": "{errors} errores · {warnings} avisos",
+  "result.error": "error",
+  "result.warning": "aviso",
+  "result.errorCount.one": "{n} error",
+  "result.errorCount.many": "{n} errores",
+  "result.warningCount.one": "{n} aviso",
+  "result.warningCount.many": "{n} avisos",
+  "result.and": " y ",
   "result.detected": "Objetivo: {target}",
   "result.catalog": "Catálogo: {source}",
   "result.coverage": "{checked} de {total} asignaciones comprobadas",
@@ -101,27 +107,11 @@ export const es = {
   "footer.ai": "Hecho con ayuda de IA. Revisa siempre los resultados antes de aplicar cambios.",
   "footer.license": "Software libre bajo GPL v3.0 o posterior.",
 
-  "nav.validator": "Validador",
   "nav.how": "Cómo funciona",
-  "nav.cta": "Validar ahora",
   "bar.label": "Aviso",
   "bar.unofficial":
     "Herramienta no oficial: no está afiliada, respaldada ni mantenida por el proyecto NixOS, Home Manager ni disko.",
-  "hero.titleA": "Valida tu Nix.",
-  "hero.titleB": "Antes de reconstruir.",
-  "hero.cta": "Empezar a validar",
-  "hero.note1": "100 % en tu navegador",
-  "hero.note2": "Sin cuentas ni servidor",
-  "hero.note3": "NixOS · Home Manager · disko · flakes",
-  "validator.kicker": "Validador",
-  "validator.title": "Pega tu Nix. Revisa cada línea.",
-  "validator.lead": "Los resultados aparecen aquí mismo. Nada se envía a ningún sitio.",
-  "features.kicker": "Simple por diseño",
   "features.lead": "El mismo archivo da siempre los mismos resultados.",
-  "cta.kicker": "Tu configuración, revisada",
-  "cta.title1": "Menos errores.",
-  "cta.title2": "Más reconstruir.",
-  "cta.button": "Validar mi Nix",
   "footer.tagline": "Hecho para la comunidad Nix. Tu código nunca sale del navegador.",
 } as const;
 

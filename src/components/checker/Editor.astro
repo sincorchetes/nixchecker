@@ -26,24 +26,24 @@ const m = messages[Astro.props.lang];
 
 <style>
   label {
-    font-size: 0.85rem;
-    color: var(--text-2);
+    font-weight: 560;
   }
   .editor {
     display: flex;
     margin-top: 0.5rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    /* A tint of the text color: darker than the card in the dark theme, lighter in the light one. */
-    background: color-mix(in srgb, var(--text) 5%, transparent);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: var(--paper-2);
     overflow: hidden;
   }
   .editor.dropping {
     border-style: dashed;
-    border-color: var(--accent-light);
+    background: var(--marker);
   }
   .editor:focus-within {
-    border-color: var(--accent-light);
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--marker);
   }
   .pane {
     position: relative;
@@ -66,19 +66,19 @@ const m = messages[Astro.props.lang];
     padding-inline: 0.6rem;
     overflow: hidden;
     text-align: right;
-    color: var(--text-3);
-    border-right: 1px solid var(--border);
+    color: var(--ink-3);
+    border-right: 1px solid var(--rule);
     user-select: none;
   }
   .gutter :global(.ln) {
     display: block;
   }
   .gutter :global(.ln.error) {
-    color: var(--error);
+    color: var(--flag);
     font-weight: 700;
   }
   .gutter :global(.ln.warning) {
-    color: var(--warning);
+    color: var(--warn);
     font-weight: 700;
   }
   textarea {
@@ -91,7 +91,7 @@ const m = messages[Astro.props.lang];
     border: 0;
     outline: 0;
     background: transparent;
-    color: var(--text);
+    color: var(--ink);
     white-space: pre;
     overflow: auto;
     tab-size: 2;
@@ -103,37 +103,37 @@ const m = messages[Astro.props.lang];
     padding-inline: 1rem;
     overflow: hidden;
     pointer-events: none;
-    color: var(--text);
+    color: var(--ink);
     white-space: pre;
     tab-size: 2;
   }
   .hl textarea {
     -webkit-text-fill-color: transparent;
-    caret-color: var(--text);
+    caret-color: var(--ink);
   }
   .hl textarea::placeholder {
-    -webkit-text-fill-color: var(--text-3);
+    -webkit-text-fill-color: var(--ink-3);
   }
   /* See-through, so the colored text stays readable while selected. */
   .hl textarea::selection {
-    background: color-mix(in srgb, var(--accent) 38%, transparent);
+    background: var(--marker);
   }
   .highlight :global(.tok-comment) {
-    color: var(--text-3);
+    color: var(--ink-3);
     font-style: italic;
   }
   .highlight :global(.tok-string) {
     color: var(--ok);
   }
   .highlight :global(.tok-number) {
-    color: var(--warning);
+    color: var(--warn);
   }
   .highlight :global(.tok-keyword) {
-    color: var(--accent-light);
-    font-weight: 600;
+    color: var(--ink);
+    font-weight: 700;
   }
   .highlight :global(.tok-path) {
-    color: var(--info-text);
+    color: var(--link);
   }
   .highlight :global(.mk-error),
   .highlight :global(.mk-warning) {
@@ -141,10 +141,10 @@ const m = messages[Astro.props.lang];
     text-underline-offset: 0.2em;
   }
   .highlight :global(.mk-error) {
-    text-decoration-color: var(--error);
+    text-decoration-color: var(--flag);
   }
   .highlight :global(.mk-warning) {
-    text-decoration-color: var(--warning);
+    text-decoration-color: var(--warn);
   }
   @media (forced-colors: active) {
     .highlight {
@@ -155,12 +155,12 @@ const m = messages[Astro.props.lang];
     }
   }
   textarea::placeholder {
-    color: var(--text-3);
+    color: var(--ink-3);
   }
   .cursor {
     margin: 0.35rem 0 0;
     text-align: right;
-    color: var(--text-3);
+    color: var(--ink-3);
     font-family: var(--font-mono);
     font-size: 0.75rem;
     min-height: 1em;

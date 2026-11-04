@@ -1,0 +1,86 @@
+/*
+ * A line of code with the mark of what is wrong under it, as a compiler shows it. The same markup is the
+ * example on the front page and each finding of a result (see `snippet.ts`), so they cannot drift apart.
+ */
+.listing {
+  margin: 0;
+  padding: 0.7rem 1rem 0.7rem 0.4rem;
+  border-left: 3px solid var(--rule);
+  background: var(--paper-2);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  tab-size: 2;
+  overflow-x: auto;
+}
+
+.listing .row {
+  display: block;
+  white-space: pre;
+}
+
+.listing .ln {
+  display: inline-block;
+  min-width: 3.4ch;
+  padding-right: 1.4ch;
+  text-align: right;
+  color: var(--ink-3);
+  user-select: none;
+}
+
+.listing mark {
+  background: var(--marker);
+  color: var(--on-marker);
+}
+
+.listing .caret {
+  font-weight: 700;
+}
+
+.error .listing,
+.listing.error {
+  border-left-color: var(--flag);
+}
+
+.error .listing .caret,
+.listing.error .caret {
+  color: var(--flag);
+}
+
+.warning .listing,
+.listing.warning {
+  border-left-color: var(--warn);
+}
+
+.warning .listing .caret,
+.listing.warning .caret {
+  color: var(--warn);
+}
+
+/* The words of a finding: what is wrong, then the line, then what to do about it. */
+.finding {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+  margin: 0;
+}
+
+/* An option path has no place to break: let it break anywhere rather than push the page wider. */
+.finding .msg,
+.finding .hint {
+  overflow-wrap: anywhere;
+}
+
+.finding .sev {
+  margin-right: 0.6ch;
+  font-weight: 760;
+  color: var(--flag);
+}
+
+.warning .sev {
+  color: var(--warn);
+}
+
+.finding .hint {
+  color: var(--ink-2);
+}

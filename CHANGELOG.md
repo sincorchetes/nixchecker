@@ -7,6 +7,12 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- A new look for the site: a listing of code with a proofreader's marks. Each finding shows its line with the
+  wrong word highlighted and carets under it, as a compiler does; the headline, the example and the results
+  share that language. Light and dark follow the system; Bricolage Grotesque and JetBrains Mono replace Inter
+  and Outfit; the hexagons, the glass cards, the numbered cards and the closing banner are gone. The counts
+  agree with the number ("1 warning"), a long option name wraps instead of widening the page, and fonts are
+  served as files, which the page's content policy allows.
 - A `path` option type: a string given to an absolute-path option must start with `/`.
 - `evaluate` accepts its options before or after the file; `.gitleaks.toml` scopes the secret-scan
   exception for the catalog manifest hashes.

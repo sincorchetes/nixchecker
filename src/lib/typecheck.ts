@@ -82,7 +82,10 @@ export function describeGot(entry: IndexedOption, a: Assignment): string {
 }
 
 const describeKind = (kind: string): string => {
-  if (isPatternKind(kind)) return `string matching ${patternOf(kind)}`;
+  if (isPatternKind(kind)) {
+    const pattern = patternOf(kind);
+    return pattern.length > 30 ? "string matching its pattern" : `string matching ${pattern}`;
+  }
   if (kind.startsWith("enum:")) return `enum(${enumValues(kind).join(" | ")})`;
   if (kind.startsWith("list:"))
     return `list of ${kind.slice(5).split("+").map(describeKind).join(" or ")}`;

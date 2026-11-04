@@ -15,4 +15,4 @@ Option data and documentation links come from:
 the SARIF this project prints; it is checked with [Ajv](https://ajv.js.org).
 
 Built with [Astro](https://astro.build), [Bun](https://bun.sh), [Biome](https://biomejs.dev) and
-[devenv](https://devenv.sh). Fonts: Inter and Outfit (SIL Open Font License) via Fontsource.
+[devenv](https://devenv.sh). Fonts: Bricolage Grotesque and JetBrains Mono (SIL Open Font License) via Fontsource.

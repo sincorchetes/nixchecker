@@ -2,6 +2,7 @@ import { applyAll, applyFix, wordAt } from "../../lib/fix";
 import type { Diagnostic, Report } from "../../lib/validate";
 import { coverageGroups } from "./coverage";
 import { el, type Translate } from "./dom";
+import { snippet } from "./snippet";
 
 export interface ReportView {
   source: HTMLTextAreaElement;
@@ -39,13 +40,16 @@ function fixButton(view: ReportView, label: string, apply: () => string | undefi
 
 function diagnosticCard(view: ReportView, d: Diagnostic): HTMLElement {
   const { source, tr } = view;
-  const card = el("article", `diag ${d.severity}`);
-  card.append(el("p", "msg", tr(`diag.${d.code}`, d.params)), gotoButton(view, d));
+  const card = el("article", `diag finding ${d.severity}`);
+  const message = el("p", "msg");
+  message.append(el("span", "sev", tr(`result.${d.severity}`)), tr(`diag.${d.code}`, d.params));
+  card.append(message, snippet(source.value, d));
   if (d.suggestion)
     card.append(el("p", "hint", tr("result.suggest", { suggestion: d.suggestion })));
   if (d.options) {
     card.append(el("p", "hint", tr("result.available", { options: d.options.join(", ") })));
   }
+  card.append(gotoButton(view, d));
   if (applyFix(source.value, d) !== undefined) {
     card.append(fixButton(view, tr("result.apply"), () => applyFix(source.value, d)));
   }
@@ -59,6 +63,13 @@ function diagnosticCard(view: ReportView, d: Diagnostic): HTMLElement {
   return card;
 }
 
+// "1 error and 2 warnings": what is zero is left out, and the word agrees with the number.
+function counts(tr: Translate, errors: number, warnings: number): string {
+  const part = (kind: "error" | "warning", n: number) =>
+    n === 0 ? [] : [tr(`result.${kind}Count.${n === 1 ? "one" : "many"}`, { n })];
+  return [...part("error", errors), ...part("warning", warnings)].join(tr("result.and"));
+}
+
 /** Draws the summary, the fix-all button and one card per diagnostic. */
 export function showReport(view: ReportView, report: Report, catalogSource: string): void {
   const { source, results, tr } = view;
@@ -68,33 +79,34 @@ export function showReport(view: ReportView, report: Report, catalogSource: stri
   const { coverage } = report;
 
   results.replaceChildren();
-  const head = el("div", "head");
-  head.append(
+  const facts = el("div", "facts");
+  facts.append(
     el(
-      "span",
+      "p",
       `summary ${total ? "bad" : "good"}`,
-      total ? tr("result.summary", { errors, warnings }) : tr("result.ok"),
+      total ? counts(tr, errors, warnings) : tr("result.ok"),
     ),
+    el("p", "fact", tr("result.detected", { target: tr(`target.${report.target}`) })),
+    el("p", "fact", tr("result.catalog", { source: catalogSource })),
     el(
-      "span",
-      "detected",
-      [
-        tr("result.detected", { target: tr(`target.${report.target}`) }),
-        tr("result.catalog", { source: catalogSource }),
-        tr("result.coverage", {
-          checked: coverage.total - coverage.skipped.length,
-          total: coverage.total,
-        }),
-      ].join(" · "),
+      "p",
+      "fact",
+      tr("result.coverage", {
+        checked: coverage.total - coverage.skipped.length,
+        total: coverage.total,
+      }),
     ),
   );
-  results.append(head);
   const skips = coverageGroups(view, report);
-  if (skips) results.append(skips);
+  if (skips) facts.append(skips);
 
   const fixable = report.diagnostics.filter((d) => applyFix(source.value, d) !== undefined);
   if (fixable.length > 1) {
-    results.append(fixButton(view, tr("result.applyAll"), () => applyAll(source.value, fixable)));
+    facts.append(fixButton(view, tr("result.applyAll"), () => applyAll(source.value, fixable)));
   }
-  for (const d of report.diagnostics) results.append(diagnosticCard(view, d));
+  const findings = el("div", "findings");
+  for (const d of report.diagnostics) findings.append(diagnosticCard(view, d));
+  const drawn = el("div", "report");
+  drawn.append(facts, findings);
+  results.append(drawn);
 }

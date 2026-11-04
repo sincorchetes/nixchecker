@@ -104,6 +104,10 @@ describe("values narrowed by more than their kind", () => {
     expect(got('{ mixed.shells = [ "fish" ]; }')).toEqual(["list of enum(bash | zsh+fzf)"]);
   });
 
+  test("a pattern too long for a sentence is not written into it", () => {
+    expect(got('{ mixed.long = "x"; }')).toEqual(["string matching its pattern"]);
+  });
+
   test("a string with a pattern has to match it, and says which", () => {
     expect(got('{ units.name = "a.service"; }')).toEqual([]);
     expect(got('{ units.name = "a"; }')).toEqual(["string matching ^[a-z]+[.]service$"]);

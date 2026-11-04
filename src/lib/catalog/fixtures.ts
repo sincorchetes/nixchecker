@@ -23,6 +23,7 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("files.root", "path"),
     opt("files.list", "list", { values: ["path"] }),
     opt("mixed.overlays", "list", { values: ["fn"] }),
+    opt("mixed.long", "mix", { values: [patternKind("^[a-z]{1,40}[0-9]{1,40}[A-Z]{1,40}$")] }),
     opt("mixed.hook", "mix", { values: ["fn"] }),
     opt("mixed.old", "any", { renamedTo: "mixed.mid" }),
     opt("mixed.mid", "any", { renamedTo: "mixed.flag" }),

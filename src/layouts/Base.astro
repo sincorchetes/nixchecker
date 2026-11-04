@@ -1,8 +1,7 @@
 ---
 import "../styles/global.css";
-import "../styles/landing/chrome.css";
-import "../styles/landing/hero.css";
-import "../styles/landing/sections.css";
+import "../styles/listing.css";
+import "../styles/page.css";
 import { type Lang, messages } from "../lib/i18n";
 import { withBase } from "../lib/site";
 
@@ -44,34 +43,37 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
     <link rel="icon" href={withBase(base, "favicon.svg")} type="image/svg+xml" />
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href={path(lang)}>nix<span>checker</span></a>
-      <nav aria-label={m["nav.main"]}>
-        <a href="#validador">{m["nav.validator"]}</a>
-        <a href="#como-funciona">{m["nav.how"]}</a>
-      </nav>
-      <div class="header-actions">
-        <a class="lang-switch" href={path(other)} hreflang={other} lang={other} title={m["nav.languageLabel"]}>
-          {m["nav.language"]}<span class="sr-only"> · {m["nav.languageLabel"]}</span>
-        </a>
-        <a class="header-cta" href="#validador">{m["nav.cta"]} <span aria-hidden="true">↗</span></a>
-      </div>
-    </header>
+    <aside class="notice" aria-label={m["bar.label"]}>
+      <p>{m["bar.unofficial"]}</p>
+    </aside>
 
-    <aside class="unofficial-bar" aria-label={m["bar.label"]}>{m["bar.unofficial"]}</aside>
+    <header class="top">
+      <a class="mark" href={path(lang)}>nixchecker</a>
+      <nav aria-label={m["nav.main"]}>
+        <a href="#como-funciona">{m["nav.how"]}</a>
+        <a href={source} rel="noopener">{m["nav.source"]}</a>
+        <a class="lang" href={path(other)} hreflang={other} lang={other} title={m["nav.languageLabel"]}>
+          {m["nav.language"]}<span class="sr-only"> {m["nav.languageLabel"]}</span>
+        </a>
+      </nav>
+    </header>
 
     <slot />
 
-    <footer class="site-footer">
-      <a class="brand" href={path(lang)}>nix<span>checker</span></a>
-      <p>{m["footer.tagline"]}</p>
-      <p class="legal">{m["footer.unofficial"]}</p>
-      <p class="legal">
-        {m["footer.license"]} · <a class="footer-link" href={source} rel="noopener">{m["nav.source"]}</a> ·
-        <a class="footer-link" href="https://sincorchetes.tech" rel="author noopener">sincorchetes.tech</a>
-      </p>
-      <p class="legal">{m["footer.ai"]}</p>
+    <footer class="foot">
+      <div>
+        <a class="mark" href={path(lang)}>nixchecker</a>
+        <p>{m["footer.tagline"]}</p>
+      </div>
+      <div class="legal">
+        <p>{m["footer.unofficial"]}</p>
+        <p>{m["footer.ai"]}</p>
+        <p>{m["footer.license"]}</p>
+        <ul>
+          <li><a href={source} rel="noopener">{m["nav.source"]}</a></li>
+          <li><a href="https://sincorchetes.tech" rel="author noopener">sincorchetes.tech</a></li>
+        </ul>
+      </div>
     </footer>
   </body>
 </html>
-

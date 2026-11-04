@@ -7,9 +7,11 @@ import Results from "./checker/Results.astro";
 
 interface Props {
   lang: Lang;
+  /** The id of the heading that names this section (it comes in the slot, with the introduction). */
+  titleId: string;
 }
 
-const { lang } = Astro.props;
+const { lang, titleId } = Astro.props;
 const m = messages[lang];
 // Only what the browser script needs to render results.
 const client = Object.fromEntries(
@@ -19,13 +21,17 @@ const client = Object.fromEntries(
 
 <section
   id="checker"
-  class="glass checker"
+  class="checker"
+  aria-labelledby={titleId}
   data-messages={JSON.stringify(client)}
   data-base={withBase(import.meta.env.BASE_URL)}
 >
-  <Editor lang={lang} />
-  <Controls lang={lang} />
-  <p class="privacy">{m["checker.privacy"]}</p>
+  <slot />
+  <div class="bench">
+    <Editor lang={lang} />
+    <Controls lang={lang} />
+    <p class="privacy">{m["checker.privacy"]}</p>
+  </div>
   <Results />
 </section>
 
@@ -35,11 +41,24 @@ const client = Object.fromEntries(
 
 <style>
   .checker {
-    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem 4rem;
+    width: var(--page);
+    margin: 2.5rem auto 0;
   }
   .privacy {
-    margin: 1rem 0 0;
-    color: var(--text-3);
-    font-size: 0.8rem;
+    margin-top: 0.9rem;
+    color: var(--ink-3);
+    font-size: 0.875rem;
+  }
+  @media (min-width: 64rem) {
+    .checker {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: start;
+    }
+    .checker :global(#results) {
+      grid-column: 1 / -1;
+    }
   }
 </style>

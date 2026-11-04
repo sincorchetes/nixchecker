@@ -59,7 +59,7 @@ describe("robustness", () => {
     await page.goto(sub.url("/"));
     await validateIn(page, "{ services.openssh.enabel = true; }");
     expect(await page.$$eval(".diag", (els) => els.length)).toBe(1);
-    expect(await page.$eval(".lang-switch", (el) => (el as HTMLAnchorElement).href)).toContain(
+    expect(await page.$eval(".top .lang", (el) => (el as HTMLAnchorElement).href)).toContain(
       "/nixchecker/en/",
     );
     expect(failed).toEqual([]);
