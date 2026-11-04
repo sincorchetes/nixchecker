@@ -7,6 +7,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- The bar between the editor and the findings can be dragged, or moved with the arrow keys (Home and End go to the
+  ends, Enter or a double click puts it back). It is a window splitter for assistive technology, stays between a
+  fifth of the width and three fifths (and never below 20rem), and the width is kept in this browser.
 - A narrow screen has two views, the editor and the problems (with their number on the button): validating on
   purpose shows the problems, a finding's position takes you back to its word, and validating by itself while
   typing moves nothing. The header takes less room there.

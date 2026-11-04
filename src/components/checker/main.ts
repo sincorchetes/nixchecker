@@ -2,6 +2,7 @@ import type { Version } from "../../lib/catalog";
 import { EXAMPLE } from "../../lib/example";
 import { format } from "../../lib/i18n";
 import type { TargetChoice } from "../../lib/validate";
+import { setupDivider } from "./divider";
 import { el } from "./dom";
 import { setupDraft } from "./draft";
 import { setupEditor } from "./editor";
@@ -30,6 +31,8 @@ if (root?.dataset.messages && source && target && version && results && gutter &
   const tr = (key: string, params?: Record<string, string | number>) =>
     format(text[key] ?? key, params);
   const status = setupStatus(root, tr);
+  const divider = query("#divider");
+  if (divider) setupDivider(root, divider);
   // The text a button replaced, until the next edit: offered back, instead of asking before replacing.
   const undo = query("#undo");
   let previous: string | undefined;

@@ -31,7 +31,9 @@ official page of each option; what it was checked against (target, catalog, cove
 "Details". Next to the Validate button the page says where the validation stands ("Validating…", "2 errors",
 "No problems", "Previous result"). On a narrow screen the editor and the problems take turns, with the number of
 problems on their button; validating on purpose shows them, and a finding's position takes you back to the word.
-"Clear", "Load example" and opening a file offer "Undo" until the next edit. "Download report" saves the report as JSON. "Remember on this device"
+"Clear", "Load example" and opening a file offer "Undo" until the next edit. Where the editor and the problems are
+side by side, the bar between them can be dragged (or moved with the arrow keys, Home and End; Enter or a double
+click puts it back) to give room to one or the other, and the width is kept in this browser. "Download report" saves the report as JSON. "Remember on this device"
 (off by default) keeps the text in this browser's storage between visits. The button in the header
 switches the light and dark themes: the page follows the system until it is used, and only that choice is
 kept. Everything runs in your browser; nothing is uploaded.

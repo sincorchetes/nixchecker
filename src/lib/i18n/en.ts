@@ -49,6 +49,7 @@ export const en: Record<MessageKey, string> = {
   "result.details": "Details",
   "checker.replaced": "The text was replaced.",
   "checker.undo": "Undo",
+  "result.divider": "Width of the results",
   "result.example": "This is what a finding looks like:",
   "result.error": "error",
   "result.warning": "warning",

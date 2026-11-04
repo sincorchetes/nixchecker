@@ -41,6 +41,19 @@ const client = Object.fromEntries(
     </div>
     <p class="privacy">{m["checker.privacy"]}</p>
   </div>
+  <!-- Between the editor and the findings, when they are side by side: drag it or use the arrow keys. -->
+  <div
+    id="divider"
+    class="divider"
+    role="separator"
+    aria-orientation="vertical"
+    aria-label={m["result.divider"]}
+    aria-valuemin="40"
+    aria-valuemax="80"
+    aria-valuenow="70"
+    tabindex="0"
+  >
+  </div>
   <Results><slot /></Results>
 </section>
 
@@ -60,6 +73,9 @@ const client = Object.fromEntries(
   .views {
     display: flex;
     gap: 0.25rem;
+  }
+  .divider {
+    display: none;
   }
   .view {
     flex: 1;
@@ -116,12 +132,37 @@ const client = Object.fromEntries(
       display: none;
     }
     .checker {
-      grid-template-columns: minmax(0, 1fr) minmax(24rem, 30%);
-      gap: 2rem;
+      grid-template-columns: minmax(0, 1fr) 1.5rem minmax(20rem, var(--results-width, 30%));
+      column-gap: 0;
       height: max(32rem, calc(100dvh - 15rem));
     }
     .bench {
       min-height: 0;
+    }
+    .divider {
+      display: block;
+      position: relative;
+      cursor: col-resize;
+      touch-action: none;
+    }
+    .divider::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      left: 50%;
+      width: 1px;
+      background: var(--rule);
+      transform: translateX(-50%);
+    }
+    .divider:hover::before,
+    .divider:focus-visible::before,
+    .checker.resizing .divider::before {
+      width: 3px;
+      background: var(--ink);
+    }
+    .checker.resizing {
+      cursor: col-resize;
+      user-select: none;
     }
   }
 </style>

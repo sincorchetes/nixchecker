@@ -48,6 +48,7 @@ export const es = {
   "result.details": "Detalles",
   "checker.replaced": "Se reemplazó el texto.",
   "checker.undo": "Deshacer",
+  "result.divider": "Ancho de los resultados",
   "result.example": "Así se ve un hallazgo:",
   "result.error": "error",
   "result.warning": "aviso",
