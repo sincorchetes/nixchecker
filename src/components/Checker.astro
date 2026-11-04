@@ -1,9 +1,10 @@
 ---
 import { type Lang, messages } from "../lib/i18n";
 import { withBase } from "../lib/site";
-import Controls from "./checker/Controls.astro";
 import Editor from "./checker/Editor.astro";
 import Results from "./checker/Results.astro";
+import Status from "./checker/Status.astro";
+import Toolbar from "./checker/Toolbar.astro";
 
 interface Props {
   lang: Lang;
@@ -27,8 +28,11 @@ const client = Object.fromEntries(
   data-base={withBase(import.meta.env.BASE_URL)}
 >
   <div class="bench">
-    <Controls lang={lang} />
-    <Editor lang={lang} />
+    <div class="frame">
+      <Toolbar lang={lang} />
+      <Editor lang={lang} />
+      <Status lang={lang} />
+    </div>
     <p class="privacy">{m["checker.privacy"]}</p>
   </div>
   <Results><slot /></Results>
@@ -53,6 +57,21 @@ const client = Object.fromEntries(
     gap: 0.75rem;
     min-width: 0;
   }
+  .frame {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: var(--paper-2);
+    overflow: hidden;
+  }
+  .frame:focus-within {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--marker);
+  }
   .privacy {
     color: var(--ink-3);
     font-size: 0.875rem;
@@ -63,7 +82,7 @@ const client = Object.fromEntries(
     .checker {
       grid-template-columns: minmax(0, 1fr) minmax(24rem, 30%);
       gap: 2rem;
-      height: max(32rem, calc(100dvh - 14.5rem));
+      height: max(32rem, calc(100dvh - 15rem));
     }
     .bench {
       min-height: 0;

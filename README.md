@@ -27,8 +27,8 @@ Paste or type your file, drop a `.nix` file on the editor, or use "Open file" (u
 checks it by itself when you stop typing for a moment; the button checks at once. The text is colored,
 each finding is underlined where it is and marked in the line numbers, and the report lists them with a
 link to the offending word, a button for the fixes that are certain (one, or all at once) and the
-official page of each option. "Download report" saves the report as JSON. "Remember my text on this
-device" (off by default) keeps the text in this browser's storage between visits. Everything runs in your
+official page of each option. "Download report" saves the report as JSON. "Remember on this device"
+(off by default) keeps the text in this browser's storage between visits. Everything runs in your
 browser; nothing is uploaded.
 
 ## Checking a whole configuration with real Nix

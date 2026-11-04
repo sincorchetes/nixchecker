@@ -58,11 +58,8 @@
 
 /* What the page is, in one line, above the workbench. */
 .titlebar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 3rem;
-  align-items: baseline;
-  justify-content: space-between;
+  display: grid;
+  gap: 0.6rem;
   width: var(--page);
   margin: 1.5rem auto 0;
 }
@@ -76,7 +73,7 @@
 }
 
 .titlebar .lead {
-  max-width: 30rem;
+  max-width: 40rem;
   color: var(--ink-2);
   font-size: 0.95rem;
   line-height: 1.45;

@@ -23,7 +23,7 @@ export const es = {
   "checker.clear": "Limpiar",
   "checker.open": "Abrir archivo",
   "checker.export": "Descargar informe",
-  "checker.remember": "Recordar mi texto en este dispositivo",
+  "checker.remember": "Recordar en este dispositivo",
   "checker.privacy": "Todo se valida en tu navegador. Tu código no se envía a ningún servidor.",
 
   "target.auto": "Detectar automáticamente",

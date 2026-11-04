@@ -7,8 +7,10 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
-- The editor and the findings are one workbench: the editor takes the height the window leaves, with its toolbar
-  above it, and what was found sits beside it and scrolls on its own, so nothing needs a scroll of the page.
+- The editor is one frame, as in a code editor: the actions (open, download the report, clear, load the example,
+  validate) are its toolbar, and the target, the version, "remember" and the cursor position are its status bar.
+  The sentence about pasting a file is the subtitle of the title.
+- The editor and the findings are one workbench: the editor takes the height the window leaves, and what was found sits beside it and scrolls on its own, so nothing needs a scroll of the page.
   Resting the pointer on an underlined word shows what it says, with the suggestion, as an editor does. On
   narrow screens the findings go below the editor.
 - A new look for the site: a listing of code with a proofreader's marks. Each finding shows its line with the

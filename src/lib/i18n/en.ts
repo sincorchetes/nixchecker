@@ -23,7 +23,7 @@ export const en: Record<MessageKey, string> = {
   "checker.clear": "Clear",
   "checker.open": "Open file",
   "checker.export": "Download report",
-  "checker.remember": "Remember my text on this device",
+  "checker.remember": "Remember on this device",
   "checker.privacy":
     "Everything is validated in your browser. Your code is never sent to a server.",
 

@@ -8,7 +8,7 @@ interface Props {
 const m = messages[Astro.props.lang];
 ---
 
-<label for="source">{m["checker.label"]}</label>
+<label class="sr-only" for="source">{m["checker.label"]}</label>
 <div class="editor">
   <pre id="gutter" class="gutter" aria-hidden="true"></pre>
   <div class="pane">
@@ -22,35 +22,22 @@ const m = messages[Astro.props.lang];
       placeholder={m["checker.placeholder"]}></textarea>
   </div>
 </div>
-<p id="cursor" class="cursor"></p>
 
 <style>
-  label {
-    font-weight: 560;
+  .editor {
+    display: flex;
+    flex: 1;
+    min-height: 20rem;
+    overflow: hidden;
+  }
+  .editor.dropping {
+    background: var(--marker);
   }
   /* Beside the results, the editor is as tall as the window leaves it. */
   @media (min-width: 64rem) {
     .editor {
       min-height: 0;
     }
-  }
-  .editor {
-    display: flex;
-    flex: 1;
-    min-height: 20rem;
-    border: 1px solid var(--ink);
-    border-radius: 4px;
-    background: var(--paper-2);
-    overflow: hidden;
-  }
-  .editor.dropping {
-    border-style: dashed;
-    background: var(--marker);
-  }
-  .editor:focus-within {
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
-    box-shadow: 0 0 0 5px var(--marker);
   }
   .pane {
     position: relative;
@@ -196,13 +183,5 @@ const m = messages[Astro.props.lang];
   }
   textarea::placeholder {
     color: var(--ink-3);
-  }
-  .cursor {
-    margin: 0;
-    text-align: right;
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    min-height: 1em;
   }
 </style>
