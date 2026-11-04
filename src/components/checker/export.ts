@@ -1,9 +1,10 @@
 import type { Report } from "../../lib/validate";
 
 /** The report as data: the same facts the page shows, for a ticket or a pull request. */
-export const reportData = (report: Report, catalog: string, release: string) => ({
+export const reportData = (report: Report, catalog: string, release: string, system: string) => ({
   target: report.target,
   release,
+  system,
   catalog,
   coverage: {
     checked: report.coverage.total - report.coverage.skipped.length,

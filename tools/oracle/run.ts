@@ -7,6 +7,7 @@
 // Many of those new names are free-form or not in the catalogs, so what is let through is not held to the
 // share there: that run is for the false positives.
 // ORACLE_MISSES=1 lists every wrong value we let through.
+import { DEFAULT_SYSTEM } from "../../src/lib/catalog/systems";
 import { VERSIONS, type Version } from "../../src/lib/catalog/versions";
 import { diskoRoot, releaseRoots } from "../corpus/sources";
 import { CASES } from "./cases";
@@ -62,7 +63,12 @@ const say = (v: Judged) => `${v.unknown ? "unknown" : ""}${v.typeError ? "type" 
 const disko = await diskoRoot();
 async function rootsOf(version: Version) {
   const [nixpkgs, homeManager] = await releaseRoots(version);
-  return { nixpkgs: nixpkgs as string, homeManager: homeManager as string, disko };
+  return {
+    nixpkgs: nixpkgs as string,
+    homeManager: homeManager as string,
+    disko,
+    system: DEFAULT_SYSTEM,
+  };
 }
 
 // Runs `work` over the items with a few at a time.

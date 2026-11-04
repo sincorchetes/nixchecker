@@ -1,5 +1,5 @@
 ---
-import { DEFAULT_VERSION, TARGETS, VERSIONS } from "../../lib/catalog";
+import { DEFAULT_SYSTEM, DEFAULT_VERSION, SYSTEMS, TARGETS, VERSIONS } from "../../lib/catalog";
 import { type Lang, messages } from "../../lib/i18n";
 
 interface Props {
@@ -22,6 +22,12 @@ const m = messages[Astro.props.lang];
     <span>{m["checker.version"]}</span>
     <select id="version" title={m["checker.versionHint"]}>
       {VERSIONS.map((v) => <option value={v} selected={v === DEFAULT_VERSION}>{v}</option>)}
+    </select>
+  </label>
+  <label class="choice">
+    <span>{m["checker.system"]}</span>
+    <select id="system" title={m["checker.systemHint"]}>
+      {SYSTEMS.map((s) => <option value={s} selected={s === DEFAULT_SYSTEM}>{s}</option>)}
     </select>
   </label>
   <label class="choice remember">

@@ -2,6 +2,7 @@
 // asked, the packages, checks and development shells of the system this runs on.
 import { dirname } from "node:path";
 import { type Finding, parseEvaluation } from "../../src/lib/evaluation";
+import { currentSystem } from "./system";
 
 const FLAGS = [
   "--extra-experimental-features",
@@ -38,15 +39,14 @@ export const original = (file: string | undefined, dir: string): string | undefi
  * The warnings and errors of every configuration of the flake `file` (and of its packages, checks and
  * development shells when `all`), tagged with the name of each.
  */
-export async function evaluateFlake(path: string, all = false): Promise<Finding[]> {
+export async function evaluateFlake(path: string, all = false, asked?: string): Promise<Finding[]> {
   // The directory as Nix reads it: in a Git repository only the files Git tracks, as for `nix build`. (With
   // `path:` the whole directory, untracked files and secrets included, would be copied to the store.)
   const ref = dirname(path);
   const findings: Finding[] = [];
   const outputs: Array<[string, string]> = Object.entries(CONFIGURATIONS);
   if (all) {
-    const system = (await nix(["eval", "--impure", "--raw", "--expr", "builtins.currentSystem"]))
-      .out;
+    const system = asked ?? (await currentSystem());
     for (const output of PER_SYSTEM) outputs.push([`${output}.${system}`, "drvPath"]);
   }
   for (const [output, derivation] of outputs) {

@@ -6,6 +6,8 @@ export interface Roots {
   nixpkgs: string;
   homeManager: string;
   disko: string;
+  /** The system the configuration is built for, as flakes name it (`aarch64-linux`). */
+  system: string;
 }
 
 const quote = (s: string) => JSON.stringify(s);
@@ -27,7 +29,7 @@ export function systemExpression(
   if (kind === "home-manager") {
     return `${args}:
 let
-  pkgs = import ${quote(r.nixpkgs)} { system = "x86_64-linux"; };
+  pkgs = import ${quote(r.nixpkgs)} { system = ${quote(r.system)}; };
   hm = import (${quote(r.homeManager)} + "/modules") {
     inherit pkgs;
     configuration = {
@@ -45,7 +47,7 @@ ${force}`;
   return `${args}:
 let
   ev = import (${quote(r.nixpkgs)} + "/nixos/lib/eval-config.nix") {
-    system = "x86_64-linux";
+    system = ${quote(r.system)};
     modules = [ file ${extra} ${loose} ];
   };
   config = ev.config;

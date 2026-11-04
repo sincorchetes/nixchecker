@@ -70,6 +70,9 @@ is reported in that file, at its line and column.
   read, so the assertions of a whole system (root file system, boot loader) do not get in the way.
 - `--target` is `nixos`, `home-manager` or `disko`; `--release` picks the pinned nixpkgs and Home
   Manager (or give `--nixpkgs DIR --home-manager DIR`); `--static` skips the evaluation.
+- `--system` is `x86_64-linux` or `aarch64-linux` (default: the system of your Nix): what the configuration is built
+  for, which decides platform conditions and assertions. The options are the same on both, so the page has one
+  catalog; its "System" selector is recorded in the downloaded report.
 - `--format json` (or `--json`) prints the findings as data, `{ "schemaVersion": 1, "results": [...] }` with one result per file, each
   with its coverage and the revisions of the catalog used; `--format sarif` prints SARIF 2.1.0 for code scanning annotations.
 

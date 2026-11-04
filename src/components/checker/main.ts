@@ -22,12 +22,23 @@ const root = query("#checker");
 const source = query<HTMLTextAreaElement>("#source");
 const target = query<HTMLSelectElement>("#target");
 const version = query<HTMLSelectElement>("#version");
+const system = query<HTMLSelectElement>("#system");
 const results = query("#results");
 const gutter = query("#gutter");
 const layer = query("#highlight");
 const cursor = query("#cursor");
 
-if (root?.dataset.messages && source && target && version && results && gutter && cursor && layer) {
+if (
+  root?.dataset.messages &&
+  source &&
+  target &&
+  version &&
+  system &&
+  results &&
+  gutter &&
+  cursor &&
+  layer
+) {
   const text = JSON.parse(root.dataset.messages) as Record<string, string>;
   const tr = (key: string, params?: Record<string, string | number>) =>
     format(text[key] ?? key, params);
@@ -105,13 +116,14 @@ if (root?.dataset.messages && source && target && version && results && gutter &
       report,
       verdict.source,
     );
-    offer(() => reportData(report, verdict.source, version.value));
+    offer(() => reportData(report, verdict.source, version.value, system.value));
   };
 
   // `void`: the handlers start a validation and have nothing to wait for.
   const validate = () => void render();
   target.addEventListener("change", validate);
   version.addEventListener("change", validate);
+  system.addEventListener("change", validate);
   // Asked for on purpose: the findings are shown where they were not beside the editor.
   query("#validate")?.addEventListener("click", () => {
     validate();

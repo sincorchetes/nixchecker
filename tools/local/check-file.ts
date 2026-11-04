@@ -13,9 +13,11 @@ import { reconcile } from "./reconcile";
 import { fromDiagnostic, fromFinding, isImported, type Located } from "./report";
 import { evaluate } from "./run-nix";
 import { publicDir, staticLayer } from "./static-layer";
+import { systemFor } from "./system";
 
 export interface Options {
   target?: string | undefined;
+  system?: string | undefined;
   version: Version;
   nixpkgs?: string | undefined;
   homeManager?: string | undefined;
@@ -44,8 +46,8 @@ export interface Result {
 }
 
 // Building the pinned sources is slow, so a run over many files does it once per release.
-const built = new Map<Version, Promise<Roots>>();
-function rootsOf(o: Options): Promise<Roots> {
+const built = new Map<Version, Promise<Omit<Roots, "system">>>();
+function rootsOf(o: Options): Promise<Omit<Roots, "system">> {
   if (!built.has(o.version)) {
     built.set(
       o.version,
@@ -60,7 +62,7 @@ function rootsOf(o: Options): Promise<Roots> {
       })(),
     );
   }
-  return built.get(o.version) as Promise<Roots>;
+  return built.get(o.version) as Promise<Omit<Roots, "system">>;
 }
 
 // The keys of the module system itself, which are not options and cannot be read from `config`.
@@ -98,8 +100,8 @@ async function nixFindings(
   analysis: Analysis,
   o: Options,
 ): Promise<Finding[]> {
-  if (target === "flake") return evaluateFlake(resolve(file), o.allOutputs);
-  const roots = await rootsOf(o);
+  if (target === "flake") return evaluateFlake(resolve(file), o.allOutputs, o.system);
+  const roots = { ...(await rootsOf(o)), system: await systemFor(o.system) };
   const options = optionPaths(analysis);
   const found = await evaluate(target as Kind, roots, file, o.partial ? options : undefined);
   const stoppedOnValues = found.some((f) => f.kind === "unknown-option" || f.kind === "type-error");

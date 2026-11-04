@@ -93,3 +93,29 @@ describe("an error inside an imported file", () => {
     TIME,
   );
 });
+
+describe("the system the configuration is built for", () => {
+  test(
+    "an assertion about the platform holds on one system and fails on the other",
+    async () => {
+      const file = join(dir, "only-arm.nix");
+      await Bun.write(
+        file,
+        `{ pkgs, ... }: {
+  boot.loader.grub.enable = false;
+  fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
+  system.stateVersion = "25.05";
+  assertions = [ { assertion = pkgs.stdenv.hostPlatform.isAarch64; message = "only on ARM"; } ];
+}
+`,
+      );
+      const on = (system: string) =>
+        evaluate("--format", "json", "--target", "nixos", "--system", system, file);
+      const arm = await on("aarch64-linux");
+      expect(arm.items.some((i) => i.message.includes("only on ARM"))).toBe(false);
+      const x86 = await on("x86_64-linux");
+      expect(x86.items.some((i) => i.message.includes("only on ARM"))).toBe(true);
+    },
+    TIME,
+  );
+});

@@ -20,6 +20,9 @@ export const es = {
   "checker.target": "Objetivo",
   "checker.version": "Versión",
   "checker.versionHint": "Versión de NixOS y de Home Manager contra la que se valida",
+  "checker.system": "Sistema",
+  "checker.systemHint":
+    "Sistema para el que se construye la configuración; las opciones son las mismas en todos",
   "checker.validate": "Validar",
   "checker.example": "Cargar ejemplo",
   "checker.clear": "Limpiar",

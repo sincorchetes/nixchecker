@@ -134,6 +134,17 @@ describe("checker", () => {
     await page.select("#target", "auto");
   });
 
+  test("changing the system validates again", async () => {
+    await validate("{ services.openssh.enable = true; }");
+    await page.$eval("#results", (el) => el.replaceChildren());
+    await page.select("#system", "aarch64-linux");
+    await page.waitForSelector("#results .summary");
+    expect(await page.$eval("#system", (el) => (el as HTMLSelectElement).value)).toBe(
+      "aarch64-linux",
+    );
+    await page.select("#system", "x86_64-linux");
+  });
+
   test("numbers the lines, marks the ones with problems and tracks the cursor", async () => {
     await validate('{\n  services.openssh.enabel = true;\n  networking.hostName = "x";\n}');
     expect(await page.$$eval("#gutter .ln", (els) => els.length)).toBe(4);

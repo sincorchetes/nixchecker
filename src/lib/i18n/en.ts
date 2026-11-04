@@ -20,6 +20,9 @@ export const en: Record<MessageKey, string> = {
   "checker.target": "Target",
   "checker.version": "Version",
   "checker.versionHint": "NixOS and Home Manager release to validate against",
+  "checker.system": "System",
+  "checker.systemHint":
+    "System the configuration is built for; the options are the same on all of them",
   "checker.validate": "Validate",
   "checker.example": "Load example",
   "checker.clear": "Clear",

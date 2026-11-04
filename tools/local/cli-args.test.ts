@@ -26,6 +26,12 @@ describe("command line", () => {
     expect(parseCommand(["-j", "2", "a.nix"]).jobs).toBe(2);
   });
 
+  test("--system is one of the known systems, and left out it is the one of your Nix", () => {
+    expect(parseCommand(["--system", "aarch64-linux", "a.nix"]).system).toBe("aarch64-linux");
+    expect(parseCommand(["a.nix"]).system).toBeUndefined();
+    expect(usage("--system", "riscv64-linux", "a.nix")).toContain("--system is one of");
+  });
+
   test("--help and --version need no file", () => {
     expect(parseCommand(["--help"])).toMatchObject({ help: true, paths: [] });
     expect(parseCommand(["-v"]).version).toBe(true);

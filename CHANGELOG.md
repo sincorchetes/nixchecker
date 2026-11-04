@@ -6,6 +6,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ## Unreleased
 
 ### Added
+- `--system` for the command line and a "System" selector in the page (`x86_64-linux`, `aarch64-linux`). The
+  evaluation used to be fixed to `x86_64-linux`; the options are identical on both systems (32,558 in NixOS 26.05),
+  so there is still one catalog.
 - The finding cards settle into place from a few pixels below as the list is scrolled (CSS scroll-driven animation: no
   fading, nothing hidden), only in browsers that support it and not with "reduce motion".
 

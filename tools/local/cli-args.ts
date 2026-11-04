@@ -1,6 +1,7 @@
 // The command line of `nixchecker`: what it takes, and a usage error (exit 2) for anything it does not.
 import { availableParallelism } from "node:os";
 import { parseArgs } from "node:util";
+import { SYSTEMS } from "../../src/lib/catalog/systems";
 import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
 
 export const FORMATS = ["text", "json", "sarif"] as const;
@@ -15,6 +16,7 @@ Evaluating is running code, as nix build is: use it on code you trust (--static 
 Options:
   --target <t>        what the file is: ${TARGETS.join(", ")} (default: auto, as the web page decides)
   --release <v>       release of nixpkgs and Home Manager: ${VERSIONS.join(", ")} (default: ${DEFAULT_VERSION})
+  --system <s>        system to build for: ${SYSTEMS.join(", ")} (default: the one of your Nix)
   --static            static analysis only; do not evaluate with Nix
   --partial           the file is part of a system, not all of it: read its options, skip the
                       assertions of a whole system (root file system, boot loader)
@@ -42,6 +44,7 @@ export interface Command {
   format: (typeof FORMATS)[number];
   release: Version;
   jobs: number;
+  system?: string | undefined;
   target?: string | undefined;
   nixpkgs?: string | undefined;
   homeManager?: string | undefined;
@@ -67,6 +70,9 @@ export function parseCommand(argv: string[]): Command {
   if (!(VERSIONS as readonly string[]).includes(release)) {
     throw new UsageError(`--release is one of ${VERSIONS.join(", ")}`);
   }
+  if (values.system && !(SYSTEMS as readonly string[]).includes(values.system)) {
+    throw new UsageError(`--system is one of ${SYSTEMS.join(", ")}`);
+  }
   if (values.target && !TARGETS.includes(values.target)) {
     throw new UsageError(`--target is one of ${TARGETS.join(", ")}`);
   }
@@ -83,6 +89,7 @@ export function parseCommand(argv: string[]): Command {
     release: release as Version,
     jobs,
     target: values.target,
+    system: values.system,
     nixpkgs: values.nixpkgs,
     homeManager: values["home-manager"],
     disko: values.disko,
@@ -95,6 +102,7 @@ export function parseCommand(argv: string[]): Command {
 const OPTIONS = {
   target: { type: "string" },
   release: { type: "string" },
+  system: { type: "string" },
   nixpkgs: { type: "string" },
   "home-manager": { type: "string" },
   disko: { type: "string" },
