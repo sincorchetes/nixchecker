@@ -26,13 +26,12 @@ const client = Object.fromEntries(
   data-messages={JSON.stringify(client)}
   data-base={withBase(import.meta.env.BASE_URL)}
 >
-  <slot />
   <div class="bench">
-    <Editor lang={lang} />
     <Controls lang={lang} />
+    <Editor lang={lang} />
     <p class="privacy">{m["checker.privacy"]}</p>
   </div>
-  <Results />
+  <Results><slot /></Results>
 </section>
 
 <script>
@@ -40,25 +39,34 @@ const client = Object.fromEntries(
 </script>
 
 <style>
+  /* Narrow screens: the editor, then what was found. */
   .checker {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 2.5rem 4rem;
+    gap: 1.5rem;
     width: var(--page);
-    margin: 2.5rem auto 0;
+    margin: 1.5rem auto 0;
+  }
+  .bench {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
   }
   .privacy {
-    margin-top: 0.9rem;
     color: var(--ink-3);
     font-size: 0.875rem;
   }
+  /* A workbench: the editor takes what the window leaves, the findings sit beside it and scroll on
+     their own, so nothing needs a scroll of the page to be seen. */
   @media (min-width: 64rem) {
     .checker {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-      align-items: start;
+      grid-template-columns: minmax(0, 1fr) minmax(24rem, 30%);
+      gap: 2rem;
+      height: max(32rem, calc(100dvh - 14.5rem));
     }
-    .checker :global(#results) {
-      grid-column: 1 / -1;
+    .bench {
+      min-height: 0;
     }
   }
 </style>

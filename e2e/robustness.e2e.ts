@@ -96,10 +96,10 @@ describe("robustness", () => {
     await page.goto(site.url());
     await page.focus("#source");
     await page.keyboard.type("{ services.openssh.enabel = true; }");
-    for (let i = 0; i < 10; i++) {
-      await page.keyboard.press("Tab");
-      if (await page.evaluate(() => document.activeElement?.id === "validate")) break;
-    }
+    // The toolbar comes before the editor, as it looks: back from the text is the last button, Validate.
+    await page.keyboard.down("Shift");
+    await page.keyboard.press("Tab");
+    await page.keyboard.up("Shift");
     expect(await page.evaluate(() => document.activeElement?.id)).toBe("validate");
     await page.keyboard.press("Enter");
     await page.waitForSelector("#results .diag");

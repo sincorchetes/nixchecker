@@ -9,6 +9,7 @@ import { createEngine } from "./engine";
 import { download, reportData } from "./export";
 import { setupFiles } from "./files";
 import { showReport } from "./report";
+import { setupTooltip } from "./tooltip";
 
 // How long the text must rest before it is validated by itself (the button validates at once).
 const PAUSE_MS = 700;
@@ -93,6 +94,7 @@ if (root?.dataset.messages && source && target && version && results && gutter &
     validate();
   });
   const area = query(".editor");
+  if (area) setupTooltip(area, layer, editor.findingAt, tr);
   const input = query<HTMLInputElement>("#file");
   const opener = query("#open");
   if (area && input && opener) {

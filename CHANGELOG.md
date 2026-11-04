@@ -7,6 +7,10 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- The editor and the findings are one workbench: the editor takes the height the window leaves, with its toolbar
+  above it, and what was found sits beside it and scrolls on its own, so nothing needs a scroll of the page.
+  Resting the pointer on an underlined word shows what it says, with the suggestion, as an editor does. On
+  narrow screens the findings go below the editor.
 - A new look for the site: a listing of code with a proofreader's marks. Each finding shows its line with the
   wrong word highlighted and carets under it, as a compiler does; the headline, the example and the results
   share that language. Light and dark follow the system; Bricolage Grotesque and JetBrains Mono replace Inter

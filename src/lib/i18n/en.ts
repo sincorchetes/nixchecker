@@ -36,6 +36,7 @@ export const en: Record<MessageKey, string> = {
   "result.empty": "Paste some Nix to get started.",
   "result.ok":
     "No static problems detected in the analyzable parts. Dynamic values, functions and rec sets are not evaluated: this does not guarantee the configuration will work.",
+  "result.example": "This is what a finding looks like:",
   "result.error": "error",
   "result.warning": "warning",
   "result.errorCount.one": "{n} error",

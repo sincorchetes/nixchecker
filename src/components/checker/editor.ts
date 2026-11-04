@@ -21,6 +21,7 @@ export function setupEditor(
 ) {
   let marks = new Map<number, string>();
   let findings: Diagnostic[] = [];
+  let ranges: Array<{ start: number; end: number; finding: Diagnostic }> = [];
   let painted = 0;
   let queued = false;
 
@@ -36,6 +37,7 @@ export function setupEditor(
       const [start, end] = wordAt(text, d.line, d.col);
       return { start, end: Math.max(end, start + 1), severity: d.severity };
     });
+    ranges = underlines.map((u, n) => ({ ...u, finding: findings[n] as Diagnostic }));
     const pieces = segments(text, highlight(text), underlines).map(
       ({ text: piece, kind, severity }) => {
         if (!kind && !severity) return document.createTextNode(piece);
@@ -103,6 +105,8 @@ export function setupEditor(
 
   return {
     refresh,
+    /** The finding underlined at this offset of the text, if there is one. */
+    findingAt: (offset: number) => ranges.find((r) => offset >= r.start && offset < r.end)?.finding,
     /** Colors the line numbers of the diagnostics: an error wins over a warning on the same line. */
     mark(diagnostics: Diagnostic[]) {
       for (const d of diagnostics) {

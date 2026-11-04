@@ -1,9 +1,20 @@
-<div id="results" class="results" aria-live="polite"></div>
+<div class="panel">
+  <div id="results" class="results" aria-live="polite"></div>
+  <!-- What a finding looks like: shown until there is a report to show instead. -->
+  <div class="example"><slot /></div>
+</div>
 
 <style>
-  .results {
-    padding-top: 1.75rem;
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    min-width: 0;
+    padding-top: 1.25rem;
     border-top: 1px solid var(--rule);
+  }
+  :global(.results:has(.report)) + .example {
+    display: none;
   }
   .results[data-stale] {
     opacity: 0.45;
@@ -15,12 +26,14 @@
   .results :global(.report) {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 1.75rem 4rem;
+    gap: 1.25rem;
   }
   .results :global(.facts) {
     display: grid;
-    gap: 0.6rem;
-    align-content: start;
+    gap: 0.35rem;
+    justify-items: start;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
   }
   .results :global(.summary) {
     font-size: 1.5rem;
@@ -33,7 +46,10 @@
   }
   .results :global(.fact) {
     color: var(--ink-2);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
+  }
+  .results :global(.facts .fix) {
+    margin-top: 0.5rem;
   }
   .results :global(.skips) {
     display: flex;
@@ -59,8 +75,7 @@
   .results :global(.findings) {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 1.75rem;
-    min-width: 0;
+    gap: 1.5rem;
   }
   .results :global(.diag) {
     display: grid;
@@ -71,9 +86,6 @@
   }
   .results :global(.diag .listing) {
     justify-self: stretch;
-  }
-  .results :global(.diag .note) {
-    margin-top: 0;
   }
   .results :global(.where) {
     padding: 0;
@@ -96,14 +108,27 @@
   .results :global(.fix) {
     font-size: 0.875rem;
   }
+  .example {
+    display: grid;
+    gap: 0.75rem;
+    color: var(--ink-2);
+  }
+  /* Beside the editor: the panel is as tall as the editor and scrolls inside. */
   @media (min-width: 64rem) {
-    .results :global(.report) {
-      grid-template-columns: minmax(13rem, 1fr) minmax(0, 3fr);
-      align-items: start;
+    .panel {
+      min-height: 0;
+      height: 100%;
+      padding-top: 0;
+      padding-left: 2rem;
+      border-top: 0;
+      border-left: 1px solid var(--rule);
+      overflow-y: auto;
     }
     .results :global(.facts) {
       position: sticky;
-      top: 1.5rem;
+      top: 0;
+      z-index: 1;
+      background: var(--paper);
     }
   }
 </style>

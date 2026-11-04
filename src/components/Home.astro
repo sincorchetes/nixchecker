@@ -21,10 +21,13 @@ const features = ["docs", "local", "hints"] as const;
 
 <Base lang={lang}>
   <main>
-    <h1 id="intro-title" class="headline">{m["hero.title"]}</h1>
+    <div class="titlebar">
+      <h1 id="intro-title">{m["hero.title"]}</h1>
+      <p class="lead">{m["hero.subtitle"]}</p>
+    </div>
     <Checker lang={lang} titleId="intro-title">
-      <div class="intro">
-        <p class="lead">{m["hero.subtitle"]}</p>
+      <div class="sample">
+        <p>{m["result.example"]}</p>
         <Specimen
           line={14}
           code={`  ${typo} = true;`}

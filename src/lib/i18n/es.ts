@@ -35,6 +35,7 @@ export const es = {
   "result.empty": "Pega algo de Nix para empezar.",
   "result.ok":
     "No se detectaron problemas estáticos en las partes analizables. Los valores dinámicos, las funciones y los conjuntos rec no se evalúan: esto no garantiza que la configuración funcione.",
+  "result.example": "Así se ve un hallazgo:",
   "result.error": "error",
   "result.warning": "aviso",
   "result.errorCount.one": "{n} error",

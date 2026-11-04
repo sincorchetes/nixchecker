@@ -56,33 +56,36 @@
   font-weight: 700;
 }
 
-/* The introduction, beside the editor. */
-.intro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1.5rem;
-  align-content: start;
+/* What the page is, in one line, above the workbench. */
+.titlebar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 3rem;
+  align-items: baseline;
+  justify-content: space-between;
+  width: var(--page);
+  margin: 1.5rem auto 0;
 }
 
-.headline {
-  width: var(--page);
-  margin: 3.25rem auto 0;
-  font-size: clamp(2.5rem, 7.2vw, 5.6rem);
+.titlebar h1 {
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
   font-weight: 800;
   font-stretch: 75%;
-  line-height: 0.98;
+  line-height: 1;
   letter-spacing: -0.02em;
 }
 
-.intro .lead {
-  max-width: 34rem;
+.titlebar .lead {
+  max-width: 30rem;
   color: var(--ink-2);
-  font-size: 1.15rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 
-.intro .finding {
-  margin-top: 0.75rem;
-  max-width: 34rem;
+.sample {
+  display: grid;
+  gap: 0.75rem;
+  color: var(--ink-2);
 }
 
 /* How it works: a margin note on the left, and what it means on the right. */
