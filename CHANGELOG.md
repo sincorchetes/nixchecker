@@ -7,6 +7,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- Two weekly workflows keep the catalogs current: `catalog-update.yml` opens a pull request with the catalogs
+  regenerated from the latest upstream (they were only checked daily, never updated), and `new-release.yml` opens an
+  issue when nixpkgs has a NixOS release the site has no catalog for. `devenv shell -- releases` is the check.
 - A button in the header switches between the light and the dark theme. Without a choice the page follows the
   system; the choice is kept in this browser (only that) and applied before the first paint.
 - The editor is one frame, as in a code editor: the actions (open, download the report, clear, load the example,

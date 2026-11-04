@@ -22,6 +22,8 @@
   scripts.e2e.exec = "bun install --frozen-lockfile && bun test -c e2e/bunfig.toml ./e2e/*.e2e.ts";
   # Regenerates public/catalog/ from the pinned upstream projects (needs Nix); `--update` moves the pins first.
   scripts.catalog.exec = ''bun tools/catalog/build.ts "$@"'';
+  # Is there a NixOS release without a catalog? Takes the files of branch names the workflow lists.
+  scripts.releases.exec = ''bun tools/catalog/releases.ts "$@"'';
   # Looks for secrets across the whole git history (gitleaks).
   # Every .nix file in nixpkgs and Home Manager must parse: they are all valid, so a problem is a parser bug.
   scripts.corpus.exec = "bun tools/corpus/run.ts";

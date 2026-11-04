@@ -1,0 +1,59 @@
+name: New release
+
+# Every Tuesday, looks for a NixOS release that the site has no catalog for (a branch nixos-YY.MM in nixpkgs
+# newer than every release in src/lib/catalog/versions.ts) and, if there is one, opens an issue with what to
+# do. Adding a release changes the selector of the site and its default, so it is done by a person.
+on:
+  schedule:
+    - cron: '0 7 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: Look for a new release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: ./.github/actions/setup-devenv
+      - name: Release branches of nixpkgs and Home Manager
+        run: |
+          gh api --paginate repos/NixOS/nixpkgs/branches \
+            --jq '.[].name | select(test("^nixos-[0-9]{2}\\.[0-9]{2}$"))' > nixpkgs-branches.txt
+          gh api --paginate repos/nix-community/home-manager/branches \
+            --jq '.[].name | select(test("^release-[0-9]{2}\\.[0-9]{2}$"))' > home-manager-branches.txt
+      - name: Is there one the site does not have?
+        id: found
+        run: devenv shell -- releases nixpkgs-branches.txt home-manager-branches.txt
+      - name: Open an issue
+        if: steps.found.outputs.release != ''
+        env:
+          RELEASE: ${{ steps.found.outputs.release }}
+          HOME_MANAGER: ${{ steps.found.outputs.home_manager }}
+        run: |
+          title="New NixOS release: $RELEASE"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$title in:title" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then exit 0; fi
+          if [ "$HOME_MANAGER" = "true" ]; then
+            ready="Home Manager has its branch \`release-$RELEASE\`: the catalog can be built now."
+          else
+            ready="Home Manager has no branch \`release-$RELEASE\` yet: wait for it, the catalog needs both."
+          fi
+          body="nixpkgs has a branch \`nixos-$RELEASE\` and the site has no catalog for it. $ready
+
+          To add it:
+
+          - [ ] In \`tools/catalog/flake.nix\`: the inputs \`nixpkgs-${RELEASE/./}\` and \`home-manager-${RELEASE/./}\`, and the release in the list of releases.
+          - [ ] In \`src/lib/catalog/versions.ts\`: add \"$RELEASE\" to \`VERSIONS\`, and make it \`DEFAULT_VERSION\`.
+          - [ ] \`devenv shell -- catalog\`, and commit what it generates.
+          - [ ] The tests and examples that name the previous default release.
+          - [ ] \`devenv shell -- oracle 40 1 all\`: no false positives against the new release.
+
+          Opened by the weekly workflow \`new-release.yml\`."
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
