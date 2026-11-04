@@ -124,6 +124,31 @@
   .results :global(.fix) {
     font-size: 0.875rem;
   }
+  /*
+   * As the list is scrolled, each card settles into place from a little below: a few pixels, no fading, so
+   * nothing is ever hard to read. Only where the browser ties animations to scrolling, and not when the
+   * person asked for less motion.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .results :global(.diag) {
+        /* Longhands on purpose: the minifier folds a full set into `animation`, which resets the timeline. */
+        animation-name: settle;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 45%;
+      }
+    }
+  }
+  @keyframes settle {
+    from {
+      transform: translateY(0.6rem);
+    }
+    to {
+      transform: none;
+    }
+  }
   .example {
     display: grid;
     gap: 0.75rem;

@@ -182,3 +182,23 @@ describe("theme", () => {
     expect(await page.$eval("#theme", (el) => el.textContent)).toMatch(/mode$/);
   });
 });
+
+describe("cards settling as they are scrolled into view", () => {
+  const motion = async (reduced: boolean) => {
+    const other = await (await browser.createBrowserContext()).newPage();
+    await other.setViewport({ width: 1440, height: 900 });
+    await other.emulateMediaFeatures([
+      { name: "prefers-reduced-motion", value: reduced ? "reduce" : "no-preference" },
+    ]);
+    await other.goto(site.url());
+    await validateIn(other, "{ services.openssh.enabel = true; }");
+    const name = await other.$eval(".diag", (el) => getComputedStyle(el).animationName);
+    await other.close();
+    return name;
+  };
+
+  test("move a little, and not at all for someone who asked for less motion", async () => {
+    expect(await motion(false)).toBe("settle");
+    expect(await motion(true)).toBe("none");
+  });
+});

@@ -6,6 +6,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ## Unreleased
 
 ### Added
+- The finding cards settle into place from a few pixels below as the list is scrolled (CSS scroll-driven animation: no
+  fading, nothing hidden), only in browsers that support it and not with "reduce motion".
 
 - The weekly catalog pull request is opened by a GitHub App (a one-hour token for this repository, `CATALOG_APP_CLIENT_ID`
   and `CATALOG_APP_PRIVATE_KEY`) instead of a personal token, with the steps to create it in `CONTRIBUTING.md`; and a
