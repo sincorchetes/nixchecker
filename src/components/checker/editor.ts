@@ -2,6 +2,7 @@ import { wordAt } from "../../lib/fix";
 import { highlight, segments } from "../../lib/nix/highlight";
 import type { Diagnostic } from "../../lib/validate";
 import { el, type Translate } from "./dom";
+import { RULER } from "./ruler";
 
 // Past this much text, coloring it at every keystroke costs more than it helps: it is shown plain.
 const MAX_COLORED = 200_000;
@@ -24,6 +25,13 @@ export function setupEditor(
   let ranges: Array<{ start: number; end: number; finding: Diagnostic }> = [];
   let painted = 0;
   let queued = false;
+
+  // What sits behind the text moves with it: the colors, and the line at the column to keep within.
+  const follow = () => {
+    layer.scrollTop = source.scrollTop;
+    layer.scrollLeft = source.scrollLeft;
+    layer.parentElement?.style.setProperty("--scroll-left", `${source.scrollLeft}px`);
+  };
 
   // The colored copy of the text under the text. The underlines are only drawn for the text as it was
   // validated: the first edit clears them.
@@ -51,8 +59,7 @@ export function setupEditor(
     );
     // The newline that ends the text, so an empty last line is as tall as in the text area.
     layer.replaceChildren(...pieces, document.createTextNode("\n"));
-    layer.scrollTop = source.scrollTop;
-    layer.scrollLeft = source.scrollLeft;
+    follow();
   };
   const schedule = () => {
     if (queued) return;
@@ -75,7 +82,10 @@ export function setupEditor(
   const where = () => {
     const before = source.value.slice(0, source.selectionStart);
     const line = before.split("\n").length;
-    cursor.textContent = tr("result.line", { line, col: before.length - before.lastIndexOf("\n") });
+    const col = before.length - before.lastIndexOf("\n");
+    cursor.textContent = tr("result.line", { line, col });
+    // Past the line at the ruler: the position says so.
+    cursor.classList.toggle("over", col > RULER);
   };
 
   // The text changed: the marks belonged to the old lines.
@@ -93,8 +103,7 @@ export function setupEditor(
   });
   source.addEventListener("scroll", () => {
     gutter.scrollTop = source.scrollTop;
-    layer.scrollTop = source.scrollTop;
-    layer.scrollLeft = source.scrollLeft;
+    follow();
   });
   document.addEventListener("selectionchange", () => {
     if (document.activeElement === source) where();

@@ -4,7 +4,7 @@
 const MIN = 20;
 const MAX = 60;
 const MIN_REM = 20;
-const DEFAULT = 30;
+const DEFAULT = 28;
 const STEP = 2;
 const KEY = "results-width";
 

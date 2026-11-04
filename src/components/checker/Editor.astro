@@ -1,5 +1,6 @@
 ---
 import { type Lang, messages } from "../../lib/i18n";
+import { RULER } from "./ruler";
 
 interface Props {
   lang: Lang;
@@ -12,6 +13,8 @@ const m = messages[Astro.props.lang];
 <div class="editor">
   <pre id="gutter" class="gutter" aria-hidden="true"></pre>
   <div class="pane">
+    <!-- The vertical line at the column a line is kept within; it moves with the text when that scrolls sideways. -->
+    <div class="ruler" style={`--ruler-columns: ${RULER}`} aria-hidden="true"></div>
     <pre id="highlight" class="highlight" aria-hidden="true"></pre>
     <textarea
       id="source"
@@ -45,13 +48,36 @@ const m = messages[Astro.props.lang];
     flex: 1;
     min-width: 0;
   }
+  /* The same font as the text, so a column is `ch` wide; the text starts after its padding (1rem). */
+  .ruler {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+  }
+  .ruler::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: calc(1rem + var(--ruler-columns) * 1ch);
+    width: 1px;
+    background: color-mix(in srgb, var(--ink) 22%, transparent);
+    transform: translateX(calc(var(--scroll-left, 0px) * -1));
+  }
+  @media (forced-colors: active) {
+    .ruler::before {
+      background: GrayText;
+    }
+  }
   .gutter,
   .highlight,
   textarea {
     margin: 0;
     padding: 1rem 0;
     font-family: var(--font-mono);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     line-height: 1.5;
   }
   .gutter {

@@ -1,6 +1,6 @@
 /* The page around the validator: the notice, the header, the introduction, how it works and the footer. */
 :root {
-  --page: min(100% - 2.5rem, 76rem);
+  --page: min(100% - 2.5rem, 84rem);
 }
 
 .mark {

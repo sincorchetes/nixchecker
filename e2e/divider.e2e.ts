@@ -45,7 +45,7 @@ describe("divider", () => {
   test("starts with the findings at a third of the width, and says how much the editor has", async () => {
     expect(await share()).toBeGreaterThan(24);
     expect(await share()).toBeLessThan(34);
-    expect(await editorShare()).toBe(70);
+    expect(await editorShare()).toBe(72);
     expect(await page.$eval("#divider", (el) => el.getAttribute("role"))).toBe("separator");
   });
 
@@ -54,7 +54,7 @@ describe("divider", () => {
     const from = await center();
     await drag(from.x - 200);
     expect(await findings()).toBeGreaterThan(before + 120);
-    expect(await editorShare()).toBeLessThan(70);
+    expect(await editorShare()).toBeLessThan(72);
   });
 
   test("it stays within its limits however far it is dragged", async () => {
@@ -79,14 +79,14 @@ describe("divider", () => {
     await page.keyboard.press("Home");
     expect(await editorShare()).toBe(40);
     await page.keyboard.press("End");
-    // As far as the findings can narrow: 20rem, a little over a quarter of the 76rem the page holds.
+    // As far as the findings can narrow: 20rem, a little over a quarter of the 84rem the page holds.
     expect(await editorShare()).toBeGreaterThanOrEqual(73);
     expect(await findings()).toBeGreaterThanOrEqual(319);
     expect(await page.$eval("#divider", (el) => Number(el.getAttribute("aria-valuemax")))).toBe(
       await editorShare(),
     );
     await page.keyboard.press("Enter");
-    expect(await editorShare()).toBe(70);
+    expect(await editorShare()).toBe(72);
   });
 
   test("a double click puts it back", async () => {
@@ -94,7 +94,7 @@ describe("divider", () => {
     expect(await editorShare()).toBe(40);
     const at = await center();
     await page.mouse.click(at.x, at.y, { count: 2 });
-    expect(await editorShare()).toBe(70);
+    expect(await editorShare()).toBe(72);
   });
 
   test("the width chosen is kept for the next visit", async () => {

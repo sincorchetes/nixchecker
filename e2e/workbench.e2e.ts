@@ -58,6 +58,66 @@ describe("workbench", () => {
   });
 });
 
+describe("the ruler", () => {
+  // Where the line is drawn, and where the text of 100 characters ends (both in the page's pixels).
+  const measure = () =>
+    page.evaluate(() => {
+      const ruler = document.querySelector(".ruler") as HTMLElement;
+      const line = getComputedStyle(ruler, "::before");
+      const box = ruler.getBoundingClientRect();
+      const text = document.getElementById("highlight")?.firstChild;
+      const range = document.createRange();
+      range.setStart(text as Node, 0);
+      range.setEnd(text as Node, 100);
+      return {
+        line: box.left + Number.parseFloat(line.left) + new DOMMatrix(line.transform).m41,
+        end: range.getBoundingClientRect().right,
+      };
+    });
+
+  test("is drawn right after the hundredth character, and moves with the text when it scrolls sideways", async () => {
+    await page.goto(site.url());
+    await page.$eval("#source", (el) => {
+      (el as HTMLTextAreaElement).value = `${"x".repeat(100)}\n${"y".repeat(300)}`;
+      el.dispatchEvent(new Event("input"));
+    });
+    // The page script colors on the next frame.
+    await page.waitForFunction(() =>
+      document.getElementById("highlight")?.textContent?.startsWith("x".repeat(100)),
+    );
+    const still = await measure();
+    expect(Math.abs(still.line - still.end)).toBeLessThan(2);
+    expect(await page.$eval(".ruler", (el) => getComputedStyle(el).pointerEvents)).toBe("none");
+
+    await page.$eval("#source", (el) => {
+      (el as HTMLTextAreaElement).scrollLeft = 120;
+    });
+    await page.waitForFunction(() =>
+      document.querySelector(".pane")?.getAttribute("style")?.includes("120px"),
+    );
+    const moved = await measure();
+    expect(Math.abs(moved.line - moved.end)).toBeLessThan(2);
+    expect(moved.line).toBeLessThan(still.line - 100);
+  });
+
+  test("the position of the cursor says when it is past the line", async () => {
+    await page.$eval("#source", (el) => {
+      const area = el as HTMLTextAreaElement;
+      area.focus();
+      area.setSelectionRange(10, 10);
+    });
+    await page.waitForFunction(
+      () => !document.getElementById("cursor")?.classList.contains("over"),
+    );
+    await page.$eval("#source", (el) => {
+      const area = el as HTMLTextAreaElement;
+      area.setSelectionRange(250, 250);
+    });
+    await page.waitForFunction(() => document.getElementById("cursor")?.classList.contains("over"));
+    expect(await page.$eval("#cursor", (el) => el.textContent)).toContain("columna 150");
+  });
+});
+
 describe("replacing the text", () => {
   const value = () => page.$eval("#source", (el) => (el as HTMLTextAreaElement).value);
   const offered = () => page.$eval("#undo", (el) => !(el as HTMLElement).hidden);

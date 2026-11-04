@@ -7,6 +7,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- A vertical line in the editor marks column 100, where `nixfmt` wraps lines by default; it moves with the text when
+  it scrolls sideways, and the cursor's position turns amber past it. To make room for it the page is a little
+  wider (84rem) and the editor's type a little smaller, and the findings start at 28% of the width.
 - The bar between the editor and the findings can be dragged, or moved with the arrow keys (Home and End go to the
   ends, Enter or a double click puts it back). It is a window splitter for assistive technology, stays between a
   fifth of the width and three fifths (and never below 20rem), and the width is kept in this browser.
