@@ -7,13 +7,20 @@ export const dist = join(import.meta.dir, "..", "dist");
 
 /**
  * Serves a built site the way GitHub Pages does (`/x/` is `/x/index.html`), under `prefix`. While
- * `failing()` is true the catalogs answer with an error, as a network that drops them would.
+ * `failing()` is true the catalogs answer with an error, as a network that drops them would; each catalog
+ * waits `delay` milliseconds first, as a slow one would.
  */
-export function serveSite(root: string, prefix = "", failing: () => boolean = () => false) {
+export function serveSite(
+  root: string,
+  prefix = "",
+  failing: () => boolean = () => false,
+  delay = 0,
+) {
   const server = Bun.serve({
     port: 4100 + Math.floor(Math.random() * 500),
     async fetch(request) {
       const path = decodeURIComponent(new URL(request.url).pathname);
+      if (delay > 0 && path.includes("/catalog/")) await new Promise((r) => setTimeout(r, delay));
       if (failing() && path.includes("/catalog/")) return new Response("down", { status: 503 });
       if (!path.startsWith(`${prefix}/`)) return new Response("Not found", { status: 404 });
       const local = path.slice(prefix.length);

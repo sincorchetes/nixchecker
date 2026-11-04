@@ -16,7 +16,16 @@ const m = messages[Astro.props.lang];
   <button type="button" class="tool" id="export" disabled>{m["checker.export"]}</button>
   <button type="button" class="tool" id="clear">{m["checker.clear"]}</button>
   <button type="button" class="tool" id="example">{m["checker.example"]}</button>
-  <button type="button" class="tool primary" id="validate">{m["checker.validate"]}</button>
+  <!-- Where the validation stands, always in sight, beside the button that asks for it. The state is for the
+       eyes: the results are what is announced. -->
+  <div class="run">
+    <p id="state" class="state" aria-hidden="true"></p>
+    <button type="button" class="tool primary" id="validate">{m["checker.validate"]}</button>
+  </div>
+</div>
+<div id="undo" class="undo" hidden role="status">
+  <span>{m["checker.replaced"]}</span>
+  <button type="button" id="undo-button">{m["checker.undo"]}</button>
 </div>
 
 <style>
@@ -48,9 +57,59 @@ const m = messages[Astro.props.lang];
     color: var(--ink-3);
     cursor: default;
   }
+  .run {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-left: auto;
+  }
+  /* A narrow screen puts them on a row of their own: the state at one end, the button at the other. */
+  @media (max-width: 40rem) {
+    .run {
+      flex-basis: 100%;
+      justify-content: space-between;
+    }
+  }
+  .state {
+    margin: 0;
+    color: var(--ink-3);
+    font-size: 0.8125rem;
+    font-weight: 560;
+  }
+  .state[data-tone="bad"] {
+    color: var(--flag);
+  }
+  .state[data-tone="good"] {
+    color: var(--ok);
+  }
+  .state[data-tone="busy"] {
+    color: var(--ink-2);
+  }
+  .undo {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-bottom: 1px solid var(--rule);
+    background: var(--marker);
+    color: var(--on-marker);
+    font-size: 0.8125rem;
+  }
+  .undo[hidden] {
+    display: none;
+  }
+  .undo button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+  }
   /* Run, as an editor has it: at the far end of the bar. */
   .tool.primary {
-    margin-left: auto;
     background: var(--ink);
     color: var(--paper);
   }

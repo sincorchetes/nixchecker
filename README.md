@@ -27,7 +27,11 @@ Paste or type your file, drop a `.nix` file on the editor, or use "Open file" (u
 checks it by itself when you stop typing for a moment; the button checks at once. The text is colored,
 each finding is underlined where it is and marked in the line numbers, and the report lists them with a
 link to the offending word, a button for the fixes that are certain (one, or all at once) and the
-official page of each option. "Download report" saves the report as JSON. "Remember on this device"
+official page of each option; what it was checked against (target, catalog, coverage) is folded under
+"Details". Next to the Validate button the page says where the validation stands ("Validating…", "2 errors",
+"No problems", "Previous result"). On a narrow screen the editor and the problems take turns, with the number of
+problems on their button; validating on purpose shows them, and a finding's position takes you back to the word.
+"Clear", "Load example" and opening a file offer "Undo" until the next edit. "Download report" saves the report as JSON. "Remember on this device"
 (off by default) keeps the text in this browser's storage between visits. The button in the header
 switches the light and dark themes: the page follows the system until it is used, and only that choice is
 kept. Everything runs in your browser; nothing is uploaded.

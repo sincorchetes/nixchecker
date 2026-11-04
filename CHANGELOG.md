@@ -7,6 +7,14 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- A narrow screen has two views, the editor and the problems (with their number on the button): validating on
+  purpose shows the problems, a finding's position takes you back to its word, and validating by itself while
+  typing moves nothing. The header takes less room there.
+- The validation always says where it stands, beside the Validate button: "Validating…" (when it takes a
+  moment), the counts, "No problems" or "Previous result" once the text changed.
+- Results: the summary and the findings come first; the target, the catalog and the coverage are under a
+  folded "Details". A clean result says "No problems", with what it does not guarantee as a plain note.
+- "Clear", "Load example" and opening a file can be undone, until the next edit.
 - Two weekly workflows keep the catalogs current: `catalog-update.yml` opens a pull request with the catalogs
   regenerated from the latest upstream (they were only checked daily, never updated), and `new-release.yml` opens an
   issue when nixpkgs has a NixOS release the site has no catalog for. `devenv shell -- releases` is the check.

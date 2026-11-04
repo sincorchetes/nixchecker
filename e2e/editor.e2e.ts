@@ -30,6 +30,7 @@ beforeAll(async () => {
   site = serveSite(dist);
   browser = await launchChrome();
   page = await browser.newPage();
+  await page.setViewport({ width: 1440, height: 900 });
   await page.goto(site.url());
 });
 

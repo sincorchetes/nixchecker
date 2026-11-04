@@ -34,7 +34,10 @@ afterAll(async () => {
 // A page in a context of its own, so no cache or storage leaks in from another test.
 async function freshPage() {
   const context = await browser.createBrowserContext();
-  return context.newPage();
+  const page = await context.newPage();
+  // A desktop window, unless a test says otherwise.
+  await page.setViewport({ width: 1440, height: 900 });
+  return page;
 }
 
 describe("robustness", () => {

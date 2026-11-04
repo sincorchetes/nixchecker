@@ -12,6 +12,7 @@ beforeAll(async () => {
   site = serveSite(dist);
   browser = await launchChrome();
   page = await browser.newPage();
+  await page.setViewport({ width: 1440, height: 900 });
   await page.goto(site.url());
 });
 
@@ -53,7 +54,38 @@ describe("workbench", () => {
     });
     expect(place.foundLeft).toBeGreaterThanOrEqual(place.editorRight);
     expect(place.foundTop).toBeLessThan(900);
-    await page.setViewport({ width: 800, height: 600 });
+    await page.setViewport({ width: 1440, height: 900 });
+  });
+});
+
+describe("replacing the text", () => {
+  const value = () => page.$eval("#source", (el) => (el as HTMLTextAreaElement).value);
+  const offered = () => page.$eval("#undo", (el) => !(el as HTMLElement).hidden);
+
+  test("clearing or loading the example can be undone, until the next edit", async () => {
+    await page.goto(site.url());
+    await validateIn(page, "{ services.openssh.enabel = true; }");
+    expect(await offered()).toBe(false);
+
+    await page.click("#clear");
+    expect(await value()).toBe("");
+    expect(await offered()).toBe(true);
+    await page.click("#undo-button");
+    expect(await value()).toBe("{ services.openssh.enabel = true; }");
+    expect(await offered()).toBe(false);
+
+    await page.click("#example");
+    expect(await value()).not.toBe("{ services.openssh.enabel = true; }");
+    expect(await offered()).toBe(true);
+    // Typing is a choice already made: there is no going back to offer.
+    await page.type("#source", " ");
+    expect(await offered()).toBe(false);
+  });
+
+  test("replacing nothing offers nothing back", async () => {
+    await page.goto(site.url());
+    await page.click("#example");
+    expect(await offered()).toBe(false);
   });
 });
 

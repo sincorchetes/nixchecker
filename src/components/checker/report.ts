@@ -5,6 +5,8 @@ import { el, type Translate } from "./dom";
 import { snippet } from "./snippet";
 
 export interface ReportView {
+  /** Brings the editor into view, for a finding that points at the text (on a narrow screen it is apart). */
+  reveal: () => void;
   source: HTMLTextAreaElement;
   results: HTMLElement;
   tr: Translate;
@@ -13,12 +15,14 @@ export interface ReportView {
 }
 
 // A button that selects the offending word in the text, so it can be found at a glance.
-function gotoButton({ source, tr }: ReportView, d: Diagnostic): HTMLElement {
+function gotoButton(view: ReportView, d: Diagnostic): HTMLElement {
+  const { source, tr } = view;
   const button = el("button", "where", tr("result.line", { line: d.line, col: d.col }));
   button.setAttribute("type", "button");
   button.title = tr("result.goto");
   button.addEventListener("click", () => {
     const [start, end] = wordAt(source.value, d.line, d.col);
+    view.reveal();
     source.focus();
     source.setSelectionRange(start, end);
   });
@@ -64,7 +68,7 @@ function diagnosticCard(view: ReportView, d: Diagnostic): HTMLElement {
 }
 
 // "1 error and 2 warnings": what is zero is left out, and the word agrees with the number.
-function counts(tr: Translate, errors: number, warnings: number): string {
+export function counts(tr: Translate, errors: number, warnings: number): string {
   const part = (kind: "error" | "warning", n: number) =>
     n === 0 ? [] : [tr(`result.${kind}Count.${n === 1 ? "one" : "many"}`, { n })];
   return [...part("error", errors), ...part("warning", warnings)].join(tr("result.and"));
@@ -84,8 +88,20 @@ export function showReport(view: ReportView, report: Report, catalogSource: stri
     el(
       "p",
       `summary ${total ? "bad" : "good"}`,
-      total ? counts(tr, errors, warnings) : tr("result.ok"),
+      total ? counts(tr, errors, warnings) : tr("result.clean"),
     ),
+  );
+  // What a clean result does not mean, said in words that do not compete with the findings.
+  if (!total) facts.append(el("p", "caveat", tr("result.ok")));
+  const fixable = report.diagnostics.filter((d) => applyFix(source.value, d) !== undefined);
+  if (fixable.length > 1) {
+    facts.append(fixButton(view, tr("result.applyAll"), () => applyAll(source.value, fixable)));
+  }
+
+  // What it was checked against: useful, but after what has to be fixed, and folded away.
+  const meta = el("details", "meta");
+  meta.append(el("summary", "", tr("result.details")));
+  meta.append(
     el("p", "fact", tr("result.detected", { target: tr(`target.${report.target}`) })),
     el("p", "fact", tr("result.catalog", { source: catalogSource })),
     el(
@@ -98,15 +114,11 @@ export function showReport(view: ReportView, report: Report, catalogSource: stri
     ),
   );
   const skips = coverageGroups(view, report);
-  if (skips) facts.append(skips);
+  if (skips) meta.append(skips);
 
-  const fixable = report.diagnostics.filter((d) => applyFix(source.value, d) !== undefined);
-  if (fixable.length > 1) {
-    facts.append(fixButton(view, tr("result.applyAll"), () => applyAll(source.value, fixable)));
-  }
   const findings = el("div", "findings");
   for (const d of report.diagnostics) findings.append(diagnosticCard(view, d));
   const drawn = el("div", "report");
-  drawn.append(facts, findings);
+  drawn.append(facts, findings, meta);
   results.append(drawn);
 }

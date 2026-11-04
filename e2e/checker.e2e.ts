@@ -18,6 +18,8 @@ beforeAll(async () => {
   site = serveSite(dist);
   browser = await launchChrome();
   page = await browser.newPage();
+  // A desktop window: the editor and the findings are side by side (a narrow one has its own tests).
+  await page.setViewport({ width: 1440, height: 900 });
   await page.goto(url());
 });
 
@@ -41,9 +43,12 @@ describe("checker", () => {
 
   test("shows how many assignments could be checked", async () => {
     await validate("{ x, ... }: { networking.hostName = x; networking.useDHCP = true; }");
-    const detected = await page.$eval(".facts", (el) => el.textContent ?? "");
+    const detected = await page.$eval(".meta", (el) => el.textContent ?? "");
     expect(detected).toMatch(/1 de 2 asignaciones comprobadas/);
     expect(await page.$eval(".skip.dynamic", (el) => el.textContent)).toBe("1 con valor dinámico");
+    // The details are folded away until they are wanted.
+    expect(await page.$eval(".meta", (el) => (el as HTMLDetailsElement).open)).toBe(false);
+    await page.click(".meta > summary");
     await page.click(".skip.dynamic");
     const picked = await page.$eval("#source", (el) => {
       const area = el as HTMLTextAreaElement;
@@ -151,7 +156,7 @@ describe("checker", () => {
   test("picks Home Manager for a file that only makes sense there", async () => {
     await validate('{ programs.zsh.initContent = ""; programs = lib.mkMerge [ ]; }');
     expect(await summary()).toContain("good");
-    expect(await page.$eval(".facts", (el) => el.textContent)).toContain("Home Manager");
+    expect(await page.$eval(".meta", (el) => el.textContent)).toContain("Home Manager");
   });
 
   test("the header jumps to how it works and offers the other language", async () => {

@@ -4,31 +4,31 @@ import type { Translate } from "./dom";
 export const MAX_BYTES = 512 * 1024;
 
 interface Parts {
-  source: HTMLTextAreaElement;
   /** Where a file can be dropped. */
   area: HTMLElement;
   input: HTMLInputElement;
   opener: HTMLElement;
   tr: Translate;
   say: (key: string, params?: Record<string, string | number>) => void;
-  /** The text was replaced by the file's. */
-  loaded: () => void;
+  /** Puts the text of a file in the editor (and validates it). */
+  replace: (text: string) => void;
 }
 
 /**
  * Opens a file from the picker or a drop into the editor. It is read right here, in the browser: the
  * file goes nowhere else.
  */
-export function setupFiles({ source, area, input, opener, say, loaded }: Parts): void {
+export function setupFiles({ area, input, opener, say, replace }: Parts): void {
   const open = async (file: File | undefined) => {
     if (!file) return;
     if (file.size > MAX_BYTES) return say("result.fileTooBig", { max: MAX_BYTES / 1024 });
+    let text: string;
     try {
-      source.value = await file.text();
+      text = await file.text();
     } catch {
       return say("result.fileError");
     }
-    loaded();
+    replace(text);
   };
 
   opener.addEventListener("click", () => input.click());

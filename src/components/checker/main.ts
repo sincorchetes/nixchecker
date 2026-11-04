@@ -9,6 +9,7 @@ import { createEngine } from "./engine";
 import { download, reportData } from "./export";
 import { setupFiles } from "./files";
 import { showReport } from "./report";
+import { setupStatus } from "./status";
 import { setupTooltip } from "./tooltip";
 
 // How long the text must rest before it is validated by itself (the button validates at once).
@@ -28,10 +29,20 @@ if (root?.dataset.messages && source && target && version && results && gutter &
   const text = JSON.parse(root.dataset.messages) as Record<string, string>;
   const tr = (key: string, params?: Record<string, string | number>) =>
     format(text[key] ?? key, params);
+  const status = setupStatus(root, tr);
+  // The text a button replaced, until the next edit: offered back, instead of asking before replacing.
+  const undo = query("#undo");
+  let previous: string | undefined;
+  const forget = () => {
+    previous = undefined;
+    if (undo) undo.hidden = true;
+  };
   let pause: ReturnType<typeof setTimeout> | undefined;
   const editor = setupEditor(source, gutter, cursor, layer, tr, () => {
     // Results describe the text as it was when validated: dim them as soon as it changes.
     results.setAttribute("data-stale", "");
+    status.stale();
+    forget();
     clearTimeout(pause);
     pause = setTimeout(validate, PAUSE_MS);
   });
@@ -46,6 +57,10 @@ if (root?.dataset.messages && source && target && version && results && gutter &
   const say = (key: string, params?: Record<string, string | number>) => {
     offer(undefined);
     results.replaceChildren(el("p", "empty", tr(key, params)));
+    // Anything but the empty text is something to read now, even from the editor's side of a narrow screen.
+    if (key === "result.empty") return status.idle();
+    status.failed();
+    status.view("problems");
   };
 
   // Only the latest run may touch the page: catalogs download asynchronously.
@@ -56,6 +71,7 @@ if (root?.dataset.messages && source && target && version && results && gutter &
     results.removeAttribute("data-stale");
     editor.refresh();
     if (!source.value.trim()) return say("result.empty");
+    status.busy();
 
     let verdict: Awaited<ReturnType<typeof engine>>;
     try {
@@ -76,7 +92,12 @@ if (root?.dataset.messages && source && target && version && results && gutter &
 
     const { report } = verdict;
     editor.mark(report.diagnostics);
-    showReport({ source, results, tr, rerun: validate }, report, verdict.source);
+    status.done(report);
+    showReport(
+      { source, results, tr, rerun: validate, reveal: () => status.view("editor") },
+      report,
+      verdict.source,
+    );
     offer(() => reportData(report, verdict.source, version.value));
   };
 
@@ -84,21 +105,39 @@ if (root?.dataset.messages && source && target && version && results && gutter &
   const validate = () => void render();
   target.addEventListener("change", validate);
   version.addEventListener("change", validate);
-  query("#validate")?.addEventListener("click", validate);
-  query("#example")?.addEventListener("click", () => {
-    source.value = EXAMPLE;
+  // Asked for on purpose: the findings are shown where they were not beside the editor.
+  query("#validate")?.addEventListener("click", () => {
+    validate();
+    status.view("problems");
+  });
+  query("#view-editor")?.addEventListener("click", () => status.view("editor"));
+  query("#view-problems")?.addEventListener("click", () => status.view("problems"));
+
+  // Replaces the text and offers it back: the browser's own undo does not remember what a script put in.
+  const replace = (next: string) => {
+    const before = source.value;
+    if (before.trim() && before !== next && undo) {
+      previous = before;
+      undo.hidden = false;
+    }
+    source.value = next;
+    validate();
+  };
+  query("#undo-button")?.addEventListener("click", () => {
+    if (previous === undefined) return;
+    source.value = previous;
+    forget();
+    source.focus();
     validate();
   });
-  query("#clear")?.addEventListener("click", () => {
-    source.value = "";
-    validate();
-  });
+  query("#example")?.addEventListener("click", () => replace(EXAMPLE));
+  query("#clear")?.addEventListener("click", () => replace(""));
   const area = query(".editor");
   if (area) setupTooltip(area, layer, editor.findingAt, tr);
   const input = query<HTMLInputElement>("#file");
   const opener = query("#open");
   if (area && input && opener) {
-    setupFiles({ source, area, input, opener, tr, say, loaded: validate });
+    setupFiles({ area, input, opener, tr, say, replace });
   }
   const remember = query<HTMLInputElement>("#remember");
   if (remember) setupDraft(source, remember);

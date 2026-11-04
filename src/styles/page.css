@@ -196,6 +196,32 @@
   list-style: none;
 }
 
+/* A narrow screen: the notice and the header take less, so the editor is not pushed below the fold. */
+@media (max-width: 40rem) {
+  .notice {
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+  .notice p {
+    padding: 0.35rem 0;
+  }
+  .top {
+    flex-wrap: nowrap;
+    margin-top: 0.9rem;
+  }
+  /* The links are in the footer, and the page is short: what stays is the mark, the theme and the language. */
+  .top nav a:not(.lang) {
+    display: none;
+  }
+  .titlebar {
+    gap: 0.4rem;
+    margin-top: 0.9rem;
+  }
+  .titlebar .lead {
+    font-size: 0.875rem;
+  }
+}
+
 @media (min-width: 64rem) {
   .how {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
