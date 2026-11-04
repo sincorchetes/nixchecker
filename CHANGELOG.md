@@ -7,6 +7,10 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- A pass over the wording, in both languages: the headline says "your Nix configuration", the message for a file
+  that is not a module is plainer, "Remember on this device" is "Save draft on this device", the hint about renamed
+  options and the file-size message read more naturally, and a few labels are more direct ("Example diagnostic:",
+  "Results panel width", "{n} with unrestricted types").
 - A vertical line in the editor marks column 100, where `nixfmt` wraps lines by default; it moves with the text when
   it scrolls sideways, and the cursor's position turns amber past it. To make room for it the page is a little
   wider (84rem) and the editor's type a little smaller, and the findings start at 28% of the width.

@@ -11,7 +11,7 @@ export const en: Record<MessageKey, string> = {
   "nav.themeLight": "Light mode",
   "nav.themeDark": "Dark mode",
 
-  "hero.title": "Validate your Nix before you rebuild.",
+  "hero.title": "Validate your Nix configuration before rebuilding.",
   "hero.subtitle":
     "Paste your flake.nix or configuration and check every option against the official NixOS, Home Manager, disko and flake documentation.",
 
@@ -25,7 +25,7 @@ export const en: Record<MessageKey, string> = {
   "checker.clear": "Clear",
   "checker.open": "Open file",
   "checker.export": "Download report",
-  "checker.remember": "Remember on this device",
+  "checker.remember": "Save draft on this device",
   "checker.privacy":
     "Everything is validated in your browser. Your code is never sent to a server.",
 
@@ -49,8 +49,8 @@ export const en: Record<MessageKey, string> = {
   "result.details": "Details",
   "checker.replaced": "The text was replaced.",
   "checker.undo": "Undo",
-  "result.divider": "Width of the results",
-  "result.example": "This is what a finding looks like:",
+  "result.divider": "Results panel width",
+  "result.example": "Example diagnostic:",
   "result.error": "error",
   "result.warning": "warning",
   "result.errorCount.one": "{n} error",
@@ -62,11 +62,11 @@ export const en: Record<MessageKey, string> = {
   "result.catalog": "Catalog: {source}",
   "result.coverage": "{checked} of {total} assignments checked",
   "coverage.dynamic": "{n} with a dynamic value",
-  "coverage.any": "{n} of free type",
+  "coverage.any": "{n} with unrestricted types",
   "coverage.hidden": "{n} inside a hidden option",
   "coverage.interpolated": "{n} with interpolated text",
   "coverage.free-form": "{n} inside a free-form option",
-  "result.fileTooBig": "That file is too large (at most {max} KB).",
+  "result.fileTooBig": "That file is too large (maximum size: {max} KB).",
   "result.fileError": "The file could not be read.",
   "result.loadError": "Could not load the catalog. Check your connection and try again.",
   "result.line": "Line {line}, column {col}",
@@ -79,7 +79,7 @@ export const en: Record<MessageKey, string> = {
 
   "diag.syntax-unbalanced": "The character “{char}” has no matching pair.",
   "diag.syntax-expected": "Expected “{expected}” but found “{found}”.",
-  "diag.syntax-expected-eof": "Expected “{expected}” but the file ends.",
+  "diag.syntax-expected-eof": "Expected “{expected}”, but reached the end of the file.",
   "diag.syntax-unexpected": "Unexpected “{found}” here.",
   "diag.syntax-unexpected-eof": "The file ends before the expression is complete.",
   "diag.syntax-unclosed": "“{char}” is opened here but never closed.",
@@ -100,7 +100,7 @@ export const en: Record<MessageKey, string> = {
   "diag.nothing-to-check":
     "No attribute set { ... } was found to check, so nothing was validated. Put the options inside braces.",
   "diag.not-a-module":
-    "None of the keys of this file is an option of this kind of file, so it does not look like a module of it and nothing was checked. It may be a library, a package, an overlay, or only options that your own modules declare.",
+    "This file does not look like a module: none of its keys is an option for this file type, so nothing was checked. It may be a library, a package, an overlay, or a file containing only options declared by your own modules.",
   "diag.unknown-option": "The option “{path}” does not exist in the documentation.",
   "diag.type-mismatch": "“{path}” expects {expected}, but gets {got}.",
   "diag.deprecated": "“{path}” is deprecated: use “{replacement}”.",
@@ -116,7 +116,7 @@ export const en: Record<MessageKey, string> = {
     "The analysis runs in your browser. We never upload your configuration or store anything.",
   "features.hints.title": "Hints, not just errors",
   "features.hints.body":
-    "We suggest the right option, flag renamed ones and link the documentation.",
+    "We suggest the correct option, flag renamed options, and link to the documentation.",
 
   "footer.unofficial":
     "Unofficial project: not affiliated with or endorsed by the NixOS Foundation, Home Manager or disko.",

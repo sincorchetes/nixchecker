@@ -11,7 +11,7 @@ export const es = {
   "nav.themeLight": "Modo claro",
   "nav.themeDark": "Modo oscuro",
 
-  "hero.title": "Valida tu Nix antes de reconstruir.",
+  "hero.title": "Valida tu configuración de Nix antes de reconstruir.",
   "hero.subtitle":
     "Pega tu flake.nix o tu configuración y comprueba cada opción contra la documentación oficial de NixOS, Home Manager, disko y flakes.",
 
@@ -25,7 +25,7 @@ export const es = {
   "checker.clear": "Limpiar",
   "checker.open": "Abrir archivo",
   "checker.export": "Descargar informe",
-  "checker.remember": "Recordar en este dispositivo",
+  "checker.remember": "Guardar el borrador en este dispositivo",
   "checker.privacy": "Todo se valida en tu navegador. Tu código no se envía a ningún servidor.",
 
   "target.auto": "Detectar automáticamente",
@@ -48,8 +48,8 @@ export const es = {
   "result.details": "Detalles",
   "checker.replaced": "Se reemplazó el texto.",
   "checker.undo": "Deshacer",
-  "result.divider": "Ancho de los resultados",
-  "result.example": "Así se ve un hallazgo:",
+  "result.divider": "Ancho del panel de resultados",
+  "result.example": "Ejemplo de diagnóstico:",
   "result.error": "error",
   "result.warning": "aviso",
   "result.errorCount.one": "{n} error",
@@ -99,7 +99,7 @@ export const es = {
   "diag.nothing-to-check":
     "No se ha encontrado ningún conjunto de atributos { ... } que revisar, así que no se ha comprobado nada. Pon las opciones dentro de llaves.",
   "diag.not-a-module":
-    "Ninguna de las claves de este archivo es una opción de este tipo de archivo, así que no parece un módulo y no se ha comprobado nada. Puede ser una biblioteca, un paquete, un overlay, o solo opciones que declaran tus propios módulos.",
+    "Este archivo no parece un módulo: ninguna de sus claves es una opción de este tipo de archivo, así que no se ha comprobado nada. Puede ser una biblioteca, un paquete o un overlay, o contener únicamente opciones declaradas por tus propios módulos.",
   "diag.unknown-option": "La opción «{path}» no existe en la documentación.",
   "diag.type-mismatch": "«{path}» espera {expected}, pero recibe {got}.",
   "diag.deprecated": "«{path}» está obsoleta: usa «{replacement}».",
@@ -115,7 +115,7 @@ export const es = {
     "El análisis corre en tu navegador. No subimos tu configuración ni guardamos nada.",
   "features.hints.title": "Pistas, no solo errores",
   "features.hints.body":
-    "Sugerimos la opción correcta, avisamos de las renombradas y enlazamos la documentación.",
+    "Sugerimos la opción correcta, avisamos cuando una opción ha cambiado de nombre y enlazamos con la documentación.",
 
   "footer.unofficial":
     "Proyecto no oficial: no está afiliado ni respaldado por la Fundación NixOS, Home Manager ni disko.",

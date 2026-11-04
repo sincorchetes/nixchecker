@@ -35,7 +35,7 @@ A faint vertical line in the editor marks column 100, the width `nixfmt` (the of
 and the cursor's position turns amber once it is past it (the number is `RULER` in `src/components/checker/ruler.ts`).
 "Clear", "Load example" and opening a file offer "Undo" until the next edit. Where the editor and the problems are
 side by side, the bar between them can be dragged (or moved with the arrow keys, Home and End; Enter or a double
-click puts it back) to give room to one or the other, and the width is kept in this browser. "Download report" saves the report as JSON. "Remember on this device"
+click puts it back) to give room to one or the other, and the width is kept in this browser. "Download report" saves the report as JSON. "Save draft on this device"
 (off by default) keeps the text in this browser's storage between visits. The button in the header
 switches the light and dark themes: the page follows the system until it is used, and only that choice is
 kept. Everything runs in your browser; nothing is uploaded.
