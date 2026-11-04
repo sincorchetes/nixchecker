@@ -150,7 +150,8 @@ Projects that add options to NixOS have a catalog of their own, with only what t
 (`age.*`) and impermanence (`environment.persistence`). It is downloaded and added to the NixOS one when a file writes
 below one of those names, so a `sops.secrets` is known and typed instead of reported as unknown, its documentation link
 is the project's, and the source in the report lists them (`nixpkgs … + sops-nix …`). The oracle puts each to a NixOS with
-its module added. They are modules of NixOS only; the Home Manager modules of those projects are not covered.
+its module added. sops-nix also has one for Home Manager (`sops.*` in a Home Manager file). The Home Manager module of impermanence is
+not covered: it refuses to be imported on its own, as it belongs to the NixOS one.
 
 The `nix.conf` catalog is the list of settings Nix itself prints (`nix config show --json`, ~175 with their aliases and
 `extra-` forms), so it follows the Nix of the pinned nixpkgs. A text is read as a `nix.conf` when it is chosen, or when every

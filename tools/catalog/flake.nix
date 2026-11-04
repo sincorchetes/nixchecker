@@ -109,11 +109,19 @@
       # path of the module, which the oracle puts to the real module system.
       extension =
         name: src: module: roots:
+        extensionOf name src module roots (nixosSystem releases.unstable [ module ]).options "";
+
+      # The same for the modules of Home Manager (the bundle is `ext-<name>-home`).
+      homeExtension =
+        name: src: module: roots:
+        extensionOf name src module roots (hm releases.unstable [ module ]).options "-home";
+
+      extensionOf =
+        name: src: module: roots: options: suffix:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          options = (nixosSystem releases.unstable [ module ]).options;
         in
-        bundleWith pkgs "ext-${name}" "${src}" (lib.foldl' lib.recursiveUpdate { } (
+        bundleWith pkgs "ext-${name}${suffix}" "${src}" (lib.foldl' lib.recursiveUpdate { } (
           map (root: lib.setAttrByPath root (lib.attrByPath root null options)) roots
         )) "echo -n ${module} > $out/module-path";
 
@@ -134,10 +142,10 @@
         };
 
       hm =
-        release:
+        release: extra:
         release.home-manager.lib.homeManagerConfiguration {
           pkgs = release.nixpkgs.legacyPackages.${system};
-          modules = [
+          modules = extra ++ [
             {
               home = {
                 username = "user";
@@ -166,7 +174,7 @@
             nixosSystem release [ ]
           ).options;
           "home-manager-${name}" = bundle pkgs "home-manager-${name}" "${release.home-manager}/modules" (
-            hm release
+            hm release [ ]
           ).options;
           "nix-darwin-${name}" = bundle pkgs "nix-darwin-${name}" "${release.nix-darwin}/modules" (
             darwin release
@@ -181,6 +189,7 @@
             disko = (nixosSystem releases.unstable [ disko.nixosModules.disko ]).options.disko;
           };
           ext-sops-nix = extension "sops-nix" inputs.sops-nix "${inputs.sops-nix}/modules/sops" [ [ "sops" ] ];
+          ext-sops-nix-home = homeExtension "sops-nix" inputs.sops-nix "${inputs.sops-nix}/modules/home-manager/sops.nix" [ [ "sops" ] ];
           ext-agenix = extension "agenix" inputs.agenix "${inputs.agenix}/modules/age.nix" [ [ "age" ] ];
           ext-impermanence = extension "impermanence" inputs.impermanence "${inputs.impermanence}/nixos.nix" [
             [

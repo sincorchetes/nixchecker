@@ -1,7 +1,7 @@
 // Modules of the projects that add options to NixOS, like the NixOS ones in cases.ts. Each is put to a NixOS
 // that has the module of its project added.
 export const EXTENSION_CASES: Record<string, string[]> = {
-  "sops-nix": [
+  "ext-sops-nix": [
     // correct
     "{ sops.defaultSopsFile = ./secrets.yaml; }",
     '{ sops.secrets."db/password".owner = "postgres"; }',
@@ -17,7 +17,7 @@ export const EXTENSION_CASES: Record<string, string[]> = {
     '{ sops.age.generateKey = "yes"; }',
     "{ sops.secrets.token.restartUnits = true; }",
   ],
-  agenix: [
+  "ext-agenix": [
     // correct
     "{ age.secrets.token.file = ./token.age; }",
     '{ age.secrets.token.owner = "root"; }',
@@ -30,7 +30,7 @@ export const EXTENSION_CASES: Record<string, string[]> = {
     '{ age.identityPaths = "/etc/key"; }',
     '{ age.secrets.token.symlink = "yes"; }',
   ],
-  impermanence: [
+  "ext-impermanence": [
     // correct
     '{ environment.persistence."/persist".directories = [ "/var/lib/nixos" ]; }',
     '{ environment.persistence."/persist".files = [ "/etc/machine-id" ]; }',
@@ -42,5 +42,18 @@ export const EXTENSION_CASES: Record<string, string[]> = {
     '{ environment.persistence."/persist".hideMounts = "yes"; }',
     '{ environment.persistence."/persist".directories = "/var"; }',
     '{ environment.persistence."/persist".files = true; }',
+  ],
+  // The module asserts that a source of keys is set, so every case sets one.
+  "ext-sops-nix-home": [
+    // correct
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.defaultSopsFile = ./secrets.yaml; }',
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.secrets.token.path = "%r/token"; }',
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.secrets.token.mode = "0400"; }',
+    // unknown options
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.secret.x = 1; }',
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.defaultSopsFil = ./secrets.yaml; }',
+    // wrong types
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.secrets.token.mode = 400; }',
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.age.generateKey = "yes"; }',
   ],
 };

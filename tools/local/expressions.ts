@@ -44,7 +44,7 @@ let
   hm = import (${quote(r.homeManager)} + "/modules") {
     inherit pkgs;
     configuration = {
-      imports = [ file ${loose} ];
+      imports = [ file ${(r.modules ?? []).map(quote).join(" ")} ${loose} ];
       home = { username = "u"; homeDirectory = "/home/u"; stateVersion = "25.05"; };
     };
   };

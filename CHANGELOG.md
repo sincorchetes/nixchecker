@@ -6,6 +6,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ## Unreleased
 
 ### Added
+- The Home Manager module of sops-nix has its catalog (`ext-sops-nix-home`), loaded on top of Home Manager's when a file
+  writes below `sops`; the extensions now belong to the target they extend.
 - The "System" selector offers only the systems that suit the target: Macs for nix-darwin, Linux for NixOS and disko.
 - Extensions of NixOS: sops-nix, agenix and impermanence each have a catalog with only the options they add, loaded on top
   of the NixOS one when a file writes below `sops`, `age` or `environment.persistence`. Their options are known and typed,

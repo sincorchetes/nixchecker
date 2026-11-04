@@ -23,14 +23,17 @@ export const TARGETS: Target[] = [
 export function docUrl(target: Target, path?: string, version?: Version): string {
   switch (target) {
     case "nixos": {
-      const ext = path && extensionOf(path);
+      const ext = path && extensionOf("nixos", path);
       if (ext) return ext.docs;
       return `https://search.nixos.org/options?${version ? `channel=${version}&` : ""}query=${encodeURIComponent(path ?? "")}`;
     }
-    case "home-manager":
+    case "home-manager": {
+      const ext = path && extensionOf("home-manager", path);
+      if (ext) return ext.docs;
       return `https://nix-community.github.io/home-manager/options.xhtml${
         path ? `#opt-${path.replaceAll("*", "_name_")}` : ""
       }`;
+    }
     case "nix-darwin":
       return `https://nix-darwin.github.io/nix-darwin/manual/index.html${path ? `#opt-${path.replaceAll("*", "_name_")}` : ""}`;
     case "nix-conf":

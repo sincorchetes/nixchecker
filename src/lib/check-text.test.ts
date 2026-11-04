@@ -73,6 +73,19 @@ describe("checkText", () => {
     expect(report.diagnostics[0]?.docUrl).toContain("sops-nix");
   });
 
+  test("the Home Manager module of sops-nix is added to Home Manager, not to NixOS", async () => {
+    const { report, source } = await run(
+      '{ home.stateVersion = "24.11"; sops.age.generateKey = "yes"; }',
+      "home-manager",
+    );
+    expect(source).toContain("home-manager 26.05");
+    expect(source).toContain("+ sops-nix");
+    expect(report.diagnostics.map((d) => [d.code, d.params.path])).toEqual([
+      ["type-mismatch", "sops.age.generateKey"],
+    ]);
+    expect(report.diagnostics[0]?.docUrl).toContain("sops-nix#home-manager");
+  });
+
   test("a text that uses sops-nix is NixOS for the page, not Home Manager", async () => {
     const { report } = await run("{ sops.secrets.x = { }; services.openssh.enable = true; }");
     expect(report.target).toBe("nixos");

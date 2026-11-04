@@ -72,9 +72,9 @@ if (RELEASES.includes("unstable")) {
   for (const ext of EXTENSIONS) {
     const out = await bundleOut(extensionCatalog(ext));
     TARGETS.push({
-      kind: "nixos",
+      kind: ext.target === "home-manager" ? "home-manager" : "nixos",
       version: "unstable",
-      cases: EXTENSION_CASES[ext.name] ?? [],
+      cases: EXTENSION_CASES[extensionCatalog(ext)] ?? [],
       catalog: extensionCatalog(ext),
       module: (await Bun.file(`${out}/module-path`).text()).trim(),
     });
