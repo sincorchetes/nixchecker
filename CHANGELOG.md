@@ -7,6 +7,10 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- The weekly catalog pull request is opened by a GitHub App (a one-hour token for this repository, `CATALOG_APP_CLIENT_ID`
+  and `CATALOG_APP_PRIVATE_KEY`) instead of a personal token, with the steps to create it in `CONTRIBUTING.md`; and a
+  policy for old releases: the two newest stable ones and `unstable`, the oldest retired when a new one is added.
+  A language server change now voids the analysis under way at once, not when the wait for the next one ends.
 - A text that cannot be validated says why, apart from a catalog that cannot be downloaded: a bug of ours is now an
   "internal error" with its own message and a log line (in the page, and in the language server's output), where
   every failure used to read as a connection problem. The language server analyzes a document once the typing

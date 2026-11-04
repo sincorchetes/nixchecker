@@ -54,6 +54,7 @@ jobs:
           - [ ] \`devenv shell -- catalog\`, and commit what it generates.
           - [ ] The tests and examples that name the previous default release.
           - [ ] \`devenv shell -- oracle 40 1 all\`: no false positives against the new release.
+          - [ ] Retire the oldest stable release (CONTRIBUTING.md, "Releases"): its inputs, its entry in \`VERSIONS\`, its catalogs and tests.
 
           Opened by the weekly workflow \`new-release.yml\`."
           gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"

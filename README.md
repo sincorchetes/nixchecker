@@ -165,8 +165,8 @@ pins generate, and a daily canary regenerates them from the latest upstream and 
 
 Two weekly workflows keep the catalogs from falling behind. `catalog-update.yml` runs `catalog --update` and, when
 anything changed, opens a pull request with the new catalogs and lock file: it goes through the normal checks and a
-review, nothing reaches `main` by itself. For its checks to start, set the secret `CATALOG_PR_TOKEN` (a token that
-can write contents and pull requests): the default token's pull requests do not start workflows. `new-release.yml`
+review, nothing reaches `main` by itself. For its checks to start, the pull request is opened by a GitHub App (the
+default token's pull requests do not start workflows); see "Automation" in `CONTRIBUTING.md`. `new-release.yml`
 looks for a `nixos-YY.MM` branch of nixpkgs newer than every release in `versions.ts` and opens an issue with the
 steps to add it (`devenv shell -- releases <files>` is the check it runs); adding a release changes the selector of
 the site and its default, so it is done by a person.
