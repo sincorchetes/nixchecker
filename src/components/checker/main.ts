@@ -1,5 +1,5 @@
 import type { Version } from "../../lib/catalog";
-import { CatalogError } from "../../lib/catalog";
+import { CatalogError, systemsFor } from "../../lib/catalog";
 import { EXAMPLE } from "../../lib/example";
 import { format } from "../../lib/i18n";
 import type { TargetChoice } from "../../lib/validate";
@@ -118,6 +118,14 @@ if (
     );
     offer(() => reportData(report, verdict.source, version.value, system.value));
   };
+
+  // The systems that suit the chosen target; one that no longer suits gives way to the first that does.
+  const syncSystems = () => {
+    const fits = systemsFor(target.value) as readonly string[];
+    for (const option of system.options) option.disabled = !fits.includes(option.value);
+    if (!fits.includes(system.value)) system.value = fits[0] as string;
+  };
+  target.addEventListener("change", syncSystems);
 
   // `void`: the handlers start a validation and have nothing to wait for.
   const validate = () => void render();

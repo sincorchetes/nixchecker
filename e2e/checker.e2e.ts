@@ -160,6 +160,25 @@ describe("checker", () => {
     await page.select("#target", "auto");
   });
 
+  test("the systems offered follow the target", async () => {
+    const offered = () =>
+      page.$$eval("#system option:not([disabled])", (os) =>
+        os.map((o) => (o as HTMLOptionElement).value),
+      );
+    await page.select("#target", "nix-darwin");
+    expect(await offered()).toEqual(["aarch64-darwin", "x86_64-darwin"]);
+    expect(await page.$eval("#system", (el) => (el as HTMLSelectElement).value)).toBe(
+      "aarch64-darwin",
+    );
+    await page.select("#target", "nixos");
+    expect(await offered()).toEqual(["x86_64-linux", "aarch64-linux"]);
+    expect(await page.$eval("#system", (el) => (el as HTMLSelectElement).value)).toBe(
+      "x86_64-linux",
+    );
+    await page.select("#target", "auto");
+    expect(await offered()).toHaveLength(4);
+  });
+
   test("changing the system validates again", async () => {
     await validate("{ services.openssh.enable = true; }");
     await page.$eval("#results", (el) => el.replaceChildren());

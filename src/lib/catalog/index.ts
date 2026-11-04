@@ -5,7 +5,7 @@ import type { Version } from "./versions";
 export { loadExtended } from "./extend";
 export { EXTENSIONS, type Extension, extensionOf } from "./extensions";
 export { type Catalog, CatalogError, type IndexedOption, loadCatalog } from "./load";
-export { DEFAULT_SYSTEM, isDarwin, SYSTEMS, type System } from "./systems";
+export { DEFAULT_SYSTEM, isDarwin, SYSTEMS, type System, systemsFor } from "./systems";
 export { buildTree, type OptionTree } from "./tree";
 export type { OptionEntry, OptionType, Target } from "./types";
 export { catalogName, DEFAULT_VERSION, VERSIONS, type Version } from "./versions";

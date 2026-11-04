@@ -6,6 +6,7 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ## Unreleased
 
 ### Added
+- The "System" selector offers only the systems that suit the target: Macs for nix-darwin, Linux for NixOS and disko.
 - Extensions of NixOS: sops-nix, agenix and impermanence each have a catalog with only the options they add, loaded on top
   of the NixOS one when a file writes below `sops`, `age` or `environment.persistence`. Their options are known and typed,
   link to the project's documentation, and are listed in the report's source. The oracle holds them to a real NixOS with
