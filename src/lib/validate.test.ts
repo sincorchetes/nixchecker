@@ -176,12 +176,14 @@ describe("docUrl", () => {
       "https://search.nixos.org/options?query=",
       "https://nix-community.github.io/home-manager/options.xhtml",
       "https://nix-darwin.github.io/nix-darwin/manual/index.html",
+      "https://nix.dev/manual/nix/latest/command-ref/conf-file.html",
       "https://github.com/nix-community/disko/blob/master/docs/reference.md",
       "https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-format",
     ]);
     expect(docUrl("home-manager", "programs.git.enable")).toEndWith("#opt-programs.git.enable");
     expect(docUrl("home-manager", "a.*.b")).toEndWith("#opt-a._name_.b");
     expect(docUrl("nix-darwin", "a.*.b")).toEndWith("#opt-a._name_.b");
+    expect(docUrl("nix-conf", "extra-substituters")).toEndWith("conf-file.html#conf-substituters");
     expect(docUrl("nixos", "services.openssh", "25.11")).toBe(
       "https://search.nixos.org/options?channel=25.11&query=services.openssh",
     );

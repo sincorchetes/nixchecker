@@ -149,3 +149,22 @@ describe("nix-darwin", () => {
     TIME,
   );
 });
+
+describe("nix.conf", () => {
+  test(
+    "is recognized by its shape, checked without evaluating, and found in a directory",
+    async () => {
+      const conf = join(dir, "etc");
+      await Bun.$`mkdir -p ${conf}`;
+      await Bun.write(join(conf, "nix.conf"), "experimental-features = flakes\ncores = abc\n");
+      const run = await evaluate("--format", "json", conf);
+      expect(run.code).toBe(1);
+      expect(run.items.map((i) => [i.code, i.line])).toEqual([["type-mismatch", 2]]);
+      expect(JSON.parse(run.out).results[0]).toMatchObject({
+        target: "nix-conf",
+        evaluated: false,
+      });
+    },
+    TIME,
+  );
+});

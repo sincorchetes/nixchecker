@@ -142,6 +142,13 @@ describe("checker", () => {
     await page.select("#target", "auto");
   });
 
+  test("a nix.conf is told from Nix and its settings are checked", async () => {
+    await validate("experimental-features = nix-command flakes\nkeep-goin = true\n");
+    const text = await page.$eval("#results", (el) => el.textContent);
+    expect(text).toContain("keep-goin");
+    expect(text).toContain("keep-going");
+  });
+
   test("changing the system validates again", async () => {
     await validate("{ services.openssh.enable = true; }");
     await page.$eval("#results", (el) => el.replaceChildren());

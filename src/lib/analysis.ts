@@ -14,6 +14,7 @@ export type DiagnosticCode =
   | "list-plus"
   | "concat-non-list"
   | "nothing-to-check"
+  | "conf-bad-line"
   | "not-a-module"
   | "unknown-option"
   | "type-mismatch"

@@ -5,11 +5,11 @@ import { SYSTEMS } from "../../src/lib/catalog/systems";
 import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
 
 export const FORMATS = ["text", "json", "sarif"] as const;
-const TARGETS = ["auto", "nixos", "home-manager", "nix-darwin", "disko", "flake"];
+const TARGETS = ["auto", "nixos", "home-manager", "nix-darwin", "nix-conf", "disko", "flake"];
 
 export const HELP = `Usage: nixchecker [options] <file.nix | directory>...
 
-Checks NixOS, Home Manager, nix-darwin, disko and flake files against the official options (static analysis), and
+Checks NixOS, Home Manager, nix-darwin, nix.conf, disko and flake files against the official options (static analysis), and
 against the module system of your own Nix (real evaluation). Directories are searched for .nix files.
 Evaluating is running code, as nix build is: use it on code you trust (--static does not evaluate).
 

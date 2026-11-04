@@ -40,6 +40,8 @@ export const overlays: Record<Target, Overlay> = {
   },
   "home-manager": { entries: moduleEntries },
   "nix-darwin": { entries: moduleEntries },
+  // Read from `nix config show`; a file of settings has no module keys (see nix-conf.ts).
+  "nix-conf": {},
   // The nested options of the disk layouts are read from disko itself (see disko.ts).
   disko: { entries: moduleEntries },
   flake: { entries: flakeEntries },

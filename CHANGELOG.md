@@ -6,6 +6,10 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ## Unreleased
 
 ### Added
+- `nix.conf`: a target on the page and `--target nix-conf` on the command line (a `nix.conf` found in a directory is checked
+  too). The settings come from `nix config show --json`; the page tells a `nix.conf` from Nix by its shape, a line that
+  is not `name = value` is a syntax error where it is, and the oracle compares the validator with the real `nix` on
+  every setting (439 lines, no disagreement).
 - nix-darwin: a catalog per release (26.05, 25.11 and unstable, ~1.5k options each), a "nix-darwin" target on the page and
   `--target nix-darwin` on the command line, evaluated by Nix for a Mac (`aarch64-darwin` or `x86_64-darwin`) from any
   machine, and checked by the oracle. `homebrew` and `launchd` in a file point at it when the target is detected.

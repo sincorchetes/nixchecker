@@ -35,6 +35,7 @@ export const es = {
   "target.nixos": "NixOS",
   "target.home-manager": "Home Manager",
   "target.nix-darwin": "nix-darwin",
+  "target.nix-conf": "nix.conf",
   "target.disko": "disko",
   "target.flake": "Flake",
 
@@ -106,6 +107,8 @@ export const es = {
     "No se ha encontrado ningún conjunto de atributos { ... } que revisar, así que no se ha comprobado nada. Pon las opciones dentro de llaves.",
   "diag.not-a-module":
     "Este archivo no parece un módulo: ninguna de sus claves es una opción de este tipo de archivo, así que no se ha comprobado nada. Puede ser una biblioteca, un paquete o un overlay, o contener únicamente opciones declaradas por tus propios módulos.",
+  "diag.conf-bad-line":
+    "Esta línea no es un ajuste: nix.conf espera «nombre = valor», con espacios alrededor del «=». Leído: «{text}».",
   "diag.unknown-option": "La opción «{path}» no existe en la documentación.",
   "diag.type-mismatch": "«{path}» espera {expected}, pero recibe {got}.",
   "diag.deprecated": "«{path}» está obsoleta: usa «{replacement}».",

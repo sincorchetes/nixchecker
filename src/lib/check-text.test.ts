@@ -33,6 +33,25 @@ describe("checkText", () => {
     expect((await run("{ programs.git.enable = true; }")).report.target).toBe("nixos");
   });
 
+  test("a nix.conf is read as one when it is chosen, and when it can only be one", async () => {
+    const text = "experimental-features = nix-command flakes\ncores = abc\nkeep-goin = true\n";
+    for (const choice of ["nix-conf", "auto"] as const) {
+      const { report, source } = await run(text, choice);
+      expect(report.target).toBe("nix-conf");
+      expect(source).toContain("nix.conf");
+      expect(report.diagnostics.map((d) => [d.code, d.line, d.suggestion ?? null])).toEqual([
+        ["type-mismatch", 2, null],
+        ["unknown-option", 3, "keep-going"],
+      ]);
+    }
+    expect((await run("{ cores = 4; }")).report.target).not.toBe("nix-conf");
+  });
+
+  test("a line of a nix.conf that is not a setting is a syntax error, and the rest is still checked", async () => {
+    const { report } = await run("cores=4\nkeep-going = true\n", "nix-conf");
+    expect(report.diagnostics.map((d) => [d.code, d.line])).toEqual([["conf-bad-line", 1]]);
+  });
+
   test("an unreachable catalog is an error, not an empty answer", async () => {
     const down = (async () => new Response("down", { status: 503 })) as unknown as typeof fetch;
     await expect(checkText("{ a = 1; }", "nixos", "26.05", "/", down)).rejects.toThrow();

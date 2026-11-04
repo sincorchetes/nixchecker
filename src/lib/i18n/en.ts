@@ -36,6 +36,7 @@ export const en: Record<MessageKey, string> = {
   "target.nixos": "NixOS",
   "target.home-manager": "Home Manager",
   "target.nix-darwin": "nix-darwin",
+  "target.nix-conf": "nix.conf",
   "target.disko": "disko",
   "target.flake": "Flake",
 
@@ -107,6 +108,8 @@ export const en: Record<MessageKey, string> = {
     "No attribute set { ... } was found to check, so nothing was validated. Put the options inside braces.",
   "diag.not-a-module":
     "This file does not look like a module: none of its keys is an option for this file type, so nothing was checked. It may be a library, a package, an overlay, or a file containing only options declared by your own modules.",
+  "diag.conf-bad-line":
+    "This line is not a setting: nix.conf takes “name = value”, with spaces around the “=”. Read: “{text}”.",
   "diag.unknown-option": "The option “{path}” does not exist in the documentation.",
   "diag.type-mismatch": "“{path}” expects {expected}, but gets {got}.",
   "diag.deprecated": "“{path}” is deprecated: use “{replacement}”.",

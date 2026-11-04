@@ -7,6 +7,7 @@ import { extractRenames } from "../../src/lib/catalog/renames";
 import { shardFile, toShards } from "../../src/lib/catalog/shard";
 import { catalogName, VERSIONS, type Version } from "../../src/lib/catalog/versions";
 import { diskoEntries, LAYOUT_ROOTS } from "./disko";
+import { nixConfEntries } from "./nix-conf";
 import { overlays } from "./overlay";
 
 const root = join(import.meta.dir, "..", "..");
@@ -68,7 +69,8 @@ async function renamesIn(dir: string): Promise<Record<string, string>> {
   return found;
 }
 
-async function build(attr: string, overlay: Overlay) {
+// The store path of what the flake makes for `attr`.
+async function outPath(attr: string): Promise<string> {
   const proc = Bun.spawn(
     [
       "nix",
@@ -83,6 +85,11 @@ async function build(attr: string, overlay: Overlay) {
   );
   const out = (await new Response(proc.stdout).text()).trim();
   if ((await proc.exited) !== 0) throw new Error(`nix build ${attr} failed`);
+  return out;
+}
+
+async function build(attr: string, overlay: Overlay) {
+  const out = await outPath(attr);
   const options = await Bun.file(join(out, "options.json")).json();
   const hidden = await Bun.file(join(out, "hidden.json")).json();
   const shapes = await Bun.file(join(out, "shapes.json")).json();
@@ -93,21 +100,7 @@ async function build(attr: string, overlay: Overlay) {
 
 // The overlay of disko plus the nested options of its disk layouts, which its manual does not list.
 async function withDiskoLayouts(overlay: Overlay): Promise<Overlay> {
-  const proc = Bun.spawn(
-    [
-      "nix",
-      "build",
-      `${flakeDir}#disko-types`,
-      "--no-link",
-      "--print-out-paths",
-      "--extra-experimental-features",
-      "nix-command flakes",
-    ],
-    { stderr: "inherit" },
-  );
-  const out = (await new Response(proc.stdout).text()).trim();
-  if ((await proc.exited) !== 0) throw new Error("nix build disko-types failed");
-  const layouts = diskoEntries(await Bun.file(out).json());
+  const layouts = diskoEntries(await Bun.file(await outPath("disko-types")).json());
   return {
     ...overlay,
     entries: [...(overlay.entries ?? []), ...layouts],
@@ -179,6 +172,17 @@ await write(
   label("disko", "disko"),
   await build("disko", await withDiskoLayouts(overlays.disko)),
   ["disko", "nixpkgs"],
+);
+// The settings of nix.conf are the ones Nix itself lists; there is no module system behind them.
+const confOut = await outPath("nix-conf");
+const nixVersion = (await Bun.file(join(confOut, "version")).text())
+  .trim()
+  .replace(/^nix \(Nix\) /, "Nix ");
+await write(
+  "nix-conf",
+  `Nix manual · nix.conf · ${nixVersion}`,
+  convert({}, [], { entries: nixConfEntries(await Bun.file(join(confOut, "config.json")).json()) }),
+  ["nixpkgs"],
 );
 await write("flake", "Nix manual · flake format", convert({}, [], overlays.flake));
 

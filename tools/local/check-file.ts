@@ -137,7 +137,8 @@ export async function checkFile(file: string, o: Options): Promise<Result> {
 
   // The real evaluation, unless the text does not even parse. A flake brings its own inputs.
   const broken = items.some((i) => i.level === "syntax" && i.severity === "error");
-  const evaluated = !broken && !o.static;
+  // A nix.conf has no module system to evaluate: Nix reads it when it runs (see tools/oracle/nix-conf.ts).
+  const evaluated = !broken && !o.static && target !== "nix-conf";
   if (evaluated) {
     const found = await nixFindings(target, file, analysis, o);
     for (const finding of found) {

@@ -1,7 +1,7 @@
 # nixchecker
 
 Paste your `flake.nix` or any Nix file and validate it against the official documentation of
-NixOS, Home Manager, nix-darwin, disko and Nix flakes.
+NixOS, Home Manager, nix-darwin, disko, Nix flakes and `nix.conf`.
 
 > **Unofficial project.** nixchecker is not affiliated with or endorsed by the NixOS Foundation,
 > Home Manager, nix-darwin or disko. It was built with the help of AI: always review the results before
@@ -68,7 +68,7 @@ is reported in that file, at its line and column.
   `homeConfigurations` entry (it needs a `flake.lock`).
 - `--partial` is for a file that is part of a system, not all of it: only the options it sets are
   read, so the assertions of a whole system (root file system, boot loader) do not get in the way.
-- `--target` is `nixos`, `home-manager`, `nix-darwin` or `disko`; `--release` picks the pinned nixpkgs and Home
+- `--target` is `nixos`, `home-manager`, `nix-darwin`, `nix-conf` or `disko`; `--release` picks the pinned nixpkgs and Home
   Manager (or give `--nixpkgs DIR --home-manager DIR`); `--static` skips the evaluation.
 - `--system` is `x86_64-linux`, `aarch64-linux`, `aarch64-darwin` or `x86_64-darwin` (default: the system of your Nix, a Mac
   for nix-darwin; a Linux system with nix-darwin, or the reverse, is a usage error): what the configuration is built
@@ -144,7 +144,13 @@ Limits to know about:
 every file in it; a test checks that the files are the ones it lists.
 
 The NixOS, Home Manager and nix-darwin catalogs exist per release (26.05, 25.11 and unstable), chosen with the
-version selector; disko and flakes have one catalog each.
+version selector; disko, flakes and `nix.conf` have one catalog each.
+
+The `nix.conf` catalog is the list of settings Nix itself prints (`nix config show --json`, ~175 with their aliases and
+`extra-` forms), so it follows the Nix of the pinned nixpkgs. A text is read as a `nix.conf` when it is chosen, or when every
+line is a comment, an `include` or `name = words` (Nix needs the spaces around the `=`). It is checked statically only: the
+oracle (`devenv shell -- oracle`) holds the validator to what the real `nix` accepts, on every setting. An unknown setting is
+an error here, though Nix only warns about it.
 
 Validation runs entirely in the browser: your configuration is never uploaded. The catalogs are
 sharded (`public/catalog/<target>/`): the browser downloads a small index plus only the shards for

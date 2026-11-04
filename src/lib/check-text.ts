@@ -3,6 +3,7 @@ import type { OptionTree } from "./catalog";
 import { type Catalog, loadCatalog, type Target, type Version } from "./catalog";
 import { splitPath } from "./catalog/path";
 import { findExact } from "./catalog/tree";
+import { looksLikeConf, parseConf } from "./nixconf/parse";
 import {
   analyze,
   bestReport,
@@ -61,8 +62,10 @@ export async function checkText(
   base: string,
   fetcher?: typeof fetch,
 ): Promise<Checked> {
-  const analysis = analyze(text);
-  const kinds = candidateTargets(analysis, choice);
+  // A nix.conf is not Nix: chosen, or (when not told) a text that only has that shape.
+  const conf = choice === "nix-conf" || (choice === "auto" && looksLikeConf(text));
+  const analysis = conf ? parseConf(text) : analyze(text);
+  const kinds: Target[] = conf ? ["nix-conf"] : candidateTargets(analysis, choice);
   const paths = analysis.assignments.map((a) => a.path);
   const catalogs = await Promise.all(
     kinds.map((kind) => loadWithRenames(kind, release, base, paths, fetcher)),
@@ -74,6 +77,6 @@ export async function checkText(
   const catalog = catalogs[kinds.indexOf(best.target)] as (typeof catalogs)[number];
   // A file that was not told what it is, and has no key that is an option of what it was held against, is
   // not a module of it: one warning instead of an error for each key.
-  const report = choice === "auto" ? foldUnrelated(best, analysis, catalog.tree) : best;
+  const report = choice === "auto" && !conf ? foldUnrelated(best, analysis, catalog.tree) : best;
   return { analysis, report, source: catalog.source, tree: catalog.tree };
 }

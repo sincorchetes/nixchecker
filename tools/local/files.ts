@@ -1,4 +1,4 @@
-// The Nix files a run is about: the files named, and every .nix file under the directories named.
+// The files a run is about: the files named, and every .nix file and nix.conf under the directories named.
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -12,7 +12,7 @@ async function walk(dir: string, found: string[]): Promise<void> {
     if (entry.name.startsWith(".") || SKIPPED.has(entry.name)) continue;
     const path = join(dir, entry.name);
     if (entry.isDirectory()) await walk(path, found);
-    else if (entry.name.endsWith(".nix")) found.push(path);
+    else if (entry.name.endsWith(".nix") || entry.name === "nix.conf") found.push(path);
   }
 }
 

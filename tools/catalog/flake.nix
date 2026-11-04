@@ -155,6 +155,16 @@
           disko = bundle nixpkgs.legacyPackages.${system} "disko" "${disko}" {
             disko = (nixosSystem releases.unstable [ disko.nixosModules.disko ]).options.disko;
           };
+          # The settings of nix.conf as the Nix of the development nixpkgs describes them.
+          nix-conf =
+            nixpkgs.legacyPackages.${system}.runCommand "nixchecker-catalog-nix-conf"
+              { nativeBuildInputs = [ nixpkgs.legacyPackages.${system}.nix ]; }
+              ''
+                mkdir $out
+                export HOME=$TMPDIR NIX_CONF_DIR=$TMPDIR/etc
+                nix config show --json --extra-experimental-features nix-command > $out/config.json
+                nix --version > $out/version
+              '';
           # The options of every disk layout type, as disko serializes them for its own documentation.
           disko-types = nixpkgs.legacyPackages.${system}.writeText "disko-types.json" (
             builtins.toJSON disko.lib.jsonTypes

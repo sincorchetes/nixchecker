@@ -62,6 +62,13 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("homebrew.enable", "bool"),
     opt("nix.enable", "bool"),
   ]),
+  "nix-conf": index([
+    opt("experimental-features", "mix", { values: ["str", "list", "bool", "int"] }),
+    opt("max-jobs", "mix", { values: ["int", 'enum:["auto"]'] }),
+    opt("keep-going", "bool"),
+    opt("cores", "int"),
+    opt("substituters", "mix", { values: ["str", "list", "bool", "int"] }),
+  ]),
   disko: index([
     opt(`${disk}.device`, "str"),
     opt(`${disk}.type`, "enum", { values: ["disk"] }),
