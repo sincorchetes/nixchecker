@@ -2,12 +2,12 @@ import type { Target } from "./types";
 import type { Version } from "./versions";
 
 export { type Catalog, CatalogError, type IndexedOption, loadCatalog } from "./load";
-export { DEFAULT_SYSTEM, SYSTEMS, type System } from "./systems";
+export { DEFAULT_SYSTEM, isDarwin, SYSTEMS, type System } from "./systems";
 export { buildTree, type OptionTree } from "./tree";
 export type { OptionEntry, OptionType, Target } from "./types";
 export { catalogName, DEFAULT_VERSION, VERSIONS, type Version } from "./versions";
 
-export const TARGETS: Target[] = ["nixos", "home-manager", "disko", "flake"];
+export const TARGETS: Target[] = ["nixos", "home-manager", "nix-darwin", "disko", "flake"];
 
 /** Official documentation page for a target, deep-linked to an option when possible. */
 export function docUrl(target: Target, path?: string, version?: Version): string {
@@ -18,6 +18,8 @@ export function docUrl(target: Target, path?: string, version?: Version): string
       return `https://nix-community.github.io/home-manager/options.xhtml${
         path ? `#opt-${path.replaceAll("*", "_name_")}` : ""
       }`;
+    case "nix-darwin":
+      return `https://nix-darwin.github.io/nix-darwin/manual/index.html${path ? `#opt-${path.replaceAll("*", "_name_")}` : ""}`;
     case "disko":
       return "https://github.com/nix-community/disko/blob/master/docs/reference.md";
     case "flake":

@@ -1,10 +1,10 @@
 # nixchecker
 
 Paste your `flake.nix` or any Nix file and validate it against the official documentation of
-NixOS, Home Manager, disko and Nix flakes.
+NixOS, Home Manager, nix-darwin, disko and Nix flakes.
 
 > **Unofficial project.** nixchecker is not affiliated with or endorsed by the NixOS Foundation,
-> Home Manager or disko. It was built with the help of AI: always review the results before
+> Home Manager, nix-darwin or disko. It was built with the help of AI: always review the results before
 > applying changes to a real system.
 
 ## Status
@@ -12,7 +12,7 @@ NixOS, Home Manager, disko and Nix flakes.
 In active development; not for anything that cannot be checked twice. The validator parses the file
 with its own Nix parser (syntax errors come with the exact line and column), collects every
 `a.b.c = value;` assignment and checks it against catalogs generated from the official sources:
-`nixosOptionsDoc` for NixOS (~27k options), the Home Manager manual (~6k) and the disko module, plus the
+`nixosOptionsDoc` for NixOS (~27k options), the Home Manager manual (~6k), the nix-darwin manual (~1.5k) and the disko module, plus the
 flake format. It reports unknown options with "did you mean" suggestions and the options available there, wrong
 value types, renamed options, options hidden from the manuals, and names that are not defined.
 
@@ -68,9 +68,10 @@ is reported in that file, at its line and column.
   `homeConfigurations` entry (it needs a `flake.lock`).
 - `--partial` is for a file that is part of a system, not all of it: only the options it sets are
   read, so the assertions of a whole system (root file system, boot loader) do not get in the way.
-- `--target` is `nixos`, `home-manager` or `disko`; `--release` picks the pinned nixpkgs and Home
+- `--target` is `nixos`, `home-manager`, `nix-darwin` or `disko`; `--release` picks the pinned nixpkgs and Home
   Manager (or give `--nixpkgs DIR --home-manager DIR`); `--static` skips the evaluation.
-- `--system` is `x86_64-linux` or `aarch64-linux` (default: the system of your Nix): what the configuration is built
+- `--system` is `x86_64-linux`, `aarch64-linux`, `aarch64-darwin` or `x86_64-darwin` (default: the system of your Nix, a Mac
+  for nix-darwin; a Linux system with nix-darwin, or the reverse, is a usage error): what the configuration is built
   for, which decides platform conditions and assertions. The options are the same on both, so the page has one
   catalog; its "System" selector is recorded in the downloaded report.
 - `--format json` (or `--json`) prints the findings as data, `{ "schemaVersion": 1, "results": [...] }` with one result per file, each
@@ -142,7 +143,7 @@ Limits to know about:
 `public/catalog/manifest.json` records the revision each catalog was generated from and the hash of
 every file in it; a test checks that the files are the ones it lists.
 
-The NixOS and Home Manager catalogs exist per release (26.05, 25.11 and unstable), chosen with the
+The NixOS, Home Manager and nix-darwin catalogs exist per release (26.05, 25.11 and unstable), chosen with the
 version selector; disko and flakes have one catalog each.
 
 Validation runs entirely in the browser: your configuration is never uploaded. The catalogs are
@@ -189,7 +190,7 @@ devenv test             # lint, types, unit tests (100% line coverage gate) and 
 
 Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `corpus` (the parser against nixpkgs and
 Home Manager), `differential` (the parser against the official one on damaged files), `evaluate` (a file against real Nix), `oracle` (the validator against
-the real NixOS, Home Manager and disko module systems, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
+the real NixOS, Home Manager, nix-darwin and disko module systems, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
 `sonar`.
 
 ## Deployment (GitHub Pages)

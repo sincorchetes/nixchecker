@@ -46,3 +46,7 @@ export const releaseRoots = (version: Version): Promise<string[]> => {
 
 /** The disko repository, whose module is the one the catalog describes. */
 export const diskoRoot = (): Promise<string> => sourceRoot("disko", 0);
+
+/** The nix-darwin of a release; apart from the others, as only a Mac configuration needs it. */
+export const darwinRoot = (version: Version): Promise<string> =>
+  sourceRoot(`nix-darwin-${version === "unstable" ? version : version.replace(".", "")}`, 1);

@@ -6,7 +6,7 @@ import { catalogName, type Version } from "../../src/lib/catalog/versions";
 import type { Finding } from "../../src/lib/evaluation";
 import { parse } from "../../src/lib/nix/parse";
 import { type Analysis, analyze } from "../../src/lib/validate";
-import { diskoRoot, releaseRoots } from "../corpus/sources";
+import { darwinRoot, diskoRoot, releaseRoots } from "../corpus/sources";
 import type { Kind, Roots } from "./expressions";
 import { evaluateFlake } from "./flake";
 import { reconcile } from "./reconcile";
@@ -17,6 +17,7 @@ import { systemFor } from "./system";
 
 export interface Options {
   target?: string | undefined;
+  nixDarwin?: string | undefined;
   system?: string | undefined;
   version: Version;
   nixpkgs?: string | undefined;
@@ -46,8 +47,8 @@ export interface Result {
 }
 
 // Building the pinned sources is slow, so a run over many files does it once per release.
-const built = new Map<Version, Promise<Omit<Roots, "system">>>();
-function rootsOf(o: Options): Promise<Omit<Roots, "system">> {
+const built = new Map<Version, Promise<Omit<Roots, "system" | "nixDarwin">>>();
+function rootsOf(o: Options): Promise<Omit<Roots, "system" | "nixDarwin">> {
   if (!built.has(o.version)) {
     built.set(
       o.version,
@@ -62,7 +63,7 @@ function rootsOf(o: Options): Promise<Omit<Roots, "system">> {
       })(),
     );
   }
-  return built.get(o.version) as Promise<Omit<Roots, "system">>;
+  return built.get(o.version) as Promise<Omit<Roots, "system" | "nixDarwin">>;
 }
 
 // The keys of the module system itself, which are not options and cannot be read from `config`.
@@ -101,7 +102,11 @@ async function nixFindings(
   o: Options,
 ): Promise<Finding[]> {
   if (target === "flake") return evaluateFlake(resolve(file), o.allOutputs, o.system);
-  const roots = { ...(await rootsOf(o)), system: await systemFor(o.system) };
+  const roots = {
+    ...(await rootsOf(o)),
+    nixDarwin: target === "nix-darwin" ? (o.nixDarwin ?? (await darwinRoot(o.version))) : "",
+    system: await systemFor(o.system, target),
+  };
   const options = optionPaths(analysis);
   const found = await evaluate(target as Kind, roots, file, o.partial ? options : undefined);
   const stoppedOnValues = found.some((f) => f.kind === "unknown-option" || f.kind === "type-error");

@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { type Finding, parseEvaluation } from "../../src/lib/evaluation";
-import { type Kind, type Roots, systemExpression } from "./expressions";
+import { BASE, type Kind, type Roots, systemExpression } from "./expressions";
 import { mapLimit } from "./pool";
 
 // Builds the derivation of the system: that only evaluates when every assertion of it holds.
@@ -20,13 +20,6 @@ const PROBE = `let get = p: builtins.foldl' (c: n: c.\${n}) config p; in map (p:
 // How many failing options are read at once, after the first one Nix stopped at: all of them are asked
 // about, none is left out.
 const CONCURRENCY = 4;
-
-// Something every system has, to read first: an unknown option is found by reading any of them.
-const BASE: Record<Kind, string[]> = {
-  nixos: ["system", "name"],
-  "home-manager": ["home", "username"],
-  disko: ["system", "name"],
-};
 
 const nixList = (paths: string[][]) =>
   `[ ${paths.map((p) => `[ ${p.map((s) => JSON.stringify(s)).join(" ")} ]`).join(" ")} ]`;

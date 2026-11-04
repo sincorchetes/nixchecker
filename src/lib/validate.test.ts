@@ -165,6 +165,8 @@ describe("detectTarget", () => {
     expect(target("{ nixConfig.x = 1; }")).toBe("flake");
     expect(target("{ disko.devices = {}; }")).toBe("disko");
     expect(target("{ home.username = 1; }")).toBe("home-manager");
+    expect(target("{ homebrew.enable = true; }")).toBe("nix-darwin");
+    expect(target("{ launchd.agents = {}; }")).toBe("nix-darwin");
   });
 });
 
@@ -173,11 +175,13 @@ describe("docUrl", () => {
     expect(TARGETS.map((t) => docUrl(t))).toEqual([
       "https://search.nixos.org/options?query=",
       "https://nix-community.github.io/home-manager/options.xhtml",
+      "https://nix-darwin.github.io/nix-darwin/manual/index.html",
       "https://github.com/nix-community/disko/blob/master/docs/reference.md",
       "https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-format",
     ]);
     expect(docUrl("home-manager", "programs.git.enable")).toEndWith("#opt-programs.git.enable");
     expect(docUrl("home-manager", "a.*.b")).toEndWith("#opt-a._name_.b");
+    expect(docUrl("nix-darwin", "a.*.b")).toEndWith("#opt-a._name_.b");
     expect(docUrl("nixos", "services.openssh", "25.11")).toBe(
       "https://search.nixos.org/options?channel=25.11&query=services.openssh",
     );
@@ -197,9 +201,9 @@ describe("choosing the target", () => {
     expect(of("{ home.username = 1; }")).toEqual(["home-manager"]);
   });
 
-  test("with no signal, NixOS and Home Manager are both candidates, and the fewest errors wins", () => {
+  test("with no signal, NixOS, Home Manager and nix-darwin are all candidates, and the fewest errors wins", () => {
     const analysis = analyze("{ programs.zsh.enable = true; }");
-    expect(candidateTargets(analysis, "auto")).toEqual(["nixos", "home-manager"]);
+    expect(candidateTargets(analysis, "auto")).toEqual(["nixos", "home-manager", "nix-darwin"]);
     const report = (target: Target, errors: number): Report => ({
       target,
       coverage: { total: 0, skipped: [] },

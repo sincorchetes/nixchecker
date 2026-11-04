@@ -5,18 +5,18 @@ import { SYSTEMS } from "../../src/lib/catalog/systems";
 import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
 
 export const FORMATS = ["text", "json", "sarif"] as const;
-const TARGETS = ["auto", "nixos", "home-manager", "disko", "flake"];
+const TARGETS = ["auto", "nixos", "home-manager", "nix-darwin", "disko", "flake"];
 
 export const HELP = `Usage: nixchecker [options] <file.nix | directory>...
 
-Checks NixOS, Home Manager, disko and flake files against the official options (static analysis), and
+Checks NixOS, Home Manager, nix-darwin, disko and flake files against the official options (static analysis), and
 against the module system of your own Nix (real evaluation). Directories are searched for .nix files.
 Evaluating is running code, as nix build is: use it on code you trust (--static does not evaluate).
 
 Options:
   --target <t>        what the file is: ${TARGETS.join(", ")} (default: auto, as the web page decides)
   --release <v>       release of nixpkgs and Home Manager: ${VERSIONS.join(", ")} (default: ${DEFAULT_VERSION})
-  --system <s>        system to build for: ${SYSTEMS.join(", ")} (default: the one of your Nix)
+  --system <s>        system to build for: ${SYSTEMS.join(", ")} (default: the one of your Nix; a Mac for nix-darwin)
   --static            static analysis only; do not evaluate with Nix
   --partial           the file is part of a system, not all of it: read its options, skip the
                       assertions of a whole system (root file system, boot loader)
@@ -27,6 +27,7 @@ Options:
   --jobs <n>          files checked at the same time (default: ${Math.min(4, availableParallelism())})
   --nixpkgs <dir>     use this nixpkgs instead of building the pinned one (with --home-manager)
   --home-manager <dir>
+  --nix-darwin <dir>
   --disko <dir>
   --version           print the version and exit
   --help              print this help and exit
@@ -45,6 +46,7 @@ export interface Command {
   release: Version;
   jobs: number;
   system?: string | undefined;
+  nixDarwin?: string | undefined;
   target?: string | undefined;
   nixpkgs?: string | undefined;
   homeManager?: string | undefined;
@@ -93,6 +95,7 @@ export function parseCommand(argv: string[]): Command {
     nixpkgs: values.nixpkgs,
     homeManager: values["home-manager"],
     disko: values.disko,
+    nixDarwin: values["nix-darwin"],
     static: values.static,
     partial: values.partial,
     allOutputs: values["all-outputs"],
@@ -106,6 +109,7 @@ const OPTIONS = {
   nixpkgs: { type: "string" },
   "home-manager": { type: "string" },
   disko: { type: "string" },
+  "nix-darwin": { type: "string" },
   static: { type: "boolean" },
   partial: { type: "boolean" },
   "all-outputs": { type: "boolean" },

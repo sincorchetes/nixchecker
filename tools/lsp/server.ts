@@ -1,6 +1,6 @@
 // A Language Server for Nix files: the static layer of the validator, as diagnostics while you type.
 //   bun tools/lsp/server.ts     (talks LSP over stdin/stdout; `devenv shell -- lsp`)
-// Options (initializationOptions): { "target": "nixos" | "home-manager" | "disko" | "flake", "release": "unstable" }.
+// Options (initializationOptions): { "target": "nixos" | "home-manager" | "nix-darwin" | "disko" | "flake", "release": "unstable" }.
 import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
 import { applyFix, offsetOf } from "../../src/lib/fix";
 import type { Diagnostic } from "../../src/lib/validate";

@@ -1,16 +1,25 @@
 // The Nix expressions that build a system out of a module with the real module systems.
-export type Kind = "nixos" | "home-manager" | "disko";
+export type Kind = "nixos" | "home-manager" | "disko" | "nix-darwin";
 
 /** The sources the evaluations are made from. */
 export interface Roots {
   nixpkgs: string;
   homeManager: string;
   disko: string;
+  nixDarwin: string;
   /** The system the configuration is built for, as flakes name it (`aarch64-linux`). */
   system: string;
 }
 
 const quote = (s: string) => JSON.stringify(s);
+
+// Something every system has, to read first: an unknown option is found by reading any of them.
+export const BASE: Record<Kind, string[]> = {
+  nixos: ["system", "name"],
+  "home-manager": ["home", "username"],
+  disko: ["system", "name"],
+  "nix-darwin": ["nix", "enable"],
+};
 
 /**
  * An expression taking `args` (an attribute set pattern such as `{ file, path }`). In `force`, `config`
@@ -39,6 +48,19 @@ let
   };
   config = hm.config;
   top = hm.activationPackage.drvPath;
+in
+${force}`;
+  }
+  if (kind === "nix-darwin") {
+    return `${args}:
+let
+  ev = import ${quote(r.nixDarwin)} {
+    nixpkgs = ${quote(r.nixpkgs)};
+    system = ${quote(r.system)};
+    configuration = { imports = [ file ${loose} ]; };
+  };
+  config = ev.config;
+  top = ev.config.system.build.toplevel.drvPath;
 in
 ${force}`;
   }

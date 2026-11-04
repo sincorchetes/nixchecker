@@ -1,5 +1,5 @@
 {
- "lock": "f4577e45b9ccfc3ca70e7e28004e4a02365dc41d506315aba68db9a980de4015",
+ "lock": "ba37656b4a9e99e30c2f80f58ba3921ec8ad0a5059f1e8390a53b7883e1743d2",
  "catalogs": {
   "nixos-26.05": {
    "source": "nixpkgs 26.05 · 08d3a97 · 2026-10-28",
@@ -238,6 +238,42 @@
     "xsession.json": "c5c2fef0fb0e73b8bade49769a086240231218faa1acda6aeee7def84aa9dfbb"
    }
   },
+  "nix-darwin-26.05": {
+   "source": "nix-darwin 26.05 · d31953c · 2026-10-24",
+   "revisions": {
+    "nix-darwin-2605": "d31953cf55f9027a56e9be938daf5db8c5655663",
+    "nixpkgs-2605": "08d3a97586f6b6343b3b5e799980773629432610"
+   },
+   "files": {
+    "_module.json": "2ab82b67100961dc974cfaeff94cf1ad555ad0111aac2127d7bc20e2ee2843e8",
+    "assertions.json": "a37e9e857de8b94d1b402559939ece7e235abc0ac8cc5d3a2ea0ba5441328a80",
+    "config.json": "74208283e98225fcc8f759dfe07eb27cc7162eb28d7f09f38db3e5bc8b678dde",
+    "disabledModules.json": "a12df473ced99179da6837d370b2ff57b91920b726eca3c6552fe84d6de55b47",
+    "documentation.json": "316e2453780a0c13d8d1c4e3bfbd36b05cb3a67912b95d7b2479584bfae7473c",
+    "environment.json": "5dfa090334d0361e9d5eaa8ade7deb2c20f838ef550ffeb41ac924642891fcbe",
+    "fonts.json": "b66e4ff9d510fc20bce5efeee99b349147b927518b096d196d79e909f17c252b",
+    "freeformType.json": "b83f3a682b11c90d5ebb40e3a6b6896b16b1f171c848c9e8730503bf0f4a903b",
+    "homebrew.json": "6385962bcac6c639612523a735e42c2cc6c471707386ede19a0fd8704bc98e0f",
+    "ids.json": "29edb925d89e1dd1af34bf80cfefb73d8444a6c0aad5d6408e501ba8c48a044c",
+    "imports.json": "f937c674c84236870443e933439c760f144492d3628f3ae773d0fd20e1d0c65a",
+    "index.json": "13ee10bf1ff954cf254fc7c1f0134e647bed62fffb947381fc3b37db56ff188c",
+    "launchd.json": "ef706226dfd1c45ed285d05be36bfd35c98b4316893c0a177dd0001ea4f79acd",
+    "lib.json": "972526c1f8bca615cab9cb805e6d6d9822f82a83455e0d8a899a130d6238fbc6",
+    "meta.json": "1ec60215428a67ba42b553200b20ff6af09eeaec85d1c4255624df23614b6631",
+    "networking.json": "7a3cc3bf97c792eb1546e335dcc24f52ebb20c891cf013ed23a462b8b91ee394",
+    "nix.json": "c78122d13b5ad5527299f65dce0664e6f2b0d6d86b95ff607550999d7f4fd50f",
+    "nixpkgs.json": "1ff58e707dabcbfc03d493d5dcef70f3e2a76f09885c6cfa30fe0cdf89cb328c",
+    "options.json": "463619cbd8dc6ba00925dced70827b668a7372fe004ba3ff41be0b79b51cc92b",
+    "power.json": "bb8e0dac29941c983511b447e3937bd9e2379811b0dd5004e94de7e147f66a4a",
+    "programs.json": "f6a810a8d5905453eee72241f4b5128ebd61bf31110286afdd88bdf07bed11b6",
+    "security.json": "8648a9ee9e59df16e9f38e46b210efded685a5a09d59fdc8c6b76989a55a98f5",
+    "services.json": "8dff6e86e2e5ea364365b1e956181fd9447b12b07cc0f9fd182f28777f1e0c29",
+    "system.json": "f5e16feb117f486913d589e1ee91b29c07919ccf62a4fc18e4973d214d98ce83",
+    "time.json": "f9783c1b62d0a3189584a8932e59587b22dd270f063b2b400e396c7e679bacb0",
+    "users.json": "223b211b17667109fd6521e862a9bfdc147b87f04f81b0aeecf9548f524f7d00",
+    "warnings.json": "92bc661bd6e794e9176737be576b3c000fd44a359e48cf8c903d52af62db2979"
+   }
+  },
   "nixos-25.11": {
    "source": "nixpkgs 25.11 · b6018f8 · 2026-06-30",
    "revisions": {
@@ -463,6 +499,42 @@
     "xfconf.json": "6d38e7133e1745954cd1142c1c63e0d3cb18b3b6d625fb3f3bb515d8a30e7542",
     "xresources.json": "83a94c3a4da36ebc74a4cfd6d67700d1edd399164e301829343258888d2e0de7",
     "xsession.json": "0b78e85b23c74e8fc399073b0b7f6a48db1192a3819b7291e9410a5a09588a08"
+   }
+  },
+  "nix-darwin-25.11": {
+   "source": "nix-darwin 25.11 · ebec37a · 2026-02-26",
+   "revisions": {
+    "nix-darwin-2511": "ebec37af18215214173c98cf6356d0aca24a2585",
+    "nixpkgs-2511": "b6018f87da91d19d0ab4cf979885689b469cdd41"
+   },
+   "files": {
+    "_module.json": "2ab82b67100961dc974cfaeff94cf1ad555ad0111aac2127d7bc20e2ee2843e8",
+    "assertions.json": "a37e9e857de8b94d1b402559939ece7e235abc0ac8cc5d3a2ea0ba5441328a80",
+    "config.json": "74208283e98225fcc8f759dfe07eb27cc7162eb28d7f09f38db3e5bc8b678dde",
+    "disabledModules.json": "a12df473ced99179da6837d370b2ff57b91920b726eca3c6552fe84d6de55b47",
+    "documentation.json": "316e2453780a0c13d8d1c4e3bfbd36b05cb3a67912b95d7b2479584bfae7473c",
+    "environment.json": "5dfa090334d0361e9d5eaa8ade7deb2c20f838ef550ffeb41ac924642891fcbe",
+    "fonts.json": "b66e4ff9d510fc20bce5efeee99b349147b927518b096d196d79e909f17c252b",
+    "freeformType.json": "b83f3a682b11c90d5ebb40e3a6b6896b16b1f171c848c9e8730503bf0f4a903b",
+    "homebrew.json": "b4ff8743115aeec2536f0b57093966f2a9cc3c34839aa25148e4093a866595a5",
+    "ids.json": "29edb925d89e1dd1af34bf80cfefb73d8444a6c0aad5d6408e501ba8c48a044c",
+    "imports.json": "f937c674c84236870443e933439c760f144492d3628f3ae773d0fd20e1d0c65a",
+    "index.json": "4625ba96f74e97b3f3ed11e3d058087edfdb2c2a7f3d6eb6fe78ad45d2ac0fef",
+    "launchd.json": "ef706226dfd1c45ed285d05be36bfd35c98b4316893c0a177dd0001ea4f79acd",
+    "lib.json": "972526c1f8bca615cab9cb805e6d6d9822f82a83455e0d8a899a130d6238fbc6",
+    "meta.json": "1ec60215428a67ba42b553200b20ff6af09eeaec85d1c4255624df23614b6631",
+    "networking.json": "702535b9ecccf966c1f4ec2a57d2f59e1aa4dd0ef6f272007eeff44d02ae7411",
+    "nix.json": "c78122d13b5ad5527299f65dce0664e6f2b0d6d86b95ff607550999d7f4fd50f",
+    "nixpkgs.json": "1ff58e707dabcbfc03d493d5dcef70f3e2a76f09885c6cfa30fe0cdf89cb328c",
+    "options.json": "463619cbd8dc6ba00925dced70827b668a7372fe004ba3ff41be0b79b51cc92b",
+    "power.json": "bb8e0dac29941c983511b447e3937bd9e2379811b0dd5004e94de7e147f66a4a",
+    "programs.json": "5261f7f6fe11249049ca29dc6808bcb286a65d702b212cb333e4b044c4e6af72",
+    "security.json": "8648a9ee9e59df16e9f38e46b210efded685a5a09d59fdc8c6b76989a55a98f5",
+    "services.json": "47498aecf6f8ca3fd8aab541978d46f26288326b807d4b352e5c90a2bb855481",
+    "system.json": "9b40384c0e099182cae76458fb0f46878b1e7949bfa0607e8ddc47a6b316f68a",
+    "time.json": "f9783c1b62d0a3189584a8932e59587b22dd270f063b2b400e396c7e679bacb0",
+    "users.json": "223b211b17667109fd6521e862a9bfdc147b87f04f81b0aeecf9548f524f7d00",
+    "warnings.json": "92bc661bd6e794e9176737be576b3c000fd44a359e48cf8c903d52af62db2979"
    }
   },
   "nixos-unstable": {
@@ -707,6 +779,42 @@
     "xfconf.json": "6d38e7133e1745954cd1142c1c63e0d3cb18b3b6d625fb3f3bb515d8a30e7542",
     "xresources.json": "83a94c3a4da36ebc74a4cfd6d67700d1edd399164e301829343258888d2e0de7",
     "xsession.json": "c0acff29f44b1f04be7c639570b54068958e19158dd5c6258b2be6b9c22cfd29"
+   }
+  },
+  "nix-darwin-unstable": {
+   "source": "nix-darwin · ff0e21a · 2026-10-31",
+   "revisions": {
+    "nix-darwin": "ff0e21a414d4547183396da1b44a66f2577b65e9",
+    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+   },
+   "files": {
+    "_module.json": "2ab82b67100961dc974cfaeff94cf1ad555ad0111aac2127d7bc20e2ee2843e8",
+    "assertions.json": "a37e9e857de8b94d1b402559939ece7e235abc0ac8cc5d3a2ea0ba5441328a80",
+    "config.json": "74208283e98225fcc8f759dfe07eb27cc7162eb28d7f09f38db3e5bc8b678dde",
+    "disabledModules.json": "a12df473ced99179da6837d370b2ff57b91920b726eca3c6552fe84d6de55b47",
+    "documentation.json": "316e2453780a0c13d8d1c4e3bfbd36b05cb3a67912b95d7b2479584bfae7473c",
+    "environment.json": "5dfa090334d0361e9d5eaa8ade7deb2c20f838ef550ffeb41ac924642891fcbe",
+    "fonts.json": "b66e4ff9d510fc20bce5efeee99b349147b927518b096d196d79e909f17c252b",
+    "freeformType.json": "b83f3a682b11c90d5ebb40e3a6b6896b16b1f171c848c9e8730503bf0f4a903b",
+    "homebrew.json": "6385962bcac6c639612523a735e42c2cc6c471707386ede19a0fd8704bc98e0f",
+    "ids.json": "29edb925d89e1dd1af34bf80cfefb73d8444a6c0aad5d6408e501ba8c48a044c",
+    "imports.json": "f937c674c84236870443e933439c760f144492d3628f3ae773d0fd20e1d0c65a",
+    "index.json": "7cbe20b3f0522f5b259c4f5af37db029e27a9c87331febdcd9e371670864ce37",
+    "launchd.json": "ef706226dfd1c45ed285d05be36bfd35c98b4316893c0a177dd0001ea4f79acd",
+    "lib.json": "972526c1f8bca615cab9cb805e6d6d9822f82a83455e0d8a899a130d6238fbc6",
+    "meta.json": "1ec60215428a67ba42b553200b20ff6af09eeaec85d1c4255624df23614b6631",
+    "networking.json": "7a3cc3bf97c792eb1546e335dcc24f52ebb20c891cf013ed23a462b8b91ee394",
+    "nix.json": "c78122d13b5ad5527299f65dce0664e6f2b0d6d86b95ff607550999d7f4fd50f",
+    "nixpkgs.json": "1ff58e707dabcbfc03d493d5dcef70f3e2a76f09885c6cfa30fe0cdf89cb328c",
+    "options.json": "463619cbd8dc6ba00925dced70827b668a7372fe004ba3ff41be0b79b51cc92b",
+    "power.json": "bb8e0dac29941c983511b447e3937bd9e2379811b0dd5004e94de7e147f66a4a",
+    "programs.json": "77de3607aac70323f02ba3a03d4e263430f495b36a9df4595cc434fb931659da",
+    "security.json": "8648a9ee9e59df16e9f38e46b210efded685a5a09d59fdc8c6b76989a55a98f5",
+    "services.json": "8dff6e86e2e5ea364365b1e956181fd9447b12b07cc0f9fd182f28777f1e0c29",
+    "system.json": "093347c4ade5225cf954ec0a135d618ca0c3d89b8d9e6ca3c015c08e7031579a",
+    "time.json": "f9783c1b62d0a3189584a8932e59587b22dd270f063b2b400e396c7e679bacb0",
+    "users.json": "223b211b17667109fd6521e862a9bfdc147b87f04f81b0aeecf9548f524f7d00",
+    "warnings.json": "92bc661bd6e794e9176737be576b3c000fd44a359e48cf8c903d52af62db2979"
    }
   },
   "disko": {

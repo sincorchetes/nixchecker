@@ -31,6 +31,29 @@ export const HOME_MANAGER_CASES: string[] = [
   "{ programs.bat.enable = { }; }",
 ];
 
+export const DARWIN_CASES: string[] = [
+  // correct
+  "{ system.defaults.dock.autohide = true; }",
+  "{ homebrew.enable = true; }",
+  "{ system.defaults.NSGlobalDomain.AppleShowAllExtensions = true; }",
+  "{ nix.enable = true; }",
+  "{ programs.zsh.enable = true; }",
+  "{ services.openssh.enable = true; }",
+  "{ security.pam.services.sudo_local.touchIdAuth = true; }",
+  '{ networking.hostName = "mac"; }',
+  // unknown options
+  "{ system.defaults.dock.autohid = true; }",
+  "{ homebrew.enabel = true; }",
+  "{ system.default.dock.autohide = true; }",
+  "{ launchd.nonexistent = 1; }",
+  // wrong types
+  '{ system.defaults.dock.autohide = "yes"; }',
+  '{ homebrew.enable = "true"; }',
+  "{ nix.enable = [ ]; }",
+  "{ programs.zsh.enable = 1; }",
+  "{ system.defaults.dock.tilesize = true; }",
+];
+
 // An option deep in a disko configuration can only be read when the whole chain around it is set.
 const DISK = (inner: string) =>
   `{ disko.devices.disk.main = { type = "disk"; device = "/dev/sda"; content = { type = "gpt"; partitions.root = { ${inner} }; }; }; }`;

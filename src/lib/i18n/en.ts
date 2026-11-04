@@ -3,7 +3,7 @@ import type { MessageKey } from "./es";
 export const en: Record<MessageKey, string> = {
   "site.title": "nixchecker · Nix file validator",
   "site.description":
-    "Paste your flake.nix or Nix configuration and validate it against the official NixOS, Home Manager, disko and flake documentation. Unofficial and open source.",
+    "Paste your flake.nix or Nix configuration and validate it against the official NixOS, Home Manager, nix-darwin, disko and flake documentation. Unofficial and open source.",
   "nav.language": "ES",
   "nav.languageLabel": "Switch to Spanish",
   "nav.source": "Source code",
@@ -13,13 +13,13 @@ export const en: Record<MessageKey, string> = {
 
   "hero.title": "Validate your Nix configuration before rebuilding.",
   "hero.subtitle":
-    "Paste your flake.nix or configuration and check every option against the official NixOS, Home Manager, disko and flake documentation.",
+    "Paste your flake.nix or configuration and check every option against the official NixOS, Home Manager, nix-darwin, disko and flake documentation.",
 
   "checker.label": "Your Nix file",
   "checker.placeholder": "{ config, pkgs, ... }:\n{\n  services.openssh.enable = true;\n}",
   "checker.target": "Target",
   "checker.version": "Version",
-  "checker.versionHint": "NixOS and Home Manager release to validate against",
+  "checker.versionHint": "NixOS, Home Manager and nix-darwin release to validate against",
   "checker.system": "System",
   "checker.systemHint":
     "System the configuration is built for; the options are the same on all of them",
@@ -35,6 +35,7 @@ export const en: Record<MessageKey, string> = {
   "target.auto": "Detect automatically",
   "target.nixos": "NixOS",
   "target.home-manager": "Home Manager",
+  "target.nix-darwin": "nix-darwin",
   "target.disko": "disko",
   "target.flake": "Flake",
 
@@ -115,7 +116,7 @@ export const en: Record<MessageKey, string> = {
   "features.title": "An analysis, not an evaluation.",
   "features.docs.title": "Against the official docs",
   "features.docs.body":
-    "Options are checked against the NixOS, Home Manager and disko catalogs and the flake format.",
+    "Options are checked against the NixOS, Home Manager, nix-darwin and disko catalogs and the flake format.",
   "features.local.title": "Private by design",
   "features.local.body":
     "The analysis runs in your browser. We never upload your configuration or store anything.",
@@ -130,7 +131,7 @@ export const en: Record<MessageKey, string> = {
   "nav.how": "How it works",
   "bar.label": "Notice",
   "bar.unofficial":
-    "Unofficial tool: not affiliated with, endorsed or maintained by the NixOS, Home Manager or disko projects.",
+    "Unofficial tool: not affiliated with, endorsed or maintained by the NixOS, Home Manager, nix-darwin or disko projects.",
   "features.lead": "The same file always gives the same results.",
   "footer.tagline": "Made for the Nix community. Your code never leaves the browser.",
 };

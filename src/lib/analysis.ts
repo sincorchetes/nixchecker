@@ -96,6 +96,7 @@ function signal(assignments: Assignment[]): Target | undefined {
   const roots = new Set(assignments.map((a) => a.path[0]));
   if (roots.has("inputs") || roots.has("outputs") || roots.has("nixConfig")) return "flake";
   if (roots.has("disko")) return "disko";
+  if (roots.has("homebrew") || roots.has("launchd")) return "nix-darwin";
   if (roots.has("home")) return "home-manager";
   return undefined;
 }
@@ -114,5 +115,5 @@ export const resolveTarget = (analysis: Analysis, choice: TargetChoice): Target 
 export function candidateTargets(analysis: Analysis, choice: TargetChoice): Target[] {
   if (choice !== "auto") return [choice];
   const found = signal(analysis.assignments);
-  return found ? [found] : ["nixos", "home-manager"];
+  return found ? [found] : ["nixos", "home-manager", "nix-darwin"];
 }

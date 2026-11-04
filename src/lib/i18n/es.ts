@@ -3,7 +3,7 @@
 export const es = {
   "site.title": "nixchecker · Validador de archivos Nix",
   "site.description":
-    "Pega tu flake.nix o configuración de Nix y valídala contra la documentación oficial de NixOS, Home Manager, disko y flakes. No oficial y de código abierto.",
+    "Pega tu flake.nix o configuración de Nix y valídala contra la documentación oficial de NixOS, Home Manager, nix-darwin, disko y flakes. No oficial y de código abierto.",
   "nav.language": "EN",
   "nav.languageLabel": "Cambiar a inglés",
   "nav.source": "Código fuente",
@@ -13,13 +13,13 @@ export const es = {
 
   "hero.title": "Valida tu configuración de Nix antes de reconstruir.",
   "hero.subtitle":
-    "Pega tu flake.nix o tu configuración y comprueba cada opción contra la documentación oficial de NixOS, Home Manager, disko y flakes.",
+    "Pega tu flake.nix o tu configuración y comprueba cada opción contra la documentación oficial de NixOS, Home Manager, nix-darwin, disko y flakes.",
 
   "checker.label": "Tu archivo Nix",
   "checker.placeholder": "{ config, pkgs, ... }:\n{\n  services.openssh.enable = true;\n}",
   "checker.target": "Objetivo",
   "checker.version": "Versión",
-  "checker.versionHint": "Versión de NixOS y de Home Manager contra la que se valida",
+  "checker.versionHint": "Versión de NixOS, Home Manager y nix-darwin contra la que se valida",
   "checker.system": "Sistema",
   "checker.systemHint":
     "Sistema para el que se construye la configuración; las opciones son las mismas en todos",
@@ -34,6 +34,7 @@ export const es = {
   "target.auto": "Detectar automáticamente",
   "target.nixos": "NixOS",
   "target.home-manager": "Home Manager",
+  "target.nix-darwin": "nix-darwin",
   "target.disko": "disko",
   "target.flake": "Flake",
 
@@ -114,7 +115,7 @@ export const es = {
   "features.title": "Un análisis, no una evaluación.",
   "features.docs.title": "Contra la documentación oficial",
   "features.docs.body":
-    "Las opciones se comprueban con los catálogos de NixOS, Home Manager, disko y el formato de flakes.",
+    "Las opciones se comprueban con los catálogos de NixOS, Home Manager, nix-darwin, disko y el formato de flakes.",
   "features.local.title": "Privado por diseño",
   "features.local.body":
     "El análisis corre en tu navegador. No subimos tu configuración ni guardamos nada.",
@@ -123,14 +124,14 @@ export const es = {
     "Sugerimos la opción correcta, avisamos cuando una opción ha cambiado de nombre y enlazamos con la documentación.",
 
   "footer.unofficial":
-    "Proyecto no oficial: no está afiliado ni respaldado por la Fundación NixOS, Home Manager ni disko.",
+    "Proyecto no oficial: no está afiliado ni respaldado por la Fundación NixOS, Home Manager, nix-darwin ni disko.",
   "footer.ai": "Hecho con ayuda de IA. Revisa siempre los resultados antes de aplicar cambios.",
   "footer.license": "Software libre bajo GPL v3.0 o posterior.",
 
   "nav.how": "Cómo funciona",
   "bar.label": "Aviso",
   "bar.unofficial":
-    "Herramienta no oficial: no está afiliada, respaldada ni mantenida por el proyecto NixOS, Home Manager ni disko.",
+    "Herramienta no oficial: no está afiliada, respaldada ni mantenida por el proyecto NixOS, Home Manager, nix-darwin ni disko.",
   "features.lead": "El mismo archivo da siempre los mismos resultados.",
   "footer.tagline": "Hecho para la comunidad Nix. Tu código nunca sale del navegador.",
 } as const;

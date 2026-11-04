@@ -9,9 +9,9 @@
 // ORACLE_MISSES=1 lists every wrong value we let through.
 import { DEFAULT_SYSTEM } from "../../src/lib/catalog/systems";
 import { VERSIONS, type Version } from "../../src/lib/catalog/versions";
-import { diskoRoot, releaseRoots } from "../corpus/sources";
+import { darwinRoot, diskoRoot, releaseRoots } from "../corpus/sources";
 import { CASES } from "./cases";
-import { DISKO_CASES, HOME_MANAGER_CASES } from "./cases-other";
+import { DARWIN_CASES, DISKO_CASES, HOME_MANAGER_CASES } from "./cases-other";
 import { modulesFor, sampleOptions } from "./generated";
 import { type Kind, makeOracle, type Verdict } from "./nix";
 import { judgeOurs } from "./ours";
@@ -51,6 +51,12 @@ const TARGETS: Target[] = RELEASES.flatMap((version) => [
     cases: HOME_MANAGER_CASES,
     catalog: `home-manager-${version}`,
   },
+  {
+    kind: "nix-darwin" as const,
+    version,
+    cases: DARWIN_CASES,
+    catalog: `nix-darwin-${version}`,
+  },
   ...(version === "unstable"
     ? [{ kind: "disko" as const, version, cases: DISKO_CASES, catalog: "disko" }]
     : []),
@@ -61,13 +67,14 @@ const agrees = (a: Judged, b: Judged) => a.unknown === b.unknown && a.typeError 
 const say = (v: Judged) => `${v.unknown ? "unknown" : ""}${v.typeError ? "type" : ""}` || "ok";
 
 const disko = await diskoRoot();
-async function rootsOf(version: Version) {
+async function rootsOf(version: Version, kind: Kind) {
   const [nixpkgs, homeManager] = await releaseRoots(version);
   return {
     nixpkgs: nixpkgs as string,
     homeManager: homeManager as string,
     disko,
-    system: DEFAULT_SYSTEM,
+    nixDarwin: kind === "nix-darwin" ? await darwinRoot(version) : "",
+    system: kind === "nix-darwin" ? "aarch64-darwin" : DEFAULT_SYSTEM,
   };
 }
 
@@ -85,7 +92,7 @@ const problems: string[] = [];
 let tooLoose = false;
 
 for (const { kind, version, cases, catalog } of TARGETS) {
-  const oracle = await makeOracle(kind, await rootsOf(version));
+  const oracle = await makeOracle(kind, await rootsOf(version, kind));
   const name = kind === "disko" ? kind : `${kind} ${version}`;
   const judge = async (source: string) => {
     const ours = await judgeOurs(source, kind, version);

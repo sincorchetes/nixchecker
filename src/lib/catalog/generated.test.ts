@@ -40,8 +40,12 @@ describe("generated catalogs (public/catalog)", () => {
     for (const version of VERSIONS) {
       expect(await has(`nixos-${version}`, "services.openssh.enable", "bool")).toBe(true);
       expect(await has(`home-manager-${version}`, "programs.git.enable", "bool")).toBe(true);
+      expect(await has(`nix-darwin-${version}`, "system.defaults.dock.autohide", "bool")).toBe(
+        true,
+      );
     }
     expect(catalogName("nixos", "26.05")).toBe("nixos-26.05");
+    expect(catalogName("nix-darwin", "26.05")).toBe("nix-darwin-26.05");
     expect(catalogName("disko", "26.05")).toBe("disko");
     expect(DEFAULT_VERSION).toBe(VERSIONS[0]);
   });

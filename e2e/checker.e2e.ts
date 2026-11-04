@@ -134,6 +134,14 @@ describe("checker", () => {
     await page.select("#target", "auto");
   });
 
+  test("detects a Mac configuration and checks it against nix-darwin", async () => {
+    await validate('{ homebrew.enable = true; system.defaults.dock.autohide = "yes"; }');
+    expect(await page.$eval("#results", (el) => el.textContent)).toContain(
+      "system.defaults.dock.autohide",
+    );
+    await page.select("#target", "auto");
+  });
+
   test("changing the system validates again", async () => {
     await validate("{ services.openssh.enable = true; }");
     await page.$eval("#results", (el) => el.replaceChildren());

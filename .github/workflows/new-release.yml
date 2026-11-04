@@ -49,7 +49,7 @@ jobs:
 
           To add it:
 
-          - [ ] In \`tools/catalog/flake.nix\`: the inputs \`nixpkgs-${RELEASE/./}\` and \`home-manager-${RELEASE/./}\`, and the release in the list of releases.
+          - [ ] In \`tools/catalog/flake.nix\`: the inputs \`nixpkgs-${RELEASE/./}\`, \`home-manager-${RELEASE/./}\` and \`nix-darwin-${RELEASE/./}\`, and the release in the list of releases.
           - [ ] In \`src/lib/catalog/versions.ts\`: add \"$RELEASE\" to \`VERSIONS\`, and make it \`DEFAULT_VERSION\`.
           - [ ] \`devenv shell -- catalog\`, and commit what it generates.
           - [ ] The tests and examples that name the previous default release.

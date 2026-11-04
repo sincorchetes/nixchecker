@@ -119,3 +119,33 @@ describe("the system the configuration is built for", () => {
     TIME,
   );
 });
+
+describe("nix-darwin", () => {
+  const on = (file: string, ...more: string[]) =>
+    evaluate("--format", "json", "--partial", "--target", "nix-darwin", ...more, file);
+
+  test(
+    "Nix confirms a wrong value in a Mac configuration, evaluated from any machine",
+    async () => {
+      const file = join(dir, "mac.nix");
+      await Bun.write(file, '{ system.defaults.dock.autohide = "yes"; }\n');
+      const run = await on(file);
+      expect(run.code).toBe(1);
+      expect(run.items.some((i) => i.level === "evaluation" && i.severity === "error")).toBe(true);
+    },
+    TIME,
+  );
+
+  test(
+    "a system of the wrong family is a usage error",
+    async () => {
+      const file = join(dir, "mac-ok.nix");
+      await Bun.write(file, "{ system.defaults.dock.autohide = true; }\n");
+      const run = await evaluate("--target", "nix-darwin", "--system", "x86_64-linux", file);
+      expect(run.code).toBe(2);
+      expect(run.err).toContain("does not suit nix-darwin");
+      expect((await on(file, "--system", "aarch64-darwin")).code).toBe(0);
+    },
+    TIME,
+  );
+});

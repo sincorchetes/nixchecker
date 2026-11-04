@@ -52,8 +52,12 @@ const label = (name: string, node: string) => {
 const suffix = (version: Version) => version.replace(".", "");
 const nodes = (version: Version) =>
   version === "unstable"
-    ? { nixpkgs: "nixpkgs", homeManager: "home-manager" }
-    : { nixpkgs: `nixpkgs-${suffix(version)}`, homeManager: `home-manager-${suffix(version)}` };
+    ? { nixpkgs: "nixpkgs", homeManager: "home-manager", nixDarwin: "nix-darwin" }
+    : {
+        nixpkgs: `nixpkgs-${suffix(version)}`,
+        homeManager: `home-manager-${suffix(version)}`,
+        nixDarwin: `nix-darwin-${suffix(version)}`,
+      };
 
 // Every `mkRenamedOptionModule` found in the module sources the bundle links to.
 async function renamesIn(dir: string): Promise<Record<string, string>> {
@@ -146,10 +150,11 @@ async function write(
 await rm(outDir, { recursive: true, force: true });
 await mkdir(outDir, { recursive: true });
 for (const version of VERSIONS) {
-  const { nixpkgs, homeManager } = nodes(version);
+  const { nixpkgs, homeManager, nixDarwin } = nodes(version);
   const release = version === "unstable" ? version : suffix(version);
   const nixosLabel = version === "unstable" ? "nixpkgs-unstable" : `nixpkgs ${version}`;
   const hmLabel = version === "unstable" ? "home-manager" : `home-manager ${version}`;
+  const darwinLabel = version === "unstable" ? "nix-darwin" : `nix-darwin ${version}`;
   await write(
     catalogName("nixos", version),
     label(nixosLabel, nixpkgs),
@@ -161,6 +166,12 @@ for (const version of VERSIONS) {
     label(hmLabel, homeManager),
     await build(`home-manager-${release}`, overlays["home-manager"]),
     [homeManager, nixpkgs],
+  );
+  await write(
+    catalogName("nix-darwin", version),
+    label(darwinLabel, nixDarwin),
+    await build(`nix-darwin-${release}`, overlays["nix-darwin"]),
+    [nixDarwin, nixpkgs],
   );
 }
 await write(

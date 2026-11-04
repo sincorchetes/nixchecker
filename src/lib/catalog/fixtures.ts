@@ -57,6 +57,11 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("home-manager.users", "attrs"),
   ]),
   "home-manager": index([opt("home.stateVersion", "str"), opt("home.username", "str")]),
+  "nix-darwin": index([
+    opt("system.defaults.dock.autohide", "bool"),
+    opt("homebrew.enable", "bool"),
+    opt("nix.enable", "bool"),
+  ]),
   disko: index([
     opt(`${disk}.device`, "str"),
     opt(`${disk}.type`, "enum", { values: ["disk"] }),

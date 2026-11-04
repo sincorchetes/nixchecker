@@ -25,6 +25,18 @@
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs-2511";
     };
+    nix-darwin = {
+      url = "github:nix-darwin/nix-darwin/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-darwin-2605 = {
+      url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
+      inputs.nixpkgs.follows = "nixpkgs-2605";
+    };
+    nix-darwin-2511 = {
+      url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
+      inputs.nixpkgs.follows = "nixpkgs-2511";
+    };
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -42,14 +54,17 @@
         unstable = {
           nixpkgs = inputs.nixpkgs;
           home-manager = inputs.home-manager;
+          nix-darwin = inputs.nix-darwin;
         };
         "2605" = {
           nixpkgs = inputs.nixpkgs-2605;
           home-manager = inputs.home-manager-2605;
+          nix-darwin = inputs.nix-darwin-2605;
         };
         "2511" = {
           nixpkgs = inputs.nixpkgs-2511;
           home-manager = inputs.home-manager-2511;
+          nix-darwin = inputs.nix-darwin-2511;
         };
       };
 
@@ -108,6 +123,14 @@
           ];
         };
 
+      # nix-darwin is evaluated for a Mac; the documentation is built on this system, so nothing is built for it.
+      darwin =
+        release:
+        release.nix-darwin.lib.darwinSystem {
+          system = "aarch64-darwin";
+          modules = [ { system.stateVersion = 6; } ];
+        };
+
       perRelease =
         name: release:
         let
@@ -119,6 +142,9 @@
           ).options;
           "home-manager-${name}" = bundle pkgs "home-manager-${name}" "${release.home-manager}/modules" (
             hm release
+          ).options;
+          "nix-darwin-${name}" = bundle pkgs "nix-darwin-${name}" "${release.nix-darwin}/modules" (
+            darwin release
           ).options;
         };
     in

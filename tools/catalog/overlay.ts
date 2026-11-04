@@ -39,6 +39,7 @@ export const overlays: Record<Target, Overlay> = {
     entries: moduleEntries,
   },
   "home-manager": { entries: moduleEntries },
+  "nix-darwin": { entries: moduleEntries },
   // The nested options of the disk layouts are read from disko itself (see disko.ts).
   disko: { entries: moduleEntries },
   flake: { entries: flakeEntries },

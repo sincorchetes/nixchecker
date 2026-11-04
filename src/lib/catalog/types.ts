@@ -1,4 +1,4 @@
-export type Target = "nixos" | "home-manager" | "disko" | "flake";
+export type Target = "nixos" | "home-manager" | "nix-darwin" | "disko" | "flake";
 
 /**
  * - `attrs`: a free-form set; any path below it is accepted.

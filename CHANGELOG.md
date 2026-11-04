@@ -6,6 +6,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ## Unreleased
 
 ### Added
+- nix-darwin: a catalog per release (26.05, 25.11 and unstable, ~1.5k options each), a "nix-darwin" target on the page and
+  `--target nix-darwin` on the command line, evaluated by Nix for a Mac (`aarch64-darwin` or `x86_64-darwin`) from any
+  machine, and checked by the oracle. `homebrew` and `launchd` in a file point at it when the target is detected.
 - `--system` for the command line and a "System" selector in the page (`x86_64-linux`, `aarch64-linux`). The
   evaluation used to be fixed to `x86_64-linux`; the options are identical on both systems (32,558 in NixOS 26.05),
   so there is still one catalog.

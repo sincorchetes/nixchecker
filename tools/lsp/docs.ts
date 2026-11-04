@@ -21,6 +21,7 @@ export function bundleFor(target: Target, version: Version): string | undefined 
   const release = version === "unstable" ? version : version.replace(".", "");
   if (target === "nixos") return `nixos-${release}`;
   if (target === "home-manager") return `home-manager-${release}`;
+  if (target === "nix-darwin") return `nix-darwin-${release}`;
   return target === "disko" ? "disko" : undefined;
 }
 

@@ -2,7 +2,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type Kind, type Roots, systemExpression } from "../local/expressions";
+import { BASE, type Kind, type Roots, systemExpression } from "../local/expressions";
 
 export interface Verdict {
   /** Some option the module sets does not exist. */
@@ -25,13 +25,6 @@ const FORCE = `(if deep then builtins.deepSeq else builtins.seq) (builtins.foldl
 
 const EXPRESSION = (kind: Kind, roots: Roots) =>
   systemExpression(kind, roots, "{ file, path, deep }", FORCE);
-
-// Something every system has, to force first: unknown options are found by reading any of them.
-const BASE: Record<Kind, string[]> = {
-  nixos: ["system", "name"],
-  "home-manager": ["home", "username"],
-  disko: ["system", "name"],
-};
 
 /** Evaluates `config.<path>` of a NixOS system made from the module, and classifies the failure. */
 async function force(

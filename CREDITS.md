@@ -1,12 +1,13 @@
 # Credits
 
-nixchecker is an unofficial project, not affiliated with the NixOS Foundation, Home Manager or
-disko. It was built with the help of AI (Claude, by Anthropic).
+nixchecker is an unofficial project, not affiliated with the NixOS Foundation, Home Manager,
+nix-darwin or disko. It was built with the help of AI (Claude, by Anthropic).
 
 Option data and documentation links come from:
 
 - [NixOS options](https://search.nixos.org/options) and the [NixOS manual](https://nixos.org/manual/nixos/stable/)
 - [Home Manager](https://nix-community.github.io/home-manager/options.xhtml)
+- [nix-darwin](https://nix-darwin.github.io/nix-darwin/manual/index.html)
 - [disko](https://github.com/nix-community/disko)
 - [Nix manual: flake format](https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-format)
 

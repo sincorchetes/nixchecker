@@ -1,5 +1,6 @@
 // The system this machine's Nix builds for, as flakes name it (`x86_64-linux`).
-import { SYSTEMS } from "../../src/lib/catalog/systems";
+import { isDarwin, SYSTEMS } from "../../src/lib/catalog/systems";
+import { UsageError } from "./cli-args";
 
 export async function currentSystem(): Promise<string> {
   const proc = Bun.spawn(
@@ -11,9 +12,19 @@ export async function currentSystem(): Promise<string> {
   return JSON.parse(out) as string;
 }
 
-/** The system to evaluate for: the one asked for, else this machine's when we have a catalog for it. */
-export async function systemFor(asked?: string): Promise<string> {
-  if (asked) return asked;
+/**
+ * The system to evaluate for. One asked for has to suit the target (a Mac for nix-darwin, Linux for the
+ * rest); otherwise this machine's when it does, else the first of the family.
+ */
+export async function systemFor(asked: string | undefined, target: string): Promise<string> {
+  const darwin = target === "nix-darwin";
+  if (asked) {
+    if (isDarwin(asked) !== darwin) {
+      throw new UsageError(`--system ${asked} does not suit ${target}`);
+    }
+    return asked;
+  }
   const own = await currentSystem();
-  return (SYSTEMS as readonly string[]).includes(own) ? own : SYSTEMS[0];
+  const family = SYSTEMS.filter((s) => isDarwin(s) === darwin);
+  return (family as readonly string[]).includes(own) ? own : (family[0] as string);
 }
