@@ -50,6 +50,24 @@
   color: var(--on-marker);
 }
 
+.top .theme {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.top .theme:hover {
+  background: var(--marker);
+  color: var(--on-marker);
+  text-decoration-color: transparent;
+}
+
 .top .lang {
   font-family: var(--font-mono);
   font-size: 0.9rem;

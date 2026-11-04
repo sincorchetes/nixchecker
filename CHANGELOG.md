@@ -7,6 +7,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ### Added
 
+- A button in the header switches between the light and the dark theme. Without a choice the page follows the
+  system; the choice is kept in this browser (only that) and applied before the first paint.
 - The editor is one frame, as in a code editor: the actions (open, download the report, clear, load the example,
   validate) are its toolbar, and the target, the version, "remember" and the cursor position are its status bar.
   The sentence about pasting a file is the subtitle of the title.

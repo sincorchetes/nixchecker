@@ -8,6 +8,8 @@ export const en: Record<MessageKey, string> = {
   "nav.languageLabel": "Switch to Spanish",
   "nav.source": "Source code",
   "nav.main": "Main navigation",
+  "nav.themeLight": "Light mode",
+  "nav.themeDark": "Dark mode",
 
   "hero.title": "Validate your Nix before you rebuild.",
   "hero.subtitle":

@@ -56,3 +56,37 @@ describe("workbench", () => {
     await page.setViewport({ width: 800, height: 600 });
   });
 });
+
+describe("theme", () => {
+  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const theme = () => page.evaluate(() => document.documentElement.dataset.theme ?? "system");
+
+  test("follows the system until the button is used, and then keeps what was chosen", async () => {
+    await page.emulateMediaFeatures([{ name: "prefers-color-scheme", value: "light" }]);
+    await page.goto(site.url());
+    // Nothing chosen yet, whatever an earlier test left.
+    await page.evaluate(() => localStorage.removeItem("theme"));
+    await page.reload();
+    expect(await theme()).toBe("system");
+    const light = await background();
+    // The button says what it will switch to.
+    expect(await page.$eval("#theme", (el) => el.textContent)).toBe("Modo oscuro");
+
+    await page.click("#theme");
+    expect(await theme()).toBe("dark");
+    expect(await background()).not.toBe(light);
+    expect(await page.$eval("#theme", (el) => el.textContent)).toBe("Modo claro");
+
+    // The choice is applied before the first paint of the next visit, whatever the system says.
+    await page.reload();
+    expect(await theme()).toBe("dark");
+    await page.click("#theme");
+    expect(await theme()).toBe("light");
+    expect(await background()).toBe(light);
+  });
+
+  test("the other language says it in its own words", async () => {
+    await page.goto(site.url("/en/"));
+    expect(await page.$eval("#theme", (el) => el.textContent)).toMatch(/mode$/);
+  });
+});

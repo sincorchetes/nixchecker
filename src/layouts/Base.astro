@@ -40,6 +40,13 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
     <link rel="alternate" hreflang="es" href={href("es")} />
     <link rel="alternate" hreflang="en" href={href("en")} />
     <link rel="alternate" hreflang="x-default" href={href("es")} />
+    <!-- The theme chosen with the button, applied before the first paint so the page does not flash. -->
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem("theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
     <link rel="icon" href={withBase(base, "favicon.svg")} type="image/svg+xml" />
   </head>
   <body>
@@ -52,6 +59,15 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
       <nav aria-label={m["nav.main"]}>
         <a href="#como-funciona">{m["nav.how"]}</a>
         <a href={source} rel="noopener">{m["nav.source"]}</a>
+        <button
+          type="button"
+          class="theme"
+          id="theme"
+          data-light={m["nav.themeLight"]}
+          data-dark={m["nav.themeDark"]}
+        >
+          {m["nav.themeDark"]}
+        </button>
         <a class="lang" href={path(other)} hreflang={other} lang={other} title={m["nav.languageLabel"]}>
           {m["nav.language"]}<span class="sr-only"> {m["nav.languageLabel"]}</span>
         </a>
@@ -77,3 +93,7 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
     </footer>
   </body>
 </html>
+
+<script>
+  import "../components/theme";
+</script>

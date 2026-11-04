@@ -8,6 +8,8 @@ export const es = {
   "nav.languageLabel": "Cambiar a inglés",
   "nav.source": "Código fuente",
   "nav.main": "Navegación principal",
+  "nav.themeLight": "Modo claro",
+  "nav.themeDark": "Modo oscuro",
 
   "hero.title": "Valida tu Nix antes de reconstruir.",
   "hero.subtitle":
