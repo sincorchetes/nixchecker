@@ -30,11 +30,17 @@ const pending = new Map<string, ReturnType<typeof setTimeout>>();
 let options: { target?: string | undefined; release?: Version | undefined } = {};
 let shuttingDown = false;
 
+// Whatever is being analyzed for the document is out of date from now on, and must not be published.
+function supersede(uri: string): number {
+  const token = (latest.get(uri) ?? 0) + 1;
+  latest.set(uri, token);
+  return token;
+}
+
 async function publish(uri: string): Promise<void> {
   // A document that was closed while it waited has nothing to publish.
   if (!texts.has(uri)) return;
-  const token = (latest.get(uri) ?? 0) + 1;
-  latest.set(uri, token);
+  const token = latest.get(uri) ?? supersede(uri);
   const text = texts.get(uri) ?? "";
   let diagnostics: LspDiagnostic[] = [];
   let found: Diagnostic[] = [];
@@ -129,6 +135,8 @@ const documentOf = (params: Message["params"]) => (params?.textDocument ?? { uri
 
 // Analyzes a document after the typing pauses: a newer change starts the wait again.
 function publishSoon(uri: string): void {
+  // At the change, not when the wait ends: an analysis already running is of the text before it.
+  supersede(uri);
   clearTimeout(pending.get(uri));
   pending.set(
     uri,
@@ -181,8 +189,7 @@ function handle({ id, method, params }: Message): void {
       published.delete(uri);
       clearTimeout(pending.get(uri));
       pending.delete(uri);
-      // Whatever is still being analyzed for it must not be published after this.
-      latest.set(uri, (latest.get(uri) ?? 0) + 1);
+      supersede(uri);
       cleared(uri);
       break;
     }

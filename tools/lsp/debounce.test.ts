@@ -80,4 +80,24 @@ describe("language server pacing", () => {
     expect(published.length).toBe(1);
     expect(diagnosticsOf(published[0])).toEqual([]);
   });
+
+  test("a change that arrives while the text before it is analyzed makes that analysis void", async () => {
+    write({
+      method: "textDocument/didOpen",
+      params: { textDocument: { uri: "file:///a.nix", text: "{ }" } },
+    });
+    await sleep(1000);
+    const from = received.length;
+    // A text big enough that analyzing it is still going on when the next change arrives.
+    const lines = Array.from({ length: 30_000 }, (_, i) => `  environment.variables.V${i} = "x";`);
+    change(`{\n${lines.join("\n")}\n  services.openssh.enabel = true;\n}`);
+    await sleep(170);
+    change("{ services.openssh.enable = true; }");
+    await until(() => publications(from).length > 0);
+    await sleep(1500);
+    // Only the text now in the editor is published; the earlier one found a typo that is no longer there.
+    const published = publications(from);
+    expect(published.length).toBe(1);
+    expect(diagnosticsOf(published[0])).toEqual([]);
+  }, 30_000);
 });
