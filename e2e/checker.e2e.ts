@@ -149,6 +149,17 @@ describe("checker", () => {
     expect(text).toContain("keep-going");
   });
 
+  test("the options of sops-nix are known, and a misspelled one gets its suggestion", async () => {
+    await validate('{ sops.secrets.token.owner = "root"; sops.secret.x = 1; }');
+    await page.select("#target", "nixos");
+    const text = await page.$eval("#results", (el) => el.textContent);
+    expect(text).toContain("sops.secret.x");
+    expect(text).toContain("sops.secrets.x");
+    expect(text).toContain("«sops.secret.x»");
+    expect(text).not.toContain("«sops.secrets.token.owner»");
+    await page.select("#target", "auto");
+  });
+
   test("changing the system validates again", async () => {
     await validate("{ services.openssh.enable = true; }");
     await page.$eval("#results", (el) => el.replaceChildren());

@@ -37,6 +37,15 @@
       url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
       inputs.nixpkgs.follows = "nixpkgs-2511";
     };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    impermanence.url = "github:nix-community/impermanence";
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -68,8 +77,11 @@
         };
       };
 
-      bundle =
-        pkgs: name: src: options:
+      bundle = pkgs: name: src: options: bundleWith pkgs name src options "";
+
+      # `extra` is shell run once the bundle is made.
+      bundleWith =
+        pkgs: name: src: options: extra:
         let
           documented =
             (pkgs.nixosOptionsDoc {
@@ -90,7 +102,20 @@
           cp ${pkgs.writeText "hidden.json" (builtins.toJSON hidden)} $out/hidden.json
           cp ${pkgs.writeText "shapes.json" (builtins.toJSON (import ./shapes.nix { inherit lib; } options))} $out/shapes.json
           ln -s ${src} $out/src
+          ${extra}
         '';
+
+      # Modules of other projects that add options to NixOS. The bundle holds only those options, and the
+      # path of the module, which the oracle puts to the real module system.
+      extension =
+        name: src: module: roots:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          options = (nixosSystem releases.unstable [ module ]).options;
+        in
+        bundleWith pkgs "ext-${name}" "${src}" (lib.foldl' lib.recursiveUpdate { } (
+          map (root: lib.setAttrByPath root (lib.attrByPath root null options)) roots
+        )) "echo -n ${module} > $out/module-path";
 
       nixosSystem =
         release: extra:
@@ -155,6 +180,14 @@
           disko = bundle nixpkgs.legacyPackages.${system} "disko" "${disko}" {
             disko = (nixosSystem releases.unstable [ disko.nixosModules.disko ]).options.disko;
           };
+          ext-sops-nix = extension "sops-nix" inputs.sops-nix "${inputs.sops-nix}/modules/sops" [ [ "sops" ] ];
+          ext-agenix = extension "agenix" inputs.agenix "${inputs.agenix}/modules/age.nix" [ [ "age" ] ];
+          ext-impermanence = extension "impermanence" inputs.impermanence "${inputs.impermanence}/nixos.nix" [
+            [
+              "environment"
+              "persistence"
+            ]
+          ];
           # The settings of nix.conf as the Nix of the development nixpkgs describes them.
           nix-conf =
             nixpkgs.legacyPackages.${system}.runCommand "nixchecker-catalog-nix-conf"

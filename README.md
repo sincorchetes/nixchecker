@@ -146,6 +146,12 @@ every file in it; a test checks that the files are the ones it lists.
 The NixOS, Home Manager and nix-darwin catalogs exist per release (26.05, 25.11 and unstable), chosen with the
 version selector; disko, flakes and `nix.conf` have one catalog each.
 
+Projects that add options to NixOS have a catalog of their own, with only what they add: sops-nix (`sops.*`), agenix
+(`age.*`) and impermanence (`environment.persistence`). It is downloaded and added to the NixOS one when a file writes
+below one of those names, so a `sops.secrets` is known and typed instead of reported as unknown, its documentation link
+is the project's, and the source in the report lists them (`nixpkgs … + sops-nix …`). The oracle puts each to a NixOS with
+its module added. They are modules of NixOS only; the Home Manager modules of those projects are not covered.
+
 The `nix.conf` catalog is the list of settings Nix itself prints (`nix config show --json`, ~175 with their aliases and
 `extra-` forms), so it follows the Nix of the pinned nixpkgs. A text is read as a `nix.conf` when it is chosen, or when every
 line is a comment, an `include` or `name = words` (Nix needs the spaces around the `=`). It is checked statically only: the
@@ -196,7 +202,7 @@ devenv test             # lint, types, unit tests (100% line coverage gate) and 
 
 Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `corpus` (the parser against nixpkgs and
 Home Manager), `differential` (the parser against the official one on damaged files), `evaluate` (a file against real Nix), `oracle` (the validator against
-the real NixOS, Home Manager, nix-darwin and disko module systems, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
+the real NixOS (also with sops-nix, agenix and impermanence), Home Manager, nix-darwin and disko module systems, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
 `sonar`.
 
 ## Deployment (GitHub Pages)

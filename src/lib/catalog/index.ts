@@ -1,6 +1,9 @@
+import { extensionOf } from "./extensions";
 import type { Target } from "./types";
 import type { Version } from "./versions";
 
+export { loadExtended } from "./extend";
+export { EXTENSIONS, type Extension, extensionOf } from "./extensions";
 export { type Catalog, CatalogError, type IndexedOption, loadCatalog } from "./load";
 export { DEFAULT_SYSTEM, isDarwin, SYSTEMS, type System } from "./systems";
 export { buildTree, type OptionTree } from "./tree";
@@ -19,8 +22,11 @@ export const TARGETS: Target[] = [
 /** Official documentation page for a target, deep-linked to an option when possible. */
 export function docUrl(target: Target, path?: string, version?: Version): string {
   switch (target) {
-    case "nixos":
+    case "nixos": {
+      const ext = path && extensionOf(path);
+      if (ext) return ext.docs;
       return `https://search.nixos.org/options?${version ? `channel=${version}&` : ""}query=${encodeURIComponent(path ?? "")}`;
+    }
     case "home-manager":
       return `https://nix-community.github.io/home-manager/options.xhtml${
         path ? `#opt-${path.replaceAll("*", "_name_")}` : ""

@@ -1,6 +1,6 @@
 import type { Analysis, Report } from "./analysis";
 import type { OptionTree } from "./catalog";
-import { type Catalog, loadCatalog, type Target, type Version } from "./catalog";
+import { type Catalog, loadExtended, type Target, type Version } from "./catalog";
 import { splitPath } from "./catalog/path";
 import { findExact } from "./catalog/tree";
 import { looksLikeConf, parseConf } from "./nixconf/parse";
@@ -34,7 +34,7 @@ async function loadWithRenames(
   paths: string[][],
   fetcher: typeof fetch | undefined,
 ): Promise<Catalog> {
-  let catalog = await loadCatalog(kind, release, base, paths, fetcher);
+  let catalog = await loadExtended(kind, release, base, paths, fetcher);
   const asked = new Set(paths.map((p) => p.join(".")));
   let frontier = paths;
   for (let round = 0; round < RENAME_ROUNDS; round++) {
@@ -44,7 +44,7 @@ async function loadWithRenames(
     if (targets.length === 0) break;
     for (const to of targets) asked.add(to);
     frontier = targets.map(splitPath);
-    catalog = await loadCatalog(kind, release, base, frontier, fetcher);
+    catalog = await loadExtended(kind, release, base, frontier, fetcher);
   }
   return catalog;
 }

@@ -7,6 +7,8 @@ export interface Roots {
   homeManager: string;
   disko: string;
   nixDarwin: string;
+  /** Modules of other projects added to a NixOS system (their paths in the store). */
+  modules?: string[];
   /** The system the configuration is built for, as flakes name it (`aarch64-linux`). */
   system: string;
 }
@@ -65,7 +67,8 @@ in
 ${force}`;
   }
   // disko is a module of a NixOS system.
-  const extra = kind === "disko" ? `(${quote(r.disko)} + "/module.nix")` : "";
+  const added = (r.modules ?? []).map(quote).join(" ");
+  const extra = kind === "disko" ? `(${quote(r.disko)} + "/module.nix")` : added;
   return `${args}:
 let
   ev = import (${quote(r.nixpkgs)} + "/nixos/lib/eval-config.nix") {

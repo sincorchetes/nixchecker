@@ -1,5 +1,5 @@
 {
- "lock": "ba37656b4a9e99e30c2f80f58ba3921ec8ad0a5059f1e8390a53b7883e1743d2",
+ "lock": "596d373aed8e75fee28b2e8bdc285e8da70953e2ccff7b68f64252fef2d647fc",
  "catalogs": {
   "nixos-26.05": {
    "source": "nixpkgs 26.05 · 08d3a97 · 2026-10-28",
@@ -838,6 +838,39 @@
     "meta.json": "81cf97a7f5d7dde9abc8020deca3cadbf6a401a7a78efcbb7c305aa655231d00",
     "options.json": "463619cbd8dc6ba00925dced70827b668a7372fe004ba3ff41be0b79b51cc92b",
     "warnings.json": "92bc661bd6e794e9176737be576b3c000fd44a359e48cf8c903d52af62db2979"
+   }
+  },
+  "ext-sops-nix": {
+   "source": "sops-nix · b18e01c · 2026-11-02",
+   "revisions": {
+    "sops-nix": "b18e01ce148eb3efff5de2f2d3181ca53b2b2a54",
+    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+   },
+   "files": {
+    "index.json": "c71c0844d7577ad6338701ca175434ab8eeb7e3be64bcffc23e75571bc039254",
+    "sops.json": "5c7adf0150073fd3f547f0ac88d86196e187622c71673ef7277ef7f58573e3db"
+   }
+  },
+  "ext-agenix": {
+   "source": "agenix · 5e5b88a · 2026-10-20",
+   "revisions": {
+    "agenix": "5e5b88a0c8e56f291a108c2fe9934054d9745b2e",
+    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+   },
+   "files": {
+    "age.json": "1b57f37b5bc2121f5ad273e18b8ec9b54f53c1518c76a85d6c690f324a0f1655",
+    "index.json": "2800b2ca3623da6c779e549b4caf42a3aa40c00e0fb66113918f1aa8945c07f7"
+   }
+  },
+  "ext-impermanence": {
+   "source": "impermanence · fa627f4 · 2026-10-23",
+   "revisions": {
+    "impermanence": "fa627f4c8b8e92f58f58a73d99ee4e1304e64eb2",
+    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+   },
+   "files": {
+    "environment.json": "d73e29ef37b0aa0145e9e6c3014392c2e74fafe9a3db012a9a06c5a02ba4ed26",
+    "index.json": "1b9b8169438ddf93754fa32065a875739f6505102941913caa32aa1e2ff38308"
    }
   },
   "nix-conf": {

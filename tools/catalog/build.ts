@@ -3,6 +3,7 @@
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { convert, type Overlay } from "../../src/lib/catalog/convert";
+import { EXTENSIONS, extensionCatalog } from "../../src/lib/catalog/extensions";
 import { extractRenames } from "../../src/lib/catalog/renames";
 import { shardFile, toShards } from "../../src/lib/catalog/shard";
 import { catalogName, VERSIONS, type Version } from "../../src/lib/catalog/versions";
@@ -39,12 +40,21 @@ const lockProc = Bun.spawn(
 if ((await lockProc.exited) !== 0) throw new Error("nix flake lock failed");
 
 interface Lock {
-  nodes: Record<string, { locked?: { rev: string; lastModified: number } }>;
+  nodes: Record<
+    string,
+    { locked?: { rev: string; lastModified: number }; inputs?: Record<string, string | string[]> }
+  >;
 }
 
 const lock = (await Bun.file(join(flakeDir, "flake.lock")).json()) as Lock;
+// The lock names its nodes as it likes (`nixpkgs_2` when another input brings its own): an input of this flake is
+// found by what the root points at.
+const locked = (input: string) => {
+  const target = lock.nodes.root?.inputs?.[input];
+  return lock.nodes[typeof target === "string" ? target : input]?.locked;
+};
 const label = (name: string, node: string) => {
-  const { rev, lastModified } = lock.nodes[node]?.locked ?? { rev: "unknown", lastModified: 0 };
+  const { rev, lastModified } = locked(node) ?? { rev: "unknown", lastModified: 0 };
   const date = new Date(lastModified * 1000).toISOString().slice(0, 10);
   return `${name} · ${rev.slice(0, 7)} · ${date}`;
 };
@@ -132,9 +142,7 @@ async function write(
   };
   await put("index.json", index);
   for (const [key, rows] of Object.entries(shards)) await put(shardFile(key), rows);
-  const revisions = Object.fromEntries(
-    nodes.map((n) => [n, lock.nodes[n]?.locked?.rev ?? "unknown"]),
-  );
+  const revisions = Object.fromEntries(nodes.map((n) => [n, locked(n)?.rev ?? "unknown"]));
   manifest[name] = { source, revisions, files: Object.fromEntries(Object.entries(files).sort()) };
   console.log(`${name}: ${entries.length} options in ${index.keys.length} shards (${source})`);
 }
@@ -173,6 +181,16 @@ await write(
   await build("disko", await withDiskoLayouts(overlays.disko)),
   ["disko", "nixpkgs"],
 );
+// The options other projects add to NixOS, each apart: loaded on top of the NixOS catalog when a file uses them.
+for (const ext of EXTENSIONS) {
+  await write(
+    extensionCatalog(ext),
+    label(ext.name, ext.name),
+    await build(extensionCatalog(ext), {}),
+    [ext.name, "nixpkgs"],
+  );
+}
+
 // The settings of nix.conf are the ones Nix itself lists; there is no module system behind them.
 const confOut = await outPath("nix-conf");
 const nixVersion = (await Bun.file(join(confOut, "version")).text())

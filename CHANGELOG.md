@@ -6,6 +6,11 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ## Unreleased
 
 ### Added
+- Extensions of NixOS: sops-nix, agenix and impermanence each have a catalog with only the options they add, loaded on top
+  of the NixOS one when a file writes below `sops`, `age` or `environment.persistence`. Their options are known and typed,
+  link to the project's documentation, and are listed in the report's source. The oracle holds them to a real NixOS with
+  the module added. The catalog generator finds its inputs through the lock's root, so a new input that brings its own
+  `nixpkgs` cannot make it read the wrong revision.
 - `nix.conf`: a target on the page and `--target nix-conf` on the command line (a `nix.conf` found in a directory is checked
   too). The settings come from `nix config show --json`; the page tells a `nix.conf` from Nix by its shape, a line that
   is not `name = value` is a syntax error where it is, and the oracle compares the validator with the real `nix` on

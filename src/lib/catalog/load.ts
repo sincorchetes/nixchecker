@@ -1,3 +1,4 @@
+import { type Extension, extensionCatalog } from "./extensions";
 import { splitPath } from "./path";
 import { planner, shardFile } from "./shard";
 import { addEntries, addRoots, emptyTree, type OptionTree } from "./tree";
@@ -60,14 +61,28 @@ async function getJson<T>(fetcher: typeof fetch, url: string): Promise<T> {
  * the small index plus only the shards they touch. Everything is kept, so later runs reuse
  * it; a failed download is not kept, so the next run retries.
  */
-export async function loadCatalog(
+export const loadCatalog = (
   target: Target,
   version: Version,
   base: string,
   paths: string[][],
   fetcher: typeof fetch = fetch,
+): Promise<Catalog> =>
+  loadDirectory(`${base}catalog/${catalogName(target, version)}/`, paths, fetcher);
+
+/** The same for the catalog of an extension of NixOS (see extensions.ts), which has no versions. */
+export const loadExtension = (
+  ext: Extension,
+  base: string,
+  paths: string[][],
+  fetcher: typeof fetch = fetch,
+): Promise<Catalog> => loadDirectory(`${base}catalog/${extensionCatalog(ext)}/`, paths, fetcher);
+
+async function loadDirectory(
+  dir: string,
+  paths: string[][],
+  fetcher: typeof fetch,
 ): Promise<Catalog> {
-  const dir = `${base}catalog/${catalogName(target, version)}/`;
   let state = states.get(dir);
   if (!state) {
     const index = getJson<CatalogIndex>(fetcher, `${dir}index.json`);

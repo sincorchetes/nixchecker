@@ -52,6 +52,33 @@ describe("checkText", () => {
     expect(report.diagnostics.map((d) => [d.code, d.line])).toEqual([["conf-bad-line", 1]]);
   });
 
+  test("the options of sops-nix, agenix and impermanence are known and typed on top of NixOS", async () => {
+    const text = [
+      "sops.defaultSopsFile = ./secrets.yaml;",
+      'sops.secrets."db/password".owner = "postgres";',
+      'sops.secrets."db/password".mode = 0400;',
+      "age.secrets.token.file = ./token.age;",
+      'environment.persistence."/persist".directories = [ "/var/lib" ];',
+      "sops.age.keyFile = true;",
+      "sops.secret.x = 1;",
+      "services.openssh.enable = true;",
+    ].join("\n");
+    const { report, source } = await run(`{\n${text}\n}`, "nixos");
+    expect(source).toMatch(/nixpkgs.* \+ sops-nix .* \+ agenix .* \+ impermanence/);
+    expect(report.diagnostics.map((d) => [d.code, d.line, d.suggestion ?? null])).toEqual([
+      // `mode` is text ('"0400"'), not a number.
+      ["type-mismatch", 4, null],
+      ["unknown-option", 8, "sops.secrets.x"],
+    ]);
+    expect(report.diagnostics[0]?.docUrl).toContain("sops-nix");
+  });
+
+  test("a text that uses sops-nix is NixOS for the page, not Home Manager", async () => {
+    const { report } = await run("{ sops.secrets.x = { }; services.openssh.enable = true; }");
+    expect(report.target).toBe("nixos");
+    expect(report.diagnostics).toEqual([]);
+  });
+
   test("an unreachable catalog is an error, not an empty answer", async () => {
     const down = (async () => new Response("down", { status: 503 })) as unknown as typeof fetch;
     await expect(checkText("{ a = 1; }", "nixos", "26.05", "/", down)).rejects.toThrow();
