@@ -19,7 +19,9 @@
   scripts.site-build.exec = "bun install --frozen-lockfile && bun run build";
   scripts.start.exec = "bun run start"; # previews the built site
   # Drives the built site (`dist/`) in Chrome: run `site-build` first. CHROME_BIN overrides the binary.
-  scripts.e2e.exec = "bun install --frozen-lockfile && bun test -c e2e/bunfig.toml ./e2e/*.e2e.ts";
+  # 30 s per test and hook: starting Chrome on a busy CI runner can take longer than Bun's default of 5 s,
+  # and a hook that times out takes down every test of its file.
+  scripts.e2e.exec = "bun install --frozen-lockfile && bun test --timeout 30000 -c e2e/bunfig.toml ./e2e/*.e2e.ts";
   # Regenerates public/catalog/ from the pinned upstream projects (needs Nix); `--update` moves the pins first.
   scripts.catalog.exec = ''bun tools/catalog/build.ts "$@"'';
   # Is there a NixOS release without a catalog? Takes the files of branch names the workflow lists.

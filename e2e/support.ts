@@ -17,7 +17,8 @@ export function serveSite(
   delay = 0,
 ) {
   const server = Bun.serve({
-    port: 4100 + Math.floor(Math.random() * 500),
+    // 0: the system gives a free port. A random one in a range can land on one in use, and the whole file fails.
+    port: 0,
     async fetch(request) {
       const path = decodeURIComponent(new URL(request.url).pathname);
       if (delay > 0 && path.includes("/catalog/")) await new Promise((r) => setTimeout(r, delay));
