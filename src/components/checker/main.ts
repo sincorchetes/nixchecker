@@ -1,5 +1,6 @@
 import type { Version } from "../../lib/catalog";
 import { CatalogError, systemsFor } from "../../lib/catalog";
+import { cliCommand } from "../../lib/cli-command";
 import { EXAMPLE } from "../../lib/example";
 import { format } from "../../lib/i18n";
 import type { TargetChoice } from "../../lib/validate";
@@ -115,6 +116,7 @@ if (
       { source, results, tr, rerun: validate, reveal: () => status.view("editor") },
       report,
       verdict.source,
+      cliCommand(report.target, version.value, system.value),
     );
     offer(() => reportData(report, verdict.source, version.value, system.value));
   };

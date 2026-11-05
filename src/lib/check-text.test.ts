@@ -100,6 +100,38 @@ describe("checkText", () => {
     ]);
   });
 
+  test("an option the text declares itself is not an unknown one", async () => {
+    const text = [
+      "{ lib, ... }: {",
+      '  options.my.feature.enable = lib.mkEnableOption "x";',
+      "  options = { other.thing = lib.mkOption { type = lib.types.str; }; };",
+      "  config = {",
+      "    my.feature.enable = true;",
+      '    other.thing = "a";',
+      "    my.feature.typo = 1;",
+      "    services.openssh.enabel = true;",
+      "  };",
+      "}",
+    ].join("\n");
+    const { report } = await run(text, "nixos");
+    // Its own options are skipped and say why; a name next to them is still unknown, as is a misspelled one.
+    expect(report.diagnostics.map((d) => [d.code, d.params.path])).toEqual([
+      ["unknown-option", "my.feature.typo"],
+      ["unknown-option", "services.openssh.enabel"],
+    ]);
+    expect(
+      report.coverage.skipped.filter((s) => s.cause === "declared").map((s) => s.path),
+    ).toEqual(["my.feature.enable", "other.thing"]);
+  });
+
+  test("a group written as a set above a declared option is not an unknown one either", async () => {
+    const { report } = await run(
+      '{ lib, ... }: { options.my.on = lib.mkEnableOption "x"; config.my = { on = true; }; }',
+      "nixos",
+    );
+    expect(report.diagnostics).toEqual([]);
+  });
+
   test("a text that uses sops-nix is NixOS for the page, not Home Manager", async () => {
     const { report } = await run("{ sops.secrets.x = { }; services.openssh.enable = true; }");
     expect(report.target).toBe("nixos");
@@ -108,7 +140,7 @@ describe("checkText", () => {
 
   test("an unreachable catalog is an error, not an empty answer", async () => {
     const down = (async () => new Response("down", { status: 503 })) as unknown as typeof fetch;
-    await expect(checkText("{ a = 1; }", "nixos", "26.05", "/", down)).rejects.toThrow();
+    await expect(checkText("{ a = 1; }", "disko", "26.05", "/", down)).rejects.toThrow();
   });
 });
 

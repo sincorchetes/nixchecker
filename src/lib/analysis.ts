@@ -35,7 +35,7 @@ export interface Diagnostic {
 }
 
 /** Why an assignment was read but not verified. */
-export type SkipCause = "dynamic" | "any" | "hidden" | "interpolated" | "free-form";
+export type SkipCause = "dynamic" | "any" | "hidden" | "interpolated" | "free-form" | "declared";
 
 export interface Skipped {
   path: string;
@@ -55,6 +55,8 @@ export interface Report {
 export interface Analysis {
   syntax: Diagnostic[];
   assignments: Assignment[];
+  /** The options the file declares itself (`options.my.feature.enable = mkEnableOption ...`), without `options`. */
+  declared: string[][];
 }
 
 export function analyze(source: string): Analysis {
@@ -71,6 +73,9 @@ export function analyze(source: string): Analysis {
     .map((a) =>
       a.path[0] === "config" && a.path.length > 1 ? { ...a, path: a.path.slice(1) } : a,
     );
+  const declared = assignments
+    .filter((x) => x.path[0] === "options" && x.path.length > 1)
+    .map((x) => x.path.slice(1));
   for (const { name, line, col } of undefinedNames) {
     syntax.push({ severity: "error", code: "undefined-variable", line, col, params: { name } });
   }
@@ -89,7 +94,7 @@ export function analyze(source: string): Analysis {
       params: {},
     });
   }
-  return { syntax, assignments };
+  return { syntax, assignments, declared };
 }
 
 // What the top-level attributes say about the kind of file, when they say anything.

@@ -47,6 +47,18 @@
     color: var(--ink-2);
     font-size: 0.875rem;
   }
+  .results :global(.command) {
+    display: block;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
   /* What it was checked against: after the findings, and folded away until it is wanted. */
   .results :global(.meta) {
     display: grid;

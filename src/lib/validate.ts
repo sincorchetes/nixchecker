@@ -54,6 +54,12 @@ function available(tree: OptionTree, path: string[], known: number, written?: st
   return ranked.slice(0, OPTIONS_SHOWN);
 }
 
+// A path at, below or above (a group written as a set) an option the file declares.
+const declaredHere = (declared: string[][], path: string[]): boolean =>
+  declared.some(
+    (d) => d.every((seg, n) => path[n] === seg) || path.every((seg, n) => d[n] === seg),
+  );
+
 /** Checks an analyzed file against the options of `target`. */
 export function check(
   analysis: Analysis,
@@ -104,6 +110,11 @@ export function check(
   for (const a of analysis.assignments) {
     const at = { line: a.line, col: a.col };
     const path = a.path.join(".");
+    // An option the file declares itself is no unknown one, and nothing of the catalog says what it takes.
+    if (declaredHere(analysis.declared, a.path)) {
+      skipped.push({ cause: "declared", path, ...at });
+      continue;
+    }
     // Attributes written below a list option: the list takes a `[ ... ]`, not a set.
     const list = findListAbove(tree, a.path);
     if (list) {

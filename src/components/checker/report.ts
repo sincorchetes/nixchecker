@@ -75,7 +75,12 @@ export function counts(tr: Translate, errors: number, warnings: number): string 
 }
 
 /** Draws the summary, the fix-all button and one card per diagnostic. */
-export function showReport(view: ReportView, report: Report, catalogSource: string): void {
+export function showReport(
+  view: ReportView,
+  report: Report,
+  catalogSource: string,
+  command: string,
+): void {
   const { source, results, tr } = view;
   const errors = report.diagnostics.filter((d) => d.severity === "error").length;
   const warnings = report.diagnostics.length - errors;
@@ -115,6 +120,8 @@ export function showReport(view: ReportView, report: Report, catalogSource: stri
   );
   const skips = coverageGroups(view, report);
   if (skips) meta.append(skips);
+  // For what a page that only reads the text cannot judge: imports, mkIf, assertions.
+  meta.append(el("p", "fact", tr("result.command")), el("code", "command", command));
 
   const findings = el("div", "findings");
   for (const d of report.diagnostics) findings.append(diagnosticCard(view, d));

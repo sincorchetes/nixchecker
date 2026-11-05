@@ -43,7 +43,8 @@ kept. Everything runs in your browser; nothing is uploaded.
 ## Checking a whole configuration with real Nix
 
 The page only analyzes text. For what needs evaluation (`imports`, `mkIf`, `mkMerge`, priorities,
-the assertions of the system), run the file through the module system of your own Nix:
+the assertions of the system), run the file through the module system of your own Nix (the details of a result on the page give
+the command, with the release and system chosen there):
 
 ```sh
 nix run github:sincorchetes/nixchecker -- my-config.nix --target nixos --release 26.05

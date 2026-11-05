@@ -60,7 +60,7 @@ export function parseConf(source: string): Analysis {
       params: { text: raw.trim() },
     });
   });
-  return { syntax, assignments };
+  return { syntax, assignments, declared: [] };
 }
 
 /**

@@ -18,6 +18,11 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   command line's exit status.
 
 ### Added
+- The details of a result give the command that makes the same check with your own Nix (release and system included), for
+  what a page that only reads the text cannot judge.
+- An option the text declares itself (`options.my.feature.enable = mkEnableOption ...`) is no longer reported as unknown
+  when the same text sets it; it is listed in the coverage as declared in the file. Options declared in other files
+  are still unknown to the page: the command line (with Nix) reads those.
 - lanzaboote (`boot.lanzaboote`, 41 options) as an extension of NixOS. stylix is left out on purpose: its module is a
   function of its own flake's inputs, so it cannot be put to the oracle, and a catalog nothing checks is not shipped;
   nixos-hardware only has profiles, no options.

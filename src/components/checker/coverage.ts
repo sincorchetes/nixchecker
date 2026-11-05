@@ -3,7 +3,7 @@ import type { Report, SkipCause } from "../../lib/validate";
 import { el } from "./dom";
 import type { ReportView } from "./report";
 
-const CAUSES: SkipCause[] = ["dynamic", "any", "hidden", "interpolated", "free-form"];
+const CAUSES: SkipCause[] = ["dynamic", "any", "hidden", "interpolated", "free-form", "declared"];
 
 /** One button per reason: each press selects the next assignment skipped for that reason. */
 export function coverageGroups(
