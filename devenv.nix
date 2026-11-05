@@ -42,7 +42,12 @@
   # The command line against real Nix, on the cases the unit tests can only imitate (needs Nix).
   scripts.integration.exec = "bun test -c tools/local/integration/bunfig.toml ./tools/local/integration/*.integration.ts ./tools/lsp/*.integration.ts";
   scripts.lsp.exec = "bun tools/lsp/server.ts";
-  scripts.oracle.exec = "bun tools/oracle/run.ts \"$@\" && bun tools/oracle/nix-conf.ts";
+  # `oracle 40 1 only=<group>` runs one group of targets (CI runs them in parallel). The nix.conf check
+  # belongs to the full run; CI runs it on its own (`bun tools/oracle/nix-conf.ts`).
+  scripts.oracle.exec = ''
+    bun tools/oracle/run.ts "$@"
+    case " $* " in *" only="*) ;; *) bun tools/oracle/nix-conf.ts ;; esac
+  '';
   # Checks that a release tag is the version in package.json (the Release workflow runs it).
   scripts.release-check.exec = "bun tools/release/verify.ts \"$@\"";
   scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --config .gitleaks.toml --no-banner --redact --verbose";

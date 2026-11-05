@@ -41,6 +41,10 @@ const MAX_MISSED = 0.02;
 // `all` runs every release the site has catalogs for; the default is the development branch.
 const FLAGS = process.argv.slice(4);
 const RELEASES: readonly Version[] = FLAGS.includes("all") ? VERSIONS : ["unstable"];
+// `only=<group>` runs one group of targets (nixos, home-manager, nix-darwin, disko or extensions), so CI can
+// spread them over parallel jobs; without it every group runs.
+const ONLY = FLAGS.find((flag) => flag.startsWith("only="))?.slice("only=".length);
+const wants = (group: string) => !ONLY || ONLY === group;
 
 interface Target {
   kind: Kind;
@@ -68,10 +72,10 @@ const TARGETS: Target[] = RELEASES.flatMap((version) => [
   ...(version === "unstable"
     ? [{ kind: "disko" as const, version, cases: DISKO_CASES, catalog: "disko" }]
     : []),
-]);
+]).filter((target) => wants(target.kind));
 
 // The modules of other projects, evaluated with the development nixpkgs like disko.
-if (RELEASES.includes("unstable")) {
+if (RELEASES.includes("unstable") && wants("extensions")) {
   for (const ext of EXTENSIONS) {
     const out = await bundleOut(extensionCatalog(ext));
     TARGETS.push({

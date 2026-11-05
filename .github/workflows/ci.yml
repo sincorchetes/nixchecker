@@ -66,14 +66,32 @@ jobs:
         run: devenv shell -- corpus
       - name: The parser agrees with the official one on damaged files
         run: devenv shell -- differential
-      - name: The validator agrees with the real module system
-        run: devenv shell -- oracle
       - name: The package builds and its command line works
         run: nix flake check --extra-experimental-features "nix-command flakes"
       - name: The package evaluates for every platform it declares (it is only built for this one)
         run: nix flake check --all-systems --no-build --extra-experimental-features "nix-command flakes"
       - name: The command line works against real Nix (own modules, imports, --partial, flakes)
         run: devenv shell -- integration
+
+  # The validator against the real module systems. Each group of targets evaluates with Nix on its own
+  # runner: in one job they ran for over 25 minutes.
+  oracle:
+    name: Validator vs Nix (${{ matrix.group }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [nixos, home-manager, nix-darwin, disko, extensions, nix-conf]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: ./.github/actions/setup-devenv
+      - name: The validator agrees with the real module system
+        if: ${{ matrix.group != 'nix-conf' }}
+        run: devenv shell -- oracle 40 1 only=${{ matrix.group }}
+      - name: The nix.conf check agrees with Nix
+        if: ${{ matrix.group == 'nix-conf' }}
+        run: devenv shell -- bun tools/oracle/nix-conf.ts
 
   build:
     name: Build
@@ -133,7 +151,7 @@ jobs:
   ci-ok:
     name: CI passed
     if: ${{ always() }}
-    needs: [quality, catalog, build, e2e]
+    needs: [quality, catalog, oracle, build, e2e]
     runs-on: ubuntu-latest
     steps:
       - env:
