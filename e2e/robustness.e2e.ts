@@ -154,6 +154,8 @@ describe("robustness", () => {
         browser: "firefox",
         executablePath: firefox as string,
         headless: true,
+        // A cold start of Firefox on a CI runner can take longer than the 30 s puppeteer waits by default.
+        timeout: 90_000,
       });
       try {
         const page = await other.newPage();
@@ -164,6 +166,6 @@ describe("robustness", () => {
         await other.close();
       }
     },
-    60_000,
+    120_000,
   );
 });
