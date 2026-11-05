@@ -1,0 +1,71 @@
+name: Update catalogs
+
+# Every Monday, moves the pinned nixpkgs, Home Manager and disko (tools/catalog/flake.lock) to their latest
+# versions, regenerates the catalogs and, if anything changed, opens a pull request with the difference. The
+# pull request goes through the normal checks and a review: nothing reaches main by itself.
+#
+# A pull request opened with the default token does not start the other workflows, so its required checks
+# would never run. So a GitHub App opens it: the variable CATALOG_APP_CLIENT_ID and the secret
+# CATALOG_APP_PRIVATE_KEY (CONTRIBUTING.md says how to create it). Its token lasts an hour and can only write
+# contents and pull requests of this repository. Without them the default token is used, and the checks start
+# by closing and reopening the pull request.
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: catalog-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Regenerate and open a pull request
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BRANCH: chore/update-catalogs
+    steps:
+      - name: Token of the GitHub App
+        id: app
+        if: ${{ vars.CATALOG_APP_CLIENT_ID != '' }}
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.CATALOG_APP_CLIENT_ID }}
+          private-key: ${{ secrets.CATALOG_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # The push below uses these credentials, so the App is the author of the branch.
+          token: ${{ steps.app.outputs.token || github.token }}
+      - uses: ./.github/actions/setup-devenv
+      - run: devenv shell -- catalog --update
+      - name: Did the catalogs change?
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain -- public/catalog tools/catalog/flake.lock)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Open or update the pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token || github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git add public/catalog tools/catalog/flake.lock
+          git commit -m "chore: update the catalogs to the latest upstream"
+          # The branch is made again every week: an open pull request shows the newest result.
+          git push --force origin "$BRANCH"
+          open=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -z "$open" ]; then
+            gh pr create --base main --head "$BRANCH" \
+              --title "chore: update the catalogs to the latest upstream" \
+              --body "Regenerated with \`devenv shell -- catalog --update\` by the weekly workflow. Review the difference in \`public/catalog/\`: options added, removed or retyped upstream. The checks run the validator against the real module systems."
+          fi

@@ -1,1 +1,1 @@
-{"source":"disko · cedd626 · 2026-10-20","keys":["config","disabledModules","disko","imports","options"],"split":{}}
+{"source":"disko · cedd626 · 2026-10-20","keys":["assertions","config","disabledModules","disko~1","disko~10","disko~6","disko~7","disko~8","freeformType","imports","meta","options","warnings"],"split":{"disko":{"names":["checkScripts","devices","enableConfig","imageBuilder","memSize","rootMountPoint","testMode","tests"],"buckets":11}}}

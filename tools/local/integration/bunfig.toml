@@ -1,0 +1,3 @@
+[test]
+# These tests run the command line against real Nix: they are not unit tests, and have no coverage gate.
+coverage = false

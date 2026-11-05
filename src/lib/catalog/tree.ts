@@ -58,21 +58,32 @@ export function findExact(at: OptionTree, path: string[], i = 0): IndexedOption 
 
 /**
  * An option above `path` that cannot be checked any deeper (free-form set, opaque type, or an
- * alias whose children are unknown). The shortest one wins.
+ * alias whose children are unknown). The deepest one wins: the options below an `attrsOf` submodule
+ * know their own values.
  */
 export function findOwner(at: OptionTree, path: string[], i = 0): IndexedOption | undefined {
   if (i >= path.length) return undefined;
-  const { entry } = at;
-  // A `mix` that may be an attribute set takes any key as well.
-  const open = entry?.type === "mix" && entry.values?.includes("attrs");
-  if (
-    entry &&
-    (open || entry.type === "attrs" || entry.type === "any" || entry.type === "hidden")
-  ) {
-    return entry;
-  }
   for (const next of step(at, path[i] as string)) {
     const found = findOwner(next, path, i + 1);
+    if (found) return found;
+  }
+  const { entry } = at;
+  // A `mix` that may be an attribute set takes any key as well, and so may a package (a derivation is a set).
+  const open =
+    entry?.type === "mix" && (entry.values?.includes("attrs") || entry.values?.includes("pkg"));
+  const owns = open || entry?.type === "attrs" || entry?.type === "any" || entry?.type === "hidden";
+  return owns ? entry : undefined;
+}
+
+/**
+ * The option above `path` (not at it) that is a list. Its elements are not attributes of it, so a
+ * path written through it, such as `commands.x.command`, can never be valid.
+ */
+export function findListAbove(at: OptionTree, path: string[], i = 0): IndexedOption | undefined {
+  if (i >= path.length) return undefined;
+  if (i > 0 && at.entry?.type === "list") return at.entry;
+  for (const next of step(at, path[i] as string)) {
+    const found = findListAbove(next, path, i + 1);
     if (found) return found;
   }
   return undefined;

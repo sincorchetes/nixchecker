@@ -4,14 +4,13 @@ import { join } from "node:path";
 
 const flakeDir = join(import.meta.dir, "..", "catalog");
 
-// The whole repository a catalog bundle was read from: its `src` link points at the modules
-// directory, which is `levels` directories below the root.
-async function sourceRoot(attr: string, levels: number): Promise<string> {
+/** What the flake of the catalogs makes for `attr` (the bundle: `options.json`, `src`...), built if need be. */
+export async function bundleOut(attr: string): Promise<string> {
   const proc = Bun.spawn(
     [
       "nix",
       "build",
-      `${flakeDir}#${attr}`,
+      `path:${flakeDir}#${attr}`,
       "--no-link",
       "--print-out-paths",
       "--extra-experimental-features",
@@ -21,6 +20,13 @@ async function sourceRoot(attr: string, levels: number): Promise<string> {
   );
   const out = (await new Response(proc.stdout).text()).trim();
   if ((await proc.exited) !== 0) throw new Error(`nix build ${attr} failed`);
+  return out;
+}
+
+// The whole repository a catalog bundle was read from: its `src` link points at the modules
+// directory, which is `levels` directories below the root.
+async function sourceRoot(attr: string, levels: number): Promise<string> {
+  const out = await bundleOut(attr);
   return join(await realpath(join(out, "src")), ...Array(levels).fill(".."));
 }
 
@@ -40,3 +46,7 @@ export const releaseRoots = (version: Version): Promise<string[]> => {
 
 /** The disko repository, whose module is the one the catalog describes. */
 export const diskoRoot = (): Promise<string> => sourceRoot("disko", 0);
+
+/** The nix-darwin of a release; apart from the others, as only a Mac configuration needs it. */
+export const darwinRoot = (version: Version): Promise<string> =>
+  sourceRoot(`nix-darwin-${version === "unstable" ? version : version.replace(".", "")}`, 1);

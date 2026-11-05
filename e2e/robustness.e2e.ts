@@ -8,7 +8,8 @@ import { dist, launchChrome, serveSite, validateIn } from "./support";
 const root = join(import.meta.dir, "..");
 const subDist = join(root, "dist-base");
 const sub = serveSite(subDist, "/nixchecker");
-const site = serveSite(dist);
+let catalogsDown = false;
+const site = serveSite(dist, "", () => catalogsDown);
 let browser: Browser;
 
 beforeAll(async () => {
@@ -33,24 +34,23 @@ afterAll(async () => {
 // A page in a context of its own, so no cache or storage leaks in from another test.
 async function freshPage() {
   const context = await browser.createBrowserContext();
-  return context.newPage();
+  const page = await context.newPage();
+  // A desktop window, unless a test says otherwise.
+  await page.setViewport({ width: 1440, height: 900 });
+  return page;
 }
 
 describe("robustness", () => {
   test("says so when the catalog cannot be downloaded, and recovers", async () => {
     const page = await freshPage();
-    await page.setRequestInterception(true);
-    let offline = true;
-    page.on("request", (r) =>
-      offline && r.url().includes("/catalog/") ? r.abort() : r.continue(),
-    );
+    catalogsDown = true;
     await page.goto(site.url());
     await page.$eval("#source", (el) => ((el as HTMLTextAreaElement).value = "{ a.b = 1; }"));
     await page.click("#validate");
     await page.waitForFunction(() =>
       document.querySelector("#results")?.textContent?.includes("No se pudo cargar el catálogo"),
     );
-    offline = false;
+    catalogsDown = false;
     await validateIn(page, "{ services.openssh.enable = true; }");
     expect(await page.$eval(".summary", (el) => el.className)).toContain("good");
   });
@@ -62,7 +62,7 @@ describe("robustness", () => {
     await page.goto(sub.url("/"));
     await validateIn(page, "{ services.openssh.enabel = true; }");
     expect(await page.$$eval(".diag", (els) => els.length)).toBe(1);
-    expect(await page.$eval(".lang-switch", (el) => (el as HTMLAnchorElement).href)).toContain(
+    expect(await page.$eval(".top .lang", (el) => (el as HTMLAnchorElement).href)).toContain(
       "/nixchecker/en/",
     );
     expect(failed).toEqual([]);
@@ -99,10 +99,10 @@ describe("robustness", () => {
     await page.goto(site.url());
     await page.focus("#source");
     await page.keyboard.type("{ services.openssh.enabel = true; }");
-    for (let i = 0; i < 10; i++) {
-      await page.keyboard.press("Tab");
-      if (await page.evaluate(() => document.activeElement?.id === "validate")) break;
-    }
+    // The toolbar comes before the editor, as it looks: back from the text is the last button, Validate.
+    await page.keyboard.down("Shift");
+    await page.keyboard.press("Tab");
+    await page.keyboard.up("Shift");
     expect(await page.evaluate(() => document.activeElement?.id)).toBe("validate");
     await page.keyboard.press("Enter");
     await page.waitForSelector("#results .diag");
@@ -154,6 +154,8 @@ describe("robustness", () => {
         browser: "firefox",
         executablePath: firefox as string,
         headless: true,
+        // A cold start of Firefox on a CI runner can take longer than the 30 s puppeteer waits by default.
+        timeout: 90_000,
       });
       try {
         const page = await other.newPage();
@@ -164,6 +166,6 @@ describe("robustness", () => {
         await other.close();
       }
     },
-    60_000,
+    120_000,
   );
 });

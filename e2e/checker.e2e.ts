@@ -18,6 +18,8 @@ beforeAll(async () => {
   site = serveSite(dist);
   browser = await launchChrome();
   page = await browser.newPage();
+  // A desktop window: the editor and the findings are side by side (a narrow one has its own tests).
+  await page.setViewport({ width: 1440, height: 900 });
   await page.goto(url());
 });
 
@@ -41,9 +43,12 @@ describe("checker", () => {
 
   test("shows how many assignments could be checked", async () => {
     await validate("{ x, ... }: { networking.hostName = x; networking.useDHCP = true; }");
-    const detected = await page.$eval(".detected", (el) => el.textContent ?? "");
+    const detected = await page.$eval(".meta", (el) => el.textContent ?? "");
     expect(detected).toMatch(/1 de 2 asignaciones comprobadas/);
     expect(await page.$eval(".skip.dynamic", (el) => el.textContent)).toBe("1 con valor dinámico");
+    // The details are folded away until they are wanted.
+    expect(await page.$eval(".meta", (el) => (el as HTMLDetailsElement).open)).toBe(false);
+    await page.click(".meta > summary");
     await page.click(".skip.dynamic");
     const picked = await page.$eval("#source", (el) => {
       const area = el as HTMLTextAreaElement;
@@ -52,11 +57,11 @@ describe("checker", () => {
     expect(picked).toBe("networking.hostName");
   });
 
-  test("does not validate while typing, and dims stale results", async () => {
+  test("dims the results the moment the text changes, until it is validated", async () => {
     await page.type("#source", " ");
     expect(await page.$eval("#results", (el) => el.hasAttribute("data-stale"))).toBe(true);
     await page.click("#validate");
-    await page.waitForSelector("#results:not([data-stale])");
+    await page.waitForSelector("#results:not([data-stale]):not([aria-busy])");
   });
 
   test("applies a fix and validates again", async () => {
@@ -73,7 +78,7 @@ describe("checker", () => {
     await validate(
       "{\n  services.openssh.enabel = true;\n  boot.loader.systemd-boot.enabel = true;\n}",
     );
-    await page.click(".results > .fix");
+    await page.click(".facts > .fix");
     await page.waitForSelector(".summary.good");
   });
 
@@ -105,7 +110,10 @@ describe("checker", () => {
     });
     // disko is not used by any earlier test, so nothing of it is cached yet.
     await validate("{ disko.devices = { }; }");
-    expect(files).toEqual(["disko/index.json", "disko/disko.json"]);
+    // The index and one piece of the catalog (which one depends on how the catalog was split), not all.
+    expect(files).toHaveLength(2);
+    expect(files[0]).toBe("disko/index.json");
+    expect(files[1]).toMatch(/^disko\/disko~\d+\.json$/);
   });
 
   test("validates against the chosen release", async () => {
@@ -148,24 +156,29 @@ describe("checker", () => {
   test("picks Home Manager for a file that only makes sense there", async () => {
     await validate('{ programs.zsh.initContent = ""; programs = lib.mkMerge [ ]; }');
     expect(await summary()).toContain("good");
-    expect(await page.$eval(".detected", (el) => el.textContent)).toContain("Home Manager");
+    expect(await page.$eval(".meta", (el) => el.textContent)).toContain("Home Manager");
   });
 
-  test("the parallax layers follow the scroll, and the header jumps to the validator", async () => {
+  test("the header jumps to how it works and offers the other language", async () => {
     await page.goto(url());
-    const first = () => page.$eval(".plx", (el) => (el as HTMLElement).style.transform);
-    const before = await first();
-    await page.evaluate(() => window.scrollTo(0, 700));
-    await page.waitForFunction(
-      (was) => (document.querySelector(".plx") as HTMLElement).style.transform !== was,
-      {},
-      before,
+    await page.click(".top nav a[href='#como-funciona']");
+    await page.waitForFunction(() => location.hash === "#como-funciona");
+    expect(await page.$eval(".top .lang", (el) => el.textContent)).toContain("EN");
+  });
+
+  test("a finding shows its line, with the wrong word marked and a row of carets under it", async () => {
+    await validate("{ services.openssh.enabel = true; }");
+    expect(await page.$eval(".diag .listing mark", (el) => el.textContent)).toBe(
+      "services.openssh.enabel",
     );
-    expect(await first()).not.toBe(before);
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await page.click(".header-cta");
-    await page.waitForFunction(() => location.hash === "#validador");
-    expect(await page.$eval(".lang-switch", (el) => el.textContent)).toContain("EN");
+    expect(await page.$eval(".diag .listing .caret", (el) => el.textContent)).toBe(
+      "^".repeat("services.openssh.enabel".length).padStart("services.openssh.enabel".length + 2),
+    );
+  });
+
+  test("the counts agree with the numbers", async () => {
+    await validate('{ services.openssh.enable = "yes"; }');
+    expect(await page.$eval(".summary", (el) => el.textContent)).toBe("1 error");
   });
 
   test("works in English", async () => {

@@ -1,31 +1,6 @@
 import type { Overlay } from "../../src/lib/catalog/convert";
 import { type OptionEntry, opt, type Target } from "../../src/lib/catalog/types";
 
-// disko's disk layouts are polymorphic submodules selected by `type`, so its manual only
-// documents the top level. These are the nested options users write most often.
-const content = ["gpt", "table", "filesystem", "luks", "lvm_pv", "btrfs", "zfs", "swap", "mdraid"];
-const disk = "disko.devices.disk.*";
-const part = `${disk}.content.partitions.*`;
-const nodev = "disko.devices.nodev.*";
-
-const diskoEntries: OptionEntry[] = [
-  opt(`${disk}.type`, "enum", { values: ["disk"] }),
-  // Free-form on purpose: only the options below are checked inside it.
-  opt(`${disk}.content`, "attrs"),
-  opt(`${disk}.content.type`, "enum", { values: content }),
-  opt(`${part}.size`, "str"),
-  opt(`${part}.type`, "str"),
-  opt(`${part}.priority`, "int"),
-  opt(`${part}.content.type`, "enum", { values: content }),
-  opt(`${part}.content.format`, "str"),
-  opt(`${part}.content.mountpoint`, "str"),
-  opt(`${part}.content.mountOptions`, "list"),
-  opt(`${nodev}.fsType`, "str"),
-  opt(`${nodev}.device`, "str"),
-  opt(`${nodev}.mountpoint`, "str"),
-  opt(`${nodev}.mountOptions`, "list"),
-];
-
 // Top-level attributes of flake.nix, from the "Flake format" section of the Nix manual.
 const flakeEntries: OptionEntry[] = [
   opt("description", "str"),
@@ -40,12 +15,18 @@ const flakeEntries: OptionEntry[] = [
   opt("nixConfig.flake-registry", "str"),
 ];
 
-// Keys of the module system itself, which no manual lists as options.
+// Keys of the module system itself, and options that exist but are internal, which no manual lists:
+// `assertions` and `warnings` are what a module of your own writes to say that something is wrong, and
+// `meta` (`maintainers`, `doc`, `buildDocsInSandbox`) is about the module.
 const moduleEntries: OptionEntry[] = [
   opt("imports", "list"),
   opt("disabledModules", "list"),
   opt("options", "any"),
   opt("config", "any"),
+  opt("assertions", "list"),
+  opt("warnings", "list", { values: ["str"] }),
+  opt("meta", "attrs"),
+  opt("freeformType", "any"),
 ];
 
 export const overlays: Record<Target, Overlay> = {
@@ -58,6 +39,10 @@ export const overlays: Record<Target, Overlay> = {
     entries: moduleEntries,
   },
   "home-manager": { entries: moduleEntries },
-  disko: { entries: [...moduleEntries, ...diskoEntries] },
+  "nix-darwin": { entries: moduleEntries },
+  // Read from `nix config show`; a file of settings has no module keys (see nix-conf.ts).
+  "nix-conf": {},
+  // The nested options of the disk layouts are read from disko itself (see disko.ts).
+  disko: { entries: moduleEntries },
   flake: { entries: flakeEntries },
 };

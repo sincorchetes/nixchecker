@@ -1,14 +1,22 @@
 ---
+import { createHash } from "node:crypto";
 import "../styles/global.css";
-import "../styles/landing/chrome.css";
-import "../styles/landing/hero.css";
-import "../styles/landing/sections.css";
+import "../styles/listing.css";
+import "../styles/page.css";
 import { type Lang, messages } from "../lib/i18n";
 import { withBase } from "../lib/site";
 
 interface Props {
   lang: Lang;
 }
+
+// The theme chosen with the button, applied before the first paint so the page does not flash. It is the only
+// script written into the page, so the policy allows it by its hash instead of allowing every inline script.
+const themeScript = `try {
+  const theme = localStorage.getItem("theme");
+  if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+} catch {}`;
+const themeHash = createHash("sha256").update(themeScript).digest("base64");
 
 const { lang } = Astro.props;
 const m = messages[lang];
@@ -31,7 +39,7 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
     <!-- Pages cannot send headers, so the policy rides in a meta tag. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'"
+      content={`default-src 'self'; script-src 'self' 'sha256-${themeHash}'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'`}
     />
     <meta name="referrer" content="no-referrer" />
     <meta property="og:title" content={m["site.title"]} />
@@ -41,37 +49,54 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
     <link rel="alternate" hreflang="es" href={href("es")} />
     <link rel="alternate" hreflang="en" href={href("en")} />
     <link rel="alternate" hreflang="x-default" href={href("es")} />
+    <script is:inline set:html={themeScript} />
     <link rel="icon" href={withBase(base, "favicon.svg")} type="image/svg+xml" />
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href={path(lang)}>nix<span>checker</span></a>
-      <nav aria-label={m["nav.main"]}>
-        <a href="#validador">{m["nav.validator"]}</a>
-        <a href="#como-funciona">{m["nav.how"]}</a>
-      </nav>
-      <div class="header-actions">
-        <a class="lang-switch" href={path(other)} hreflang={other} lang={other} title={m["nav.languageLabel"]}>
-          {m["nav.language"]}<span class="sr-only"> · {m["nav.languageLabel"]}</span>
-        </a>
-        <a class="header-cta" href="#validador">{m["nav.cta"]} <span aria-hidden="true">↗</span></a>
-      </div>
-    </header>
+    <aside class="notice" aria-label={m["bar.label"]}>
+      <p>{m["bar.unofficial"]}</p>
+    </aside>
 
-    <aside class="unofficial-bar" aria-label={m["bar.label"]}>{m["bar.unofficial"]}</aside>
+    <header class="top">
+      <a class="mark" href={path(lang)}>nixchecker</a>
+      <nav aria-label={m["nav.main"]}>
+        <a href="#como-funciona">{m["nav.how"]}</a>
+        <a href={source} rel="noopener">{m["nav.source"]}</a>
+        <button
+          type="button"
+          class="theme"
+          id="theme"
+          data-light={m["nav.themeLight"]}
+          data-dark={m["nav.themeDark"]}
+        >
+          {m["nav.themeDark"]}
+        </button>
+        <a class="lang" href={path(other)} hreflang={other} lang={other} title={m["nav.languageLabel"]}>
+          {m["nav.language"]}<span class="sr-only"> {m["nav.languageLabel"]}</span>
+        </a>
+      </nav>
+    </header>
 
     <slot />
 
-    <footer class="site-footer">
-      <a class="brand" href={path(lang)}>nix<span>checker</span></a>
-      <p>{m["footer.tagline"]}</p>
-      <p class="legal">{m["footer.unofficial"]}</p>
-      <p class="legal">
-        {m["footer.license"]} · <a class="footer-link" href={source} rel="noopener">{m["nav.source"]}</a> ·
-        <a class="footer-link" href="https://sincorchetes.tech" rel="author noopener">sincorchetes.tech</a>
-      </p>
-      <p class="legal">{m["footer.ai"]}</p>
+    <footer class="foot">
+      <div>
+        <a class="mark" href={path(lang)}>nixchecker</a>
+        <p>{m["footer.tagline"]}</p>
+      </div>
+      <div class="legal">
+        <p>{m["footer.unofficial"]}</p>
+        <p>{m["footer.ai"]}</p>
+        <p>{m["footer.license"]}</p>
+        <ul>
+          <li><a href={source} rel="noopener">{m["nav.source"]}</a></li>
+          <li><a href="https://sincorchetes.tech" rel="author noopener">sincorchetes.tech</a></li>
+        </ul>
+      </div>
     </footer>
   </body>
 </html>
 
+<script>
+  import "../components/theme";
+</script>

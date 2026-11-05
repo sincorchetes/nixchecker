@@ -1,0 +1,80 @@
+---
+import { DEFAULT_SYSTEM, DEFAULT_VERSION, SYSTEMS, TARGETS, VERSIONS } from "../../lib/catalog";
+import { type Lang, messages } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const m = messages[Astro.props.lang];
+---
+
+<!-- What the text is checked against, in the bar under the editor, with where the cursor is. -->
+<div class="status">
+  <label class="choice">
+    <span>{m["checker.target"]}</span>
+    <select id="target">
+      <option value="auto">{m["target.auto"]}</option>
+      {TARGETS.map((t) => <option value={t}>{m[`target.${t}`]}</option>)}
+    </select>
+  </label>
+  <label class="choice">
+    <span>{m["checker.version"]}</span>
+    <select id="version" title={m["checker.versionHint"]}>
+      {VERSIONS.map((v) => <option value={v} selected={v === DEFAULT_VERSION}>{v}</option>)}
+    </select>
+  </label>
+  <label class="choice">
+    <span>{m["checker.system"]}</span>
+    <select id="system" title={m["checker.systemHint"]}>
+      {SYSTEMS.map((s) => <option value={s} selected={s === DEFAULT_SYSTEM}>{s}</option>)}
+    </select>
+  </label>
+  <label class="choice remember">
+    <input type="checkbox" id="remember" />
+    <span>{m["checker.remember"]}</span>
+  </label>
+  <p id="cursor" class="cursor"></p>
+</div>
+
+<style>
+  .status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.75rem;
+    align-items: center;
+    padding: 0.4rem 0.6rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.8125rem;
+  }
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--ink-2);
+  }
+  select {
+    padding: 0.15rem 0.4rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+  }
+  .remember {
+    cursor: pointer;
+  }
+  .remember input {
+    accent-color: var(--ink);
+  }
+  .cursor.over {
+    color: var(--warn);
+  }
+  .cursor {
+    margin: 0 0 0 auto;
+    min-height: 1em;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+  }
+</style>

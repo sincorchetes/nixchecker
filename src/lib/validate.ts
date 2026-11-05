@@ -5,13 +5,22 @@ import {
   candidates,
   childrenOf,
   findExact,
+  findListAbove,
   findOwner,
   knownPrefix,
   siblings,
 } from "./catalog/tree";
+import { foldUnrelated } from "./fold";
 import { byName } from "./sort";
 import { closest, distance } from "./suggest";
-import { isGroup, ownerReason, skipReason, typeMismatch, valueMismatch } from "./typecheck";
+import {
+  describeGot,
+  isGroup,
+  ownerReason,
+  renamedMismatch,
+  skipReason,
+  valueMismatch,
+} from "./typecheck";
 
 export {
   type Analysis,
@@ -25,6 +34,7 @@ export {
   type SkipCause,
   type TargetChoice,
 } from "./analysis";
+export { foldUnrelated } from "./fold";
 
 // Closest known path to `path`, with `*` filled in from what the user wrote.
 function suggest(tree: OptionTree, path: string[], known: number): string | undefined {
@@ -43,6 +53,12 @@ function available(tree: OptionTree, path: string[], known: number, written?: st
     : names;
   return ranked.slice(0, OPTIONS_SHOWN);
 }
+
+// A path at, below or above (a group written as a set) an option the file declares.
+const declaredHere = (declared: string[][], path: string[]): boolean =>
+  declared.some(
+    (d) => d.every((seg, n) => path[n] === seg) || path.every((seg, n) => d[n] === seg),
+  );
 
 /** Checks an analyzed file against the options of `target`. */
 export function check(
@@ -94,6 +110,30 @@ export function check(
   for (const a of analysis.assignments) {
     const at = { line: a.line, col: a.col };
     const path = a.path.join(".");
+    // An option the file declares itself is no unknown one, and nothing of the catalog says what it takes.
+    if (declaredHere(analysis.declared, a.path)) {
+      skipped.push({ cause: "declared", path, ...at });
+      continue;
+    }
+    // Attributes written below a list option: the list takes a `[ ... ]`, not a set.
+    const list = findListAbove(tree, a.path);
+    if (list) {
+      if (!reported.has(list.path)) {
+        reported.add(list.path);
+        diagnostics.push({
+          severity: "error",
+          code: "type-mismatch",
+          ...at,
+          params: {
+            path: a.path.slice(0, list.segs.length).join("."),
+            expected: "list",
+            got: "attrs",
+          },
+          docUrl: docUrl(target, list.path, version),
+        });
+      }
+      continue;
+    }
     const exact = findExact(tree, a.path);
     // An entry above this path that cannot be checked any deeper (free-form set, opaque
     // type, or an alias whose children are unknown).
@@ -106,13 +146,15 @@ export function check(
     if (cause) skipped.push({ cause, path, line: a.line, col: a.col });
 
     if (exact) {
-      const expected = typeMismatch(exact, a);
+      // A renamed option passes its value on as it is: the value is held to the type of the new one,
+      // when that is known here.
+      const expected = renamedMismatch(tree, exact, a);
       if (expected) {
         diagnostics.push({
           severity: "error",
           code: "type-mismatch",
           ...at,
-          params: { path, expected, got: a.kind },
+          params: { path, expected, got: describeGot(exact, a) },
           docUrl: docUrl(target, exact.path, version),
         });
       }
@@ -156,7 +198,8 @@ export function check(
       const suggestion = suggest(tree, a.path, known);
       const options = available(tree, a.path, known, a.path[known]);
       diagnostics.push({
-        severity: "error",
+        // Nix only warns about a setting of nix.conf it does not know, and goes on.
+        severity: target === "nix-conf" ? "warning" : "error",
         code: "unknown-option",
         ...at,
         params: { path },
@@ -180,7 +223,8 @@ export function validate(
 ): Report {
   const analysis = analyze(source);
   const target = resolveTarget(analysis, choice);
-  return check(analysis, target, catalogs[target], version);
+  const report = check(analysis, target, catalogs[target], version);
+  return choice === "auto" ? foldUnrelated(report, analysis, catalogs[target]) : report;
 }
 
 const errorsIn = (report: Report) =>

@@ -1,5 +1,6 @@
 ---
 import { type Lang, messages } from "../../lib/i18n";
+import { RULER } from "./ruler";
 
 interface Props {
   lang: Lang;
@@ -8,42 +9,75 @@ interface Props {
 const m = messages[Astro.props.lang];
 ---
 
-<label for="source">{m["checker.label"]}</label>
+<label class="sr-only" for="source">{m["checker.label"]}</label>
 <div class="editor">
   <pre id="gutter" class="gutter" aria-hidden="true"></pre>
-  <textarea
-    id="source"
-    wrap="off"
-    spellcheck="false"
-    autocomplete="off"
-    autocapitalize="off"
-    placeholder={m["checker.placeholder"]}></textarea>
+  <div class="pane">
+    <!-- The vertical line at the column a line is kept within (its place is set by editor.ts: the policy allows no style attribute); it moves with the text when that scrolls sideways. -->
+    <div class="ruler" data-columns={RULER} aria-hidden="true"></div>
+    <pre id="highlight" class="highlight" aria-hidden="true"></pre>
+    <textarea
+      id="source"
+      wrap="off"
+      spellcheck="false"
+      autocomplete="off"
+      autocapitalize="off"
+      placeholder={m["checker.placeholder"]}></textarea>
+  </div>
 </div>
-<p id="cursor" class="cursor"></p>
 
 <style>
-  label {
-    font-size: 0.85rem;
-    color: var(--text-2);
-  }
   .editor {
     display: flex;
-    margin-top: 0.5rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    /* A tint of the text color: darker than the card in the dark theme, lighter in the light one. */
-    background: color-mix(in srgb, var(--text) 5%, transparent);
+    flex: 1;
+    min-height: 20rem;
     overflow: hidden;
   }
-  .editor:focus-within {
-    border-color: var(--accent-light);
+  .editor.dropping {
+    background: var(--marker);
+  }
+  /* Beside the results, the editor is as tall as the window leaves it. */
+  @media (min-width: 64rem) {
+    .editor {
+      min-height: 0;
+    }
+  }
+  .pane {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+  /* The same font as the text, so a column is `ch` wide; the text starts after its padding (1rem). */
+  .ruler {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+  }
+  .ruler::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: calc(1rem + var(--ruler-columns) * 1ch);
+    width: 1px;
+    background: color-mix(in srgb, var(--ink) 22%, transparent);
+    transform: translateX(calc(var(--scroll-left, 0px) * -1));
+  }
+  @media (forced-colors: active) {
+    .ruler::before {
+      background: GrayText;
+    }
   }
   .gutter,
+  .highlight,
   textarea {
     margin: 0;
     padding: 1rem 0;
     font-family: var(--font-mono);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     line-height: 1.5;
   }
   .gutter {
@@ -52,45 +86,128 @@ const m = messages[Astro.props.lang];
     padding-inline: 0.6rem;
     overflow: hidden;
     text-align: right;
-    color: var(--text-3);
-    border-right: 1px solid var(--border);
+    color: var(--ink-3);
+    border-right: 1px solid var(--rule);
     user-select: none;
   }
   .gutter :global(.ln) {
     display: block;
   }
   .gutter :global(.ln.error) {
-    color: var(--error);
+    color: var(--flag);
     font-weight: 700;
   }
   .gutter :global(.ln.warning) {
-    color: var(--warning);
+    color: var(--warn);
     font-weight: 700;
   }
   textarea {
     display: block;
     flex: 1;
     min-width: 0;
-    min-height: 16rem;
+    min-height: 0;
     padding-inline: 1rem;
-    resize: vertical;
+    resize: none;
     border: 0;
     outline: 0;
     background: transparent;
-    color: var(--text);
+    color: var(--ink);
     white-space: pre;
     overflow: auto;
     tab-size: 2;
   }
-  textarea::placeholder {
-    color: var(--text-3);
+  /* The colored copy of the text sits right under the text, which is then drawn transparent. */
+  .highlight {
+    position: absolute;
+    inset: 0;
+    padding-inline: 1rem;
+    overflow: hidden;
+    pointer-events: none;
+    color: var(--ink);
+    white-space: pre;
+    tab-size: 2;
   }
-  .cursor {
-    margin: 0.35rem 0 0;
-    text-align: right;
-    color: var(--text-3);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    min-height: 1em;
+  .hl textarea {
+    -webkit-text-fill-color: transparent;
+    caret-color: var(--ink);
+  }
+  .hl textarea::placeholder {
+    -webkit-text-fill-color: var(--ink-3);
+  }
+  /* See-through, so the colored text stays readable while selected. */
+  .hl textarea::selection {
+    background: var(--marker);
+  }
+  .highlight :global(.tok-comment) {
+    color: var(--ink-3);
+    font-style: italic;
+  }
+  .highlight :global(.tok-string) {
+    color: var(--ok);
+  }
+  .highlight :global(.tok-number) {
+    color: var(--warn);
+  }
+  .highlight :global(.tok-keyword) {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .highlight :global(.tok-path) {
+    color: var(--link);
+  }
+  .highlight :global(.mk-error),
+  .highlight :global(.mk-warning) {
+    text-decoration: underline wavy;
+    text-underline-offset: 0.2em;
+  }
+  .highlight :global(.mk-error) {
+    text-decoration-color: var(--flag);
+  }
+  .highlight :global(.mk-warning) {
+    text-decoration-color: var(--warn);
+  }
+  /* The box by the pointer on an underlined word (built by the page script). */
+  .editor :global(.tip) {
+    position: fixed;
+    z-index: 10;
+    max-width: min(28rem, calc(100vw - 1rem));
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    pointer-events: none;
+    overflow-wrap: anywhere;
+  }
+  .editor :global(.tip[hidden]) {
+    display: none;
+  }
+  .editor :global(.tip p) {
+    margin: 0;
+  }
+  .editor :global(.tip .hint) {
+    margin-top: 0.25rem;
+    color: var(--ink-2);
+  }
+  .editor :global(.tip .sev) {
+    margin-right: 0.6ch;
+    font-weight: 760;
+    color: var(--flag);
+  }
+  .editor :global(.tip .warning .sev) {
+    color: var(--warn);
+  }
+  @media (forced-colors: active) {
+    .highlight {
+      display: none;
+    }
+    .hl textarea {
+      -webkit-text-fill-color: currentcolor;
+    }
+  }
+  textarea::placeholder {
+    color: var(--ink-3);
   }
 </style>

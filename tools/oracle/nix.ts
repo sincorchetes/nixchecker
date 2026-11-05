@@ -2,7 +2,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type Kind, type Roots, systemExpression } from "../local/expressions";
+import { BASE, type Kind, type Roots, systemExpression } from "../local/expressions";
 
 export interface Verdict {
   /** Some option the module sets does not exist. */
@@ -11,6 +11,11 @@ export interface Verdict {
   typeError: boolean;
   /** Any other failure, which means the case itself is broken. */
   other?: string;
+  /**
+   * Some value could not be read deeply, only one level (a group of packages, an option that overflows the
+   * stack): the elements of a list were not looked at, so "no type error" is not an answer there.
+   */
+  shallow?: boolean;
 }
 
 export type { Kind, Roots };
@@ -20,13 +25,6 @@ const FORCE = `(if deep then builtins.deepSeq else builtins.seq) (builtins.foldl
 
 const EXPRESSION = (kind: Kind, roots: Roots) =>
   systemExpression(kind, roots, "{ file, path, deep }", FORCE);
-
-// Something every system has, to force first: unknown options are found by reading any of them.
-const BASE: Record<Kind, string[]> = {
-  nixos: ["system", "name"],
-  "home-manager": ["home", "username"],
-  disko: ["system", "name"],
-};
 
 /** Evaluates `config.<path>` of a NixOS system made from the module, and classifies the failure. */
 async function force(
@@ -82,7 +80,10 @@ export async function makeOracle(kind: Kind, roots: Roots) {
         // Deep first, so a wrong element is found; a group holds packages that cannot be forced
         // that way, and for it reading the value itself is as far as the check goes.
         let one = await force(expression, file, path, true);
-        if (one.other) one = await force(expression, file, path, false);
+        if (one.other) {
+          verdict.shallow = true;
+          one = await force(expression, file, path, false);
+        }
         verdict.unknown ||= one.unknown;
         verdict.typeError ||= one.typeError;
         if (one.other && !verdict.other) verdict.other = one.other;

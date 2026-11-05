@@ -1,0 +1,72 @@
+// Modules of the projects that add options to NixOS, like the NixOS ones in cases.ts. Each is put to a NixOS
+// that has the module of its project added.
+export const EXTENSION_CASES: Record<string, string[]> = {
+  "ext-sops-nix": [
+    // correct
+    "{ sops.defaultSopsFile = ./secrets.yaml; }",
+    '{ sops.secrets."db/password".owner = "postgres"; }',
+    '{ sops.secrets.token = { mode = "0400"; restartUnits = [ "x.service" ]; }; }',
+    '{ sops.age.keyFile = "/var/lib/sops-nix/key.txt"; }',
+    "{ sops.age.generateKey = true; }",
+    // unknown options
+    "{ sops.secret.x = 1; }",
+    "{ sops.defaultSopsFil = ./secrets.yaml; }",
+    '{ sops.secrets.token.ownr = "root"; }',
+    // wrong types
+    "{ sops.secrets.token.mode = 400; }",
+    '{ sops.age.generateKey = "yes"; }',
+    "{ sops.secrets.token.restartUnits = true; }",
+  ],
+  "ext-agenix": [
+    // correct
+    "{ age.secrets.token.file = ./token.age; }",
+    '{ age.secrets.token.owner = "root"; }',
+    '{ age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ]; }',
+    // unknown options
+    "{ age.secret.token.file = ./token.age; }",
+    "{ age.secrets.token.fiel = ./token.age; }",
+    // wrong types
+    "{ age.secrets.token.mode = 400; }",
+    '{ age.identityPaths = "/etc/key"; }',
+    '{ age.secrets.token.symlink = "yes"; }',
+  ],
+  "ext-lanzaboote": [
+    // correct
+    "{ boot.lanzaboote.enable = true; }",
+    '{ boot.lanzaboote.pkiBundle = "/var/lib/sbctl"; }',
+    "{ boot.lanzaboote.autoGenerateKeys.enable = true; }",
+    // unknown options
+    "{ boot.lanzaboote.enabel = true; }",
+    '{ boot.lanzaboote.pkiBundl = "/var/lib/sbctl"; }',
+    // wrong types
+    '{ boot.lanzaboote.enable = "yes"; }',
+    "{ boot.lanzaboote.pkiBundle = 3; }",
+    '{ boot.lanzaboote.autoGenerateKeys.enable = "yes"; }',
+  ],
+  "ext-impermanence": [
+    // correct
+    '{ environment.persistence."/persist".directories = [ "/var/lib/nixos" ]; }',
+    '{ environment.persistence."/persist".files = [ "/etc/machine-id" ]; }',
+    '{ environment.persistence."/persist".hideMounts = true; }',
+    // unknown options
+    '{ environment.persistence."/persist".directoris = [ ]; }',
+    '{ environment.persistence."/persist".hideMount = true; }',
+    // wrong types
+    '{ environment.persistence."/persist".hideMounts = "yes"; }',
+    '{ environment.persistence."/persist".directories = "/var"; }',
+    '{ environment.persistence."/persist".files = true; }',
+  ],
+  // The module asserts that a source of keys is set, so every case sets one.
+  "ext-sops-nix-home": [
+    // correct
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.defaultSopsFile = ./secrets.yaml; }',
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.secrets.token.path = "%r/token"; }',
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.secrets.token.mode = "0400"; }',
+    // unknown options
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.secret.x = 1; }',
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.defaultSopsFil = ./secrets.yaml; }',
+    // wrong types
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.secrets.token.mode = 400; }',
+    '{ sops.age.keyFile = "/home/u/key.txt"; sops.age.generateKey = "yes"; }',
+  ],
+};

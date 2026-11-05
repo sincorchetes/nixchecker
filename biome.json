@@ -9,7 +9,8 @@
       "!.devenv",
       "!**/*.astro",
       "!bun.lock",
-      "!public/catalog"
+      "!public/catalog",
+      "!tools/local/schemas"
     ]
   },
   "overrides": [

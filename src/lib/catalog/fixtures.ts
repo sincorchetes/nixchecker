@@ -1,8 +1,10 @@
+import { splitPath } from "./path";
+import { enumElementKind, patternKind } from "./pattern";
 import { buildTree, type OptionTree } from "./tree";
 import { type OptionEntry, opt, type Target } from "./types";
 
 const index = (entries: OptionEntry[]): OptionTree =>
-  buildTree(entries.map((entry) => ({ ...entry, segs: entry.path.split(".") })));
+  buildTree(entries.map((entry) => ({ ...entry, segs: splitPath(entry.path) })));
 
 const content = ["gpt", "filesystem", "luks", "swap"];
 const disk = "disko.devices.disk.*";
@@ -19,6 +21,25 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("env.vars", "attrs", { values: ["str", "int"] }),
     opt("mixed.text", "mix", { values: ["str", "list:str"] }),
     opt("files.root", "path"),
+    opt("files.list", "list", { values: ["path"] }),
+    opt("mixed.overlays", "list", { values: ["fn"] }),
+    opt("mixed.long", "mix", { values: [patternKind("^[a-z]{1,40}[0-9]{1,40}[A-Z]{1,40}$")] }),
+    opt("mixed.hook", "mix", { values: ["fn"] }),
+    opt("mixed.old", "any", { renamedTo: "mixed.mid" }),
+    opt("mixed.mid", "any", { renamedTo: "mixed.flag" }),
+    opt("mixed.flag", "bool"),
+    // Enums of integers are stored as their digits.
+    opt("mixed.show", "enum", { values: ["100", "101"] }),
+    opt("mixed.maybe", "mix", { values: ['enum:["100","101"]'] }),
+    opt("mixed.many", "list", { values: [enumElementKind(["100", "101"])] }),
+    opt("mixed.lost", "any", { renamedTo: "mixed.nowhere" }),
+    opt("mixed.loop", "any", { renamedTo: "mixed.loop" }),
+    opt("mixed.viaEnv", "any", { renamedTo: "env.vars.KEY" }),
+    opt("mixed.viaNowhere", "any", { renamedTo: "mixed.free.deep.er" }),
+    opt("mixed.shells", "list", { values: [enumElementKind(["bash", "zsh+fzf"])] }),
+    opt("units.name", "mix", { values: [patternKind("^[a-z]+[.]service$")] }),
+    opt("units.after", "list", { values: [patternKind("[a-z]+[.](service|socket)")] }),
+    opt("units.either", "mix", { values: ["int", patternKind("[[:digit:]]+")] }),
     opt("files.either", "mix", { values: ["path", "int"] }),
     opt("mixed.jobs", "mix", { values: ["int", 'enum:["auto"]'] }),
     opt("services.openssh.enable", "bool"),
@@ -40,6 +61,18 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("home-manager.users", "attrs"),
   ]),
   "home-manager": index([opt("home.stateVersion", "str"), opt("home.username", "str")]),
+  "nix-darwin": index([
+    opt("system.defaults.dock.autohide", "bool"),
+    opt("homebrew.enable", "bool"),
+    opt("nix.enable", "bool"),
+  ]),
+  "nix-conf": index([
+    opt("experimental-features", "mix", { values: ["str", "list", "bool", "int"] }),
+    opt("max-jobs", "mix", { values: ["int", 'enum:["auto"]'] }),
+    opt("keep-going", "bool"),
+    opt("cores", "int"),
+    opt("substituters", "mix", { values: ["str", "list", "bool", "int"] }),
+  ]),
   disko: index([
     opt(`${disk}.device`, "str"),
     opt(`${disk}.type`, "enum", { values: ["disk"] }),

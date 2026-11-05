@@ -1,10 +1,11 @@
+import { enumElementKind, patternKind } from "./pattern";
 import type { OptionType } from "./types";
 
 /**
  * The type of an option as `tools/catalog/shapes.nix` reads it from Nix: a list of alternatives, one
  * of which a value must be. `"b"` `"i"` `"s"` `"a"` are a bool, an integer, a string and an attribute
  * set; `["l", ...]` is a list whose elements are one of the alternatives that follow; `["e", ...]`
- * is one of those strings; `["m", ...]` is an attribute set whose values are one of the alternatives that
+ * is one of those strings; `["r", regex]` is a string matching all of the regular expression; `["m", ...]` is an attribute set whose values are one of the alternatives that
  * follow; `"?"` is something that cannot be told apart.
  */
 export type Alt = string | Alt[];
@@ -19,19 +20,31 @@ export interface Shaped {
   values?: string[];
 }
 
-const KIND: Record<string, string> = { b: "bool", i: "int", s: "str", a: "attrs", p: "path" };
+const KIND: Record<string, string> = {
+  b: "bool",
+  i: "int",
+  s: "str",
+  a: "attrs",
+  p: "path",
+  k: "pkg",
+  u: "fn",
+};
 
-const ELEMENT: Record<string, string> = { e: "str", m: "attrs", l: "list" };
+const ELEMENT: Record<string, string> = { m: "attrs", l: "list" };
+
+// An alternative that is a list or a set: the kind of what it holds, and a pattern keeps its expression.
+const elementKind = (alt: Alt[]): string | undefined => {
+  if (alt[0] === "r") return patternKind(alt[1] as string);
+  if (alt[0] === "e") return enumElementKind(alt.slice(1) as string[]);
+  return ELEMENT[alt[0] as string];
+};
 
 // What an alternative of a list's elements allows, as the kinds a catalog stores. Undefined when it is
 // something nothing can be said about.
 function elementKinds(all: Alt[]): string[] | undefined {
   const alts = withoutFloats(all);
   if (alts.length === 0) return undefined;
-  // As list elements a path is checked as a string: only the option itself is held to a leading "/".
-  const kinds = alts.map((alt) =>
-    Array.isArray(alt) ? ELEMENT[alt[0] as string] : alt === "p" ? "str" : KIND[alt],
-  );
+  const kinds = alts.map((alt) => (Array.isArray(alt) ? elementKind(alt) : KIND[alt]));
   return kinds.every(Boolean) ? [...new Set(kinds as string[])] : undefined;
 }
 
@@ -39,6 +52,7 @@ function elementKinds(all: Alt[]): string[] | undefined {
 function token(alt: Alt): string | undefined {
   if (!Array.isArray(alt)) return KIND[alt];
   if (alt[0] === "m") return "attrs";
+  if (alt[0] === "r") return patternKind(alt[1] as string);
   // A fixed set of strings keeps its values: `enum:["auto"]`.
   if (alt[0] === "e") return `enum:${JSON.stringify(alt.slice(1))}`;
   const elements = elementKinds(alt.slice(1));
@@ -63,13 +77,17 @@ export function fromShape(all: Shape): Shaped | undefined {
     // Strict or free-form is not a matter of type; its values are read apart (`elementsOf`).
     if (head === "m") return undefined;
     if (head === "e") return { type: "enum", values: rest as string[] };
+    if (head === "r") return { type: "mix", values: [patternKind(rest[0] as string)] };
     const elements = elementKinds(rest);
     return { type: "list", ...(elements && { values: elements }) };
   }
   const kinds = [...new Set(shape.map(token))];
   if (kinds.includes(undefined)) return { type: "any" };
   const [one] = kinds as string[];
-  if (kinds.length === 1 && one && !/^(list|enum)/.test(one)) return { type: one as OptionType };
+  // A package or a function is a kind a value can be, not a type of its own: held as an alternative of one.
+  if ((one === "pkg" || one === "fn") && kinds.length === 1) return { type: "mix", values: [one] };
+  if (kinds.length === 1 && one && !/^(list|enum|re:)/.test(one))
+    return { type: one as OptionType };
   return { type: "mix", values: kinds as string[] };
 }
 

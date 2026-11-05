@@ -1,1 +1,1 @@
-[["openstack.zfs.datasets","set"],["openstack.zfs.datasets.*.mount","str"],["openstack.zfs.datasets.*.properties","attrs",["str"]]]
+[["openstack.efi","hidden"],["openstack.zfs.datasets","set"],["openstack.zfs.datasets.*._module.args","hidden"],["openstack.zfs.datasets.*._module.check","hidden"],["openstack.zfs.datasets.*._module.freeformType","hidden"],["openstack.zfs.datasets.*._module.specialArgs","hidden"],["openstack.zfs.datasets.*.mount","str"],["openstack.zfs.datasets.*.properties","attrs",["str"]],["openstack.zfs.enable","hidden"]]

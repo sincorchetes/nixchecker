@@ -97,7 +97,9 @@ describe("what the catalog offers", () => {
   test("an unknown option lists what exists there, nearest to the typo first", () => {
     const [d] = run("{ services.openssh.enabel = true; }").diagnostics;
     expect(d?.options).toEqual(["enable", "ports", "settings"]);
-    expect(run("{ zzzzzz.qqqqqq = 1; }").diagnostics[0]?.options?.length).toBeGreaterThan(3);
+    // With the kind chosen, keys that are nothing like an option are each an error with what exists.
+    const chosen = validate("{ zzzzzz.qqqqqq = 1; }", "nixos", fixtures).diagnostics[0];
+    expect(chosen?.options?.length).toBeGreaterThan(3);
   });
 });
 

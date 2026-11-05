@@ -52,13 +52,46 @@ jobs:
       - uses: ./.github/actions/setup-devenv
       - run: devenv shell -- catalog
       - name: Fail if regenerating changed anything
-        run: git diff --exit-code --stat -- public/catalog
+        run: |
+          if ! git diff --quiet -- public/catalog; then
+            git diff --stat -- public/catalog
+            echo "Changed rows (< committed, > regenerated):"
+            for f in $(git diff --name-only -- public/catalog | grep -v manifest.json); do
+              echo "== $f"
+              diff <(git show "HEAD:$f" | jq -c '.[]') <(jq -c '.[]' "$f") | cut -c1-300 | head -40 || true
+            done
+            exit 1
+          fi
       - name: The parser accepts every .nix file of nixpkgs and Home Manager
         run: devenv shell -- corpus
       - name: The parser agrees with the official one on damaged files
         run: devenv shell -- differential
+      - name: The package builds and its command line works
+        run: nix flake check --extra-experimental-features "nix-command flakes"
+      - name: The package evaluates for every platform it declares (it is only built for this one)
+        run: nix flake check --all-systems --no-build --extra-experimental-features "nix-command flakes"
+      - name: The command line works against real Nix (own modules, imports, --partial, flakes)
+        run: devenv shell -- integration
+
+  # The validator against the real module systems. Each group of targets evaluates with Nix on its own
+  # runner: in one job they ran for over 25 minutes.
+  oracle:
+    name: Validator vs Nix (${{ matrix.group }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [nixos, home-manager, nix-darwin, disko, extensions, nix-conf]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: ./.github/actions/setup-devenv
       - name: The validator agrees with the real module system
-        run: devenv shell -- oracle
+        if: ${{ matrix.group != 'nix-conf' }}
+        run: devenv shell -- oracle 40 1 only=${{ matrix.group }}
+      - name: The nix.conf check agrees with Nix
+        if: ${{ matrix.group == 'nix-conf' }}
+        run: devenv shell -- bun tools/oracle/nix-conf.ts
 
   build:
     name: Build
@@ -98,19 +131,27 @@ jobs:
     # Only runs if the repository defines the SONAR_HOST_URL variable (and the SONAR_TOKEN secret).
     # The server must be reachable from GitHub (localhost will not work).
     if: ${{ vars.SONAR_HOST_URL != '' }}
+    # The coverage report comes from the quality job.
+    needs: quality
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: ./.github/actions/setup-devenv
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: coverage
+          path: coverage
       - run: devenv shell -- sonar
         env:
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
 
   # A single result to require in the branch ruleset.
   ci-ok:
     name: CI passed
     if: ${{ always() }}
-    needs: [quality, catalog, build, e2e]
+    needs: [quality, catalog, oracle, build, e2e]
     runs-on: ubuntu-latest
     steps:
       - env:

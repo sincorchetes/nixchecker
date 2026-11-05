@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { enumElementKind } from "./pattern";
 import { elementsOf, fromShape } from "./shape";
 
 describe("fromShape", () => {
@@ -20,8 +21,16 @@ describe("fromShape", () => {
   test("paths", () => {
     expect(fromShape(["p"])).toEqual({ type: "path" });
     expect(fromShape(["p", "i"])).toEqual({ type: "mix", values: ["path", "int"] });
-    // As list elements they are strings.
-    expect(fromShape([["l", "p"]])).toEqual({ type: "list", values: ["str"] });
+    // As list elements they are paths too.
+    expect(fromShape([["l", "p"]])).toEqual({ type: "list", values: ["path"] });
+  });
+
+  test("strings with a pattern keep it, apart from the `+` and `:` that separate kinds", () => {
+    const kind = "re:%5Ba-z%5D%2B%3A";
+    expect(fromShape([["r", "[a-z]+:"]])).toEqual({ type: "mix", values: [kind] });
+    expect(fromShape(["i", ["r", "x"]])).toEqual({ type: "mix", values: ["int", "re:x"] });
+    expect(fromShape([["l", ["r", "[a-z]+:"]]])).toEqual({ type: "list", values: [kind] });
+    expect(fromShape([["l", ["r", "x"], "i"]])).toEqual({ type: "list", values: ["re:x", "int"] });
   });
 
   test("enums", () => {
@@ -54,7 +63,19 @@ describe("fromShape", () => {
     ).toHaveLength(3);
     expect(fromShape([["l", ["e", "x"]], "s"])).toEqual({
       type: "mix",
-      values: ["list:str", "str"],
+      values: ["list:enum:%5B%22x%22%5D", "str"],
+    });
+  });
+
+  test("a function is a kind a value can be, alone or as the element of a list", () => {
+    expect(fromShape(["u"])).toEqual({ type: "mix", values: ["fn"] });
+    expect(fromShape([["l", "u"]])).toEqual({ type: "list", values: ["fn"] });
+  });
+
+  test("a list of an enum keeps its values, whatever characters they have", () => {
+    expect(fromShape([["l", ["e", "a+b", "c:d"]]])).toEqual({
+      type: "list",
+      values: [enumElementKind(["a+b", "c:d"])],
     });
   });
 
@@ -88,5 +109,14 @@ describe("fromShape", () => {
     expect(fromShape([["l", "f"]])).toEqual({ type: "list" });
     expect(elementsOf([["m", "s", "f"]])).toEqual(["str"]);
     expect(elementsOf([["m", "f"]])).toBeUndefined();
+  });
+});
+
+describe("a package", () => {
+  test("is a kind a value can be: an option of one is a mix with it, a list of them a list of it", () => {
+    expect(fromShape(["k"])).toEqual({ type: "mix", values: ["pkg"] });
+    expect(fromShape([["l", "k"]])).toEqual({ type: "list", values: ["pkg"] });
+    expect(fromShape(["k", "s"])).toEqual({ type: "mix", values: ["pkg", "str"] });
+    expect(elementsOf([["m", "k"]])).toEqual(["pkg"]);
   });
 });

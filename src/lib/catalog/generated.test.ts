@@ -30,14 +30,22 @@ describe("generated catalogs (public/catalog)", () => {
     expect(await has("nixos-unstable", "services.openssh.enable", "bool")).toBe(true);
     expect(await has("nixos-unstable", "users.users", "set")).toBe(true);
     expect(await has("home-manager-unstable", "programs.git.enable", "bool")).toBe(true);
-    expect(await has("disko", "disko.devices.disk.*.device", "str")).toBe(true);
+    expect(await has("disko", "disko.devices.disk.*.device", "path")).toBe(true);
     expect(await has("flake", "inputs.*.url", "str")).toBe(true);
+    // Internal options a module of your own writes are there, though the manuals leave them out.
+    expect(await has("nixos-unstable", "assertions", "list")).toBe(true);
+    expect(await has("home-manager-unstable", "warnings", "list")).toBe(true);
+    expect(await has("nixos-unstable", "meta", "attrs")).toBe(true);
     // Every release ships both catalogs, and an option can exist in one release only.
     for (const version of VERSIONS) {
       expect(await has(`nixos-${version}`, "services.openssh.enable", "bool")).toBe(true);
       expect(await has(`home-manager-${version}`, "programs.git.enable", "bool")).toBe(true);
+      expect(await has(`nix-darwin-${version}`, "system.defaults.dock.autohide", "bool")).toBe(
+        true,
+      );
     }
     expect(catalogName("nixos", "26.05")).toBe("nixos-26.05");
+    expect(catalogName("nix-darwin", "26.05")).toBe("nix-darwin-26.05");
     expect(catalogName("disko", "26.05")).toBe("disko");
     expect(DEFAULT_VERSION).toBe(VERSIONS[0]);
   });

@@ -1,8 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
-import { type Lang, messages } from "../lib/i18n";
+import { format, type Lang, messages } from "../lib/i18n";
 import Checker from "./Checker.astro";
-import Layers from "./Layers.astro";
+import Specimen from "./Specimen.astro";
 
 interface Props {
   lang: Lang;
@@ -10,66 +10,79 @@ interface Props {
 
 const { lang } = Astro.props;
 const m = messages[lang];
+const tell = (key: keyof typeof m, params: Record<string, string>) => format(m[key], params);
+
+// The three findings the page shows as examples: a typo, a value of the wrong type and a renamed option.
+const typo = "services.nginx.enabel";
+const wrongType = "networking.firewall.enable";
+const renamed = "services.xserver.displayManager.gdm.enable";
 const features = ["docs", "local", "hints"] as const;
-const notes = ["note1", "note2", "note3"] as const;
 ---
 
 <Base lang={lang}>
   <main>
-    <section class="hero">
-      <Layers scene="hero" />
-      <div class="hero-content" data-parallax="-0.14">
-        <p class="eyebrow"><span></span>{m["hero.eyebrow"]}</p>
-        <h1>{m["hero.titleA"]}<br /><em>{m["hero.titleB"]}</em></h1>
-        <p class="hero-lead">{m["hero.subtitle"]}</p>
-        <a class="primary-button" href="#validador">{m["hero.cta"]} <span aria-hidden="true">↓</span></a>
-        <div class="hero-notes">
-          {notes.map((key) => <span>✓ {m[`hero.${key}`]}</span>)}
-        </div>
+    <div class="titlebar">
+      <h1 id="intro-title">{m["hero.title"]}</h1>
+      <p class="lead">{m["hero.subtitle"]}</p>
+    </div>
+    <Checker lang={lang} titleId="intro-title">
+      <div class="sample">
+        <p>{m["result.example"]}</p>
+        <Specimen
+          line={14}
+          code={`  ${typo} = true;`}
+          at={2}
+          length={typo.length}
+          severity="error"
+          label={m["result.error"]}
+          message={tell("diag.unknown-option", { path: typo })}
+          hint={tell("result.suggest", { suggestion: "services.nginx.enable" })}
+        />
       </div>
-    </section>
+    </Checker>
 
-    <section id="validador" class="validator-section" aria-labelledby="validator-title">
-      <div class="validator-inner">
-        <div class="section-heading">
-          <span class="kicker">{m["validator.kicker"]}</span>
-          <h2 id="validator-title">{m["validator.title"]}</h2>
-          <p>{m["validator.lead"]}</p>
-        </div>
-        <Checker lang={lang} />
-      </div>
-    </section>
-
-    <section id="como-funciona" class="how-section" aria-labelledby="how-title">
-      <Layers scene="how" />
-      <div class="section-heading centered">
-        <span class="kicker">{m["features.kicker"]}</span>
+    <section id="como-funciona" class="how" aria-labelledby="how-title">
+      <div class="how-intro">
         <h2 id="how-title">{m["features.title"]}</h2>
         <p>{m["features.lead"]}</p>
       </div>
-      <div class="feature-grid">
+      <dl class="how-notes">
         {
-          features.map((key, n) => (
-            <article>
-              <span class="feature-number">{`0${n + 1}`}</span>
-              <h3>{m[`features.${key}.title`]}</h3>
-              <p class="feature-body">{m[`features.${key}.body`]}</p>
-            </article>
+          features.map((key) => (
+            <div class="how-note">
+              <dt>{m[`features.${key}.title`]}</dt>
+              <dd>
+                <p>{m[`features.${key}.body`]}</p>
+                {key === "docs" && (
+                  <Specimen
+                    line={6}
+                    code={`  ${wrongType} = "yes";`}
+                    at={2}
+                    length={wrongType.length}
+                    severity="error"
+                    label={m["result.error"]}
+                    message={tell("diag.type-mismatch", { path: wrongType, expected: "bool", got: "str" })}
+                  />
+                )}
+                {key === "hints" && (
+                  <Specimen
+                    line={3}
+                    code={`  ${renamed} = true;`}
+                    at={2}
+                    length={renamed.length}
+                    severity="warning"
+                    label={m["result.warning"]}
+                    message={tell("diag.deprecated", {
+                      path: renamed,
+                      replacement: "services.displayManager.gdm.enable",
+                    })}
+                  />
+                )}
+              </dd>
+            </div>
           ))
         }
-      </div>
-    </section>
-
-    <section class="final-cta">
-      <div>
-        <span class="kicker">{m["cta.kicker"]}</span>
-        <h2>{m["cta.title1"]}<br />{m["cta.title2"]}</h2>
-      </div>
-      <a class="primary-button" href="#validador">{m["cta.button"]} <span aria-hidden="true">↑</span></a>
+      </dl>
     </section>
   </main>
 </Base>
-
-<script>
-  import "./parallax";
-</script>

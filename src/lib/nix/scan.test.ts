@@ -14,8 +14,8 @@ describe("scan", () => {
     const src =
       "{ pkgs }: let x = 1; in with pkgs; assert x == 1; ({ a.b = 1; c = { d = true; }; })";
     expect(scanned(src).assignments).toEqual([
-      { path: ["a", "b"], kind: "int", line: 1, col: 54 },
-      { path: ["c"], kind: "attrs", line: 1, col: 63 },
+      { path: ["a", "b"], kind: "int", value: "1", line: 1, col: 54 },
+      { path: ["c"], kind: "attrs", plain: true, line: 1, col: 63 },
       { path: ["c", "d"], kind: "bool", line: 1, col: 69 },
     ]);
     expect(scanned("f { a = 1; }").assignments).toEqual([]);
@@ -107,5 +107,51 @@ describe("scan: merged sets", () => {
 
   test("a merge with no literal set is a set but says nothing about what it holds", () => {
     expect(paths("{ p = a // b; q = rec { x = 1; } // c; }")).toEqual(["p:attrs", "q:attrs"]);
+  });
+});
+
+describe("scan: the strings in a list", () => {
+  const items = (src: string) => {
+    const [a] = scan(parse(src).ast as never).assignments;
+    return [a?.items, a?.itemValues];
+  };
+
+  test("keep their text, and so do the digits of a number; nothing for what is not plain", () => {
+    expect(items('{ a = [ "x" 1 "${y}" ]; }')).toEqual([
+      ["str", "int", "str"],
+      ["x", "1", undefined],
+    ]);
+  });
+
+  test("a list with neither strings nor numbers has no texts", () => {
+    expect(items("{ a = [ true [ ] ]; }")).toEqual([["bool", "list"], undefined]);
+  });
+
+  test("a float is not judged, and a number keeps the digits it was written with", () => {
+    expect(scanned("{ a = 1.5; b = 007; }").assignments.map((x) => [x.kind, x.value])).toEqual([
+      ["other", undefined],
+      ["int", "007"],
+    ]);
+  });
+});
+
+describe("scan: a set that cannot be a derivation", () => {
+  const first = (src: string) => scanned(src).assignments[0];
+
+  test("a set written out with no type is plain; with a type, an inherit, a rec or a // it is not", () => {
+    expect(first("{ a = { x = 1; }; }")?.plain).toBe(true);
+    expect(first("{ a = ({ x = 1; }); }")?.plain).toBe(true);
+    expect(first('{ a = { type = "derivation"; }; }')?.plain).toBeUndefined();
+    expect(first("{ a = { inherit x; }; }")?.plain).toBeUndefined();
+    expect(first("{ a = pkgs.b // { x = 1; }; }")?.plain).toBeUndefined();
+    expect(first('{ a = { "${n}" = 1; }; }')?.plain).toBeUndefined();
+  });
+
+  test("in a list, only the elements that are plain sets say so", () => {
+    expect(first("{ a = [ { } pkgs.x { type = 1; } ]; }")).toMatchObject({
+      items: ["attrs", "other", "other"],
+      itemPlain: [true, false, false],
+    });
+    expect(first("{ a = [ 1 ]; }")?.itemPlain).toBeUndefined();
   });
 });

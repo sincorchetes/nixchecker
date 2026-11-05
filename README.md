@@ -1,18 +1,19 @@
 # nixchecker
 
 Paste your `flake.nix` or any Nix file and validate it against the official documentation of
-NixOS, Home Manager, disko and Nix flakes.
+NixOS, Home Manager, nix-darwin, disko, Nix flakes and `nix.conf`.
 
 > **Unofficial project.** nixchecker is not affiliated with or endorsed by the NixOS Foundation,
-> Home Manager or disko. It was built with the help of AI: always review the results before
+> Home Manager, nix-darwin or disko. It was built with the help of AI: always review the results before
 > applying changes to a real system.
 
 ## Status
 
-Early prototype. The validator parses the file with its own Nix parser (syntax errors come with
-the exact line and column), collects every `a.b.c = value;` assignment and checks it against catalogs generated from the official sources: `nixosOptionsDoc` for NixOS
-(~27k options), the Home Manager manual (~6k) and the disko module, plus the flake format.
-It reports unknown options with "did you mean" suggestions and the options available there, wrong
+In active development; not for anything that cannot be checked twice. The validator parses the file
+with its own Nix parser (syntax errors come with the exact line and column), collects every
+`a.b.c = value;` assignment and checks it against catalogs generated from the official sources:
+`nixosOptionsDoc` for NixOS (~27k options), the Home Manager manual (~6k), the nix-darwin manual (~1.5k) and the disko module, plus the
+flake format. It reports unknown options with "did you mean" suggestions and the options available there, wrong
 value types, renamed options, options hidden from the manuals, and names that are not defined.
 
 The parser is checked against every `.nix` file of nixpkgs and Home Manager (about 49,000), all of
@@ -20,30 +21,130 @@ which must parse without a problem: `devenv shell -- corpus`, also run by CI. A 
 sampled files (cuts, a lost character, a stray symbol) and requires our parser and the official
 `nix-instantiate --parse` to agree on whether each one is valid: `devenv shell -- differential`.
 
+## Using the page
+
+Paste or type your file, drop `.nix` files on the editor, or use "Open files" or "Open folder" (up to 512 KB each, 100
+files; a folder gives its `.nix` files and `nix.conf`). With two or more files a list appears beside the buttons: the one in
+the editor is checked, the text typed before stays in the list as `untitled.nix`, and the options the other files declare
+(`options.my.feature.enable = mkEnableOption ...`) are known to the one being checked. `imports` are not followed by
+the page, and nothing is uploaded; the command of the details names all the files. The page
+checks it by itself when you stop typing for a moment; the button checks at once. The text is colored,
+each finding is underlined where it is and marked in the line numbers, and the report lists them with a
+link to the offending word, a button for the fixes that are certain (one, or all at once) and the
+official page of each option; what it was checked against (target, catalog, coverage) is folded under
+"Details". Next to the Validate button the page says where the validation stands ("Validating…", "2 errors",
+"No problems", "Previous result"). On a narrow screen the editor and the problems take turns, with the number of
+problems on their button; validating on purpose shows them, and a finding's position takes you back to the word.
+A faint vertical line in the editor marks column 100, the width `nixfmt` (the official formatter) keeps lines within,
+and the cursor's position turns amber once it is past it (the number is `RULER` in `src/components/checker/ruler.ts`).
+"Clear", "Load example" and opening a file offer "Undo" until the next edit. Where the editor and the problems are
+side by side, the bar between them can be dragged (or moved with the arrow keys, Home and End; Enter or a double
+click puts it back) to give room to one or the other, and the width is kept in this browser. "Download report" saves the report as JSON. "Save draft on this device"
+(off by default) keeps the text in this browser's storage between visits. The button in the header
+switches the light and dark themes: the page follows the system until it is used, and only that choice is
+kept. Everything runs in your browser; nothing is uploaded.
+
 ## Checking a whole configuration with real Nix
 
 The page only analyzes text. For what needs evaluation (`imports`, `mkIf`, `mkMerge`, priorities,
-the assertions of the system), run the file through the module system of your own Nix:
+the assertions of the system), run the file through the module system of your own Nix (the details of a result on the page give
+the command, with the release and system chosen there):
 
 ```sh
-devenv shell -- evaluate my-config.nix --target nixos --release 26.05
+nix run github:sincorchetes/nixchecker -- my-config.nix --target nixos --release 26.05
 ```
 
-It prints the static findings and then what Nix itself says, each marked by how sure it is
-(`syntax`, `static check`, `confirmed by Nix`), and exits with 1 when something is an error. Files
-named in `imports` are read from where they are, so a configuration split over several files works.
-`--target` is `nixos`, `home-manager` or `disko`; `--release` picks the pinned nixpkgs and Home
-Manager (or give `--nixpkgs DIR --home-manager DIR`); `--static` skips the evaluation and `--json`
-prints the findings as data. Nothing is uploaded: it all runs on your machine. Nix stops at the
-first error it meets, so fix it and run again to see the next. Flakes are not evaluated yet.
+That runs the command line from the flake of this repository (Nix and network needed the first time;
+the pinned sources are built once and kept). Pin a version with `github:sincorchetes/nixchecker/v0.0.N`,
+or put `nixchecker` and `nixchecker-lsp` on your PATH with `nix profile install github:sincorchetes/nixchecker`.
+In a clone of the repository, `devenv shell -- evaluate …` is the same command.
+
+Evaluating a file is running it, as `nix build` does (it can import, fetch and build): use it on code you
+trust (see `SECURITY.md`); `--static` does not evaluate. It prints the static findings and then what Nix itself says, each marked by how sure it is
+(`syntax`, `static check`, `confirmed by Nix`), and exits with 1 when something is an error. When Nix
+accepts the module, the static findings it settles are dropped. Files named in `imports` are read from
+where they are, so a configuration split over several files works, and an error in an imported module
+is reported in that file, at its line and column.
+
+- Name several files or directories (searched for `.nix` files) to check them in one run; they are
+  checked a few at a time (`--jobs`), and the output keeps the order given. `--help` lists every option and
+  `--version` prints the version; a mistake in the command is one line and exit status 2.
+- A `flake.nix` is evaluated with its own inputs: every `nixosConfigurations` and
+  `homeConfigurations` entry (it needs a `flake.lock`).
+- `--partial` is for a file that is part of a system, not all of it: only the options it sets are
+  read, so the assertions of a whole system (root file system, boot loader) do not get in the way.
+- `--target` is `nixos`, `home-manager`, `nix-darwin`, `nix-conf` or `disko`; `--release` picks the pinned nixpkgs and Home
+  Manager (or give `--nixpkgs DIR --home-manager DIR`); `--static` skips the evaluation.
+- `--system` is `x86_64-linux`, `aarch64-linux`, `aarch64-darwin` or `x86_64-darwin` (default: the system of your Nix, a Mac
+  for nix-darwin; a Linux system with nix-darwin, or the reverse, is a usage error): what the configuration is built
+  for, which decides platform conditions and assertions. The options are the same on both, so the page has one
+  catalog; its "System" selector is recorded in the downloaded report.
+- `--format json` (or `--json`) prints the findings as data, `{ "schemaVersion": 1, "results": [...] }` with one result per file, each
+  with its coverage and the revisions of the catalog used; `--format sarif` prints SARIF 2.1.0 for code scanning annotations.
+
+Nothing is uploaded: it all runs on your machine. Every wrong value of the file, and every option that does not
+exist, is found in one run (Nix stops at the first, so when it does the options of the file are read one by
+one as well, and those that do not exist with the existence check off). A whole system is evaluated up to the
+first problem, so its own assertions (root file system, boot loader) are reached only once the values are
+right: fix those and run again. With `--partial` there is nothing behind to wait for.
+
+### In your editor
+
+`nixchecker-lsp` (in a clone, `devenv shell -- lsp`) starts a Language Server (stdio) that publishes the static findings as diagnostics
+while you type, over the word each one is about: wrong types, unknown options, syntax errors. Point any
+LSP client at it for `nix` files. Options go in `initializationOptions`:
+`{ "target": "nixos", "release": "unstable" }` (the target is detected when left out). Where a finding has a fix that
+is certain (a misspelled option, a renamed one), the editor offers it as a quick fix, one small edit.
+It also completes option names from the catalog as you type them (after a `.`, at the start of a
+statement, and inside `x.y = { ... }`, with the type of each option), but not in values, strings or
+comments. On hover it shows the option's type, what it was renamed to, its description, default and example, and
+a link to its official page. The catalogs keep no descriptions: they are read from the manuals' own
+options file the first time one is needed, which can take a while if Nix has to build it (the hover
+answers at once with what it knows, and says more once that is read). It does not run Nix: use `evaluate` for that.
+
+Without a clone: `nix run github:sincorchetes/nixchecker#lsp`, or `nixchecker-lsp` once installed with
+`nix profile install`. For example, in Neovim (checked with 0.12, from a clone):
+
+```lua
+vim.lsp.start({
+  name = "nixchecker",
+  cmd = { "nix", "run", "github:sincorchetes/nixchecker#lsp" },
+  root_dir = vim.fn.getcwd(),
+  init_options = { target = "nixos" },
+})
+```
 
 Limits to know about:
 
 - The page is static: nothing is evaluated, so values built with functions, `mkIf` or `let` are not
   checked, and options defined by modules you import yourself are unknown to it. The command above
   settles those with real Nix.
-- disko documents only its top level; the nested disk layout options come from a hand-written
-  overlay (`tools/catalog/overlay.ts`).
+- disko's manual documents only its top level; the nested options of the disk layouts are read from
+  disko's own serialized types (`tools/catalog/disko.ts`). Where a place may hold several layout types
+  (`content`) the options of all of them are accepted there, and what the manual describes below a
+  device that its type does not declare is dropped, and layouts nested more than six deep are
+  not read.
+- The fixed integers of an `enum` (`system.defaults.ActivityMonitor.ShowCategory`) are checked: a number written out
+  that is not one of them is a wrong value (a name or an expression is not judged).
+- A string that must match a pattern (`strMatching`: a host name, a unit name such as `x.service`) is
+  checked against it, and so are the elements of a list of paths. What narrows a value in other ways is
+  checked as its base type, and the page lets such a value through (`evaluate` finds it): a few
+  options with a type of their own
+  (`ibus.engines`, `helix.languages`), and everything disko narrows (it serializes its patterns as plain strings).
+  Types with a check of their own that runs when the definitions are merged (a launchd calendar interval that must
+  not be empty, the directives of `kanshi`, `initrd.systemd.storePaths`) are in the same case. In the oracle, with 600
+  options per catalog, these are 3 of 3,615 wrong values in NixOS, 9 of 3,308 in Home Manager and 10 of 3,602 in nix-darwin.
+- A value written for a renamed option is held to the type of its new name. About four in five of the
+  renamed options of NixOS have a new name the catalogs type; the rest point to a free-form set
+  (`settings`), to an option the manuals hide, or to one they do not list, and a wrong value there is
+  only marked as deprecated (`evaluate` finds it). The oracle tries all of them (`renamed` mode).
+- When a wrong value makes another module's `mkIf` fail (`programs.sway.enable = "yes"` stops what
+  `sway` sets, such as `programs.dconf.enable`), Nix reports the first and cannot judge the second
+  until that is fixed; the page's static check still marks it.
+- For a flake, `evaluate` evaluates its `nixosConfigurations` and `homeConfigurations`; with
+  `--all-outputs` also its `packages`, `checks` and `devShells` for the system it runs on. Evaluating a
+  derivation instantiates it, it does not build it: a package that evaluates but fails to build passes.
+  Other outputs (`apps`, `overlays`, `templates`...) are not evaluated.
 - Renamed options are read from the `mkRenamedOptionModule` calls in the nixpkgs and Home Manager
   sources (about 750 for NixOS); the ones that were removed rather than renamed, and the ones
   hidden without a replacement, get a generic warning.
@@ -51,13 +152,31 @@ Limits to know about:
 `public/catalog/manifest.json` records the revision each catalog was generated from and the hash of
 every file in it; a test checks that the files are the ones it lists.
 
-The NixOS and Home Manager catalogs exist per release (26.05, 25.11 and unstable), chosen with the
-version selector; disko and flakes have one catalog each.
+The NixOS, Home Manager and nix-darwin catalogs exist per release (26.05, 25.11 and unstable), chosen with the
+version selector; disko, flakes and `nix.conf` have one catalog each.
+
+Projects that add options to NixOS have a catalog of their own, with only what they add: sops-nix (`sops.*`), agenix
+(`age.*`), lanzaboote (`boot.lanzaboote`) and impermanence (`environment.persistence`). It is downloaded and added to the NixOS one when a file writes
+below one of those names, so a `sops.secrets` is known and typed instead of reported as unknown, its documentation link
+is the project's, and the source in the report lists them (`nixpkgs … + sops-nix …`). The oracle puts each to a NixOS with
+its module added. sops-nix also has one for Home Manager (`sops.*` in a Home Manager file). The Home Manager module of impermanence is
+not covered: it refuses to be imported on its own, as it belongs to the NixOS one.
+
+The `nix.conf` catalog is the list of settings Nix itself prints (`nix config show --json`, ~175 with their aliases and
+`extra-` forms), so it follows the Nix of the pinned nixpkgs. A text is read as a `nix.conf` when it is chosen, or when every
+line is a comment, an `include` or `name = words` (Nix needs the spaces around the `=`). It is checked statically only: the
+oracle (`devenv shell -- oracle`) holds the validator to what the real `nix` accepts, on every setting. An unknown setting is
+a warning, as it is for Nix, which goes on without it.
 
 Validation runs entirely in the browser: your configuration is never uploaded. The catalogs are
 sharded (`public/catalog/<target>/`): the browser downloads a small index plus only the shards for
 the options your file mentions, typically 20-30 KB gzipped for NixOS instead of the whole catalog
 (about 190 KB).
+
+The analysis runs in a Web Worker, so a large file does not stall the editor (where a worker cannot
+start, the page does the same work itself). A service worker (`public/sw.js`) keeps a copy of the page
+and of the catalog files it used, so after one visit it also opens and validates with no connection;
+the network always comes first, so an update is never hidden by an old copy.
 
 ### Regenerating the catalogs
 
@@ -69,6 +188,14 @@ devenv shell -- catalog --update   # first moves the pinned upstream versions to
 Versions are pinned in `tools/catalog/flake.lock`; a new release is a new input pair in `flake.nix` plus an entry in
 `src/lib/catalog/versions.ts`. CI checks that the committed catalogs are what the
 pins generate, and a daily canary regenerates them from the latest upstream and runs the tests.
+
+Two weekly workflows keep the catalogs from falling behind. `catalog-update.yml` runs `catalog --update` and, when
+anything changed, opens a pull request with the new catalogs and lock file: it goes through the normal checks and a
+review, nothing reaches `main` by itself. For its checks to start, the pull request is opened by a GitHub App (the
+default token's pull requests do not start workflows); see "Automation" in `CONTRIBUTING.md`. `new-release.yml`
+looks for a `nixos-YY.MM` branch of nixpkgs newer than every release in `versions.ts` and opens an issue with the
+steps to add it (`devenv shell -- releases <files>` is the check it runs); adding a release changes the selector of
+the site and its default, so it is done by a person.
 
 ## Stack
 
@@ -85,7 +212,7 @@ devenv test             # lint, types, unit tests (100% line coverage gate) and 
 
 Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `corpus` (the parser against nixpkgs and
 Home Manager), `differential` (the parser against the official one on damaged files), `evaluate` (a file against real Nix), `oracle` (the validator against
-the real NixOS, Home Manager and disko module systems, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
+the real NixOS (also with sops-nix, agenix, lanzaboote and impermanence), Home Manager, nix-darwin and disko module systems, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
 `sonar`.
 
 ## Deployment (GitHub Pages)

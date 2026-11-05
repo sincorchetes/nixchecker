@@ -206,7 +206,7 @@ export abstract class Expressions extends Cursor {
     switch (t.kind) {
       case "number":
         this.next();
-        return { t: "num", float: t.float === true, ...pos };
+        return { t: "num", float: t.float === true, text: t.text, ...pos };
       case "string":
         this.next();
         return { t: "str", ...(t.value !== undefined && { value: t.value }), ...pos };

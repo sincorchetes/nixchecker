@@ -1,60 +1,60 @@
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/bricolage-grotesque/wdth.css";
+@import "@fontsource-variable/jetbrains-mono";
 
-/* Palette shared with sincorchetes.tech: near-black canvas, indigo accent, glass cards. */
+/*
+ * The page is a listing of code with a proofreader's marks on it. Paper and ink, a highlighter yellow
+ * that only marks what needs attention, and red, amber and green that only appear in the results.
+ */
 :root {
-  --bg: #0a0a0c;
-  --card: rgba(20, 20, 24, 0.4);
-  --card-hover: rgba(30, 30, 36, 0.6);
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #f0f0f0;
-  --text-2: #9ea3b0;
-  --text-3: #858b9c;
-  --accent: #5e6ad2;
-  --accent-light: #8e98ff;
-  --accent-soft: rgba(94, 106, 210, 0.15);
-  --on-accent-hover: #0a0a0c;
-  --error: #ff7b8a;
-  --warning: #f5c36b;
-  --ok: #6ee7a8;
-  --surface: #121216;
-  --line-strong: rgba(255, 255, 255, 0.22);
-  --glow: rgba(94, 106, 210, 0.32);
-  --info-bg: rgba(94, 106, 210, 0.14);
-  --info-line: rgba(142, 152, 255, 0.3);
-  --info-text: #d3d7ff;
-  --motion: 0.15s;
-  --radius: 20px;
-  --radius-sm: 12px;
-  --font-body: "Inter Variable", system-ui, sans-serif;
-  --font-display: "Outfit Variable", "Inter Variable", system-ui, sans-serif;
-  --font-mono: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, monospace;
-  color-scheme: dark;
+  --paper: #eef1ec;
+  --paper-2: #e2e7e0;
+  --ink: #16202b;
+  --ink-2: #3b4855;
+  --ink-3: #58666f;
+  --rule: #bcc6be;
+  --marker: #ffd23f;
+  --on-marker: #16202b;
+  --link: #1d5c86;
+  --flag: #b8322a;
+  --warn: #84560a;
+  --ok: #1a7447;
+  --font-body: "Bricolage Grotesque Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
+  --motion: 0.12s;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #fafafb;
-    --card: rgba(255, 255, 255, 0.7);
-    --card-hover: rgba(255, 255, 255, 0.95);
-    --border: rgba(10, 10, 12, 0.1);
-    --text: #14141a;
-    --text-2: #4a4f5e;
-    --text-3: #5b6173;
-    --accent-light: #4a55c0;
-    --accent-soft: rgba(94, 106, 210, 0.12);
-    --on-accent-hover: #fff;
-    --error: #c92a3e;
-    --warning: #946200;
-    --ok: #12804c;
-    --surface: #f1f1f5;
-    --line-strong: rgba(10, 10, 12, 0.28);
-    --glow: rgba(94, 106, 210, 0.2);
-    --info-bg: rgba(94, 106, 210, 0.1);
-    --info-line: rgba(74, 85, 192, 0.3);
-    --info-text: #2f3a9a;
-    color-scheme: light;
+/* The system's dark theme, unless light was chosen with the button; and dark when that was chosen. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121a22;
+    --paper-2: #19232d;
+    --ink: #e7ece8;
+    --ink-2: #b6c2bc;
+    --ink-3: #8fa09a;
+    --rule: #2c3945;
+    --marker: #f2c230;
+    --link: #8cc4e8;
+    --flag: #ff9484;
+    --warn: #efb454;
+    --ok: #6fd6a0;
+    color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --paper: #121a22;
+  --paper-2: #19232d;
+  --ink: #e7ece8;
+  --ink-2: #b6c2bc;
+  --ink-3: #8fa09a;
+  --rule: #2c3945;
+  --marker: #f2c230;
+  --link: #8cc4e8;
+  --flag: #ff9484;
+  --warn: #efb454;
+  --ok: #6fd6a0;
+  color-scheme: dark;
 }
 
 *,
@@ -65,27 +65,57 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 6rem;
+  scroll-padding-top: 1.5rem;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-body);
-  line-height: 1.6;
+  font-size: 1.0625rem;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
-a {
-  color: var(--accent-light);
-  text-underline-offset: 3px;
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 780;
+  font-stretch: 78%;
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  background: var(--marker);
+  color: var(--on-marker);
+  text-decoration-color: transparent;
+}
+
+::selection {
+  background: var(--marker);
+  color: var(--on-marker);
+}
+
+/* A ring that shows on paper and on ink alike: the dark line, and the marker around it. */
 :focus-visible {
-  outline: 2px solid var(--accent-light);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--marker);
 }
 
 /* Text for screen readers only: it joins the visible label in the accessible name. */
@@ -98,47 +128,38 @@ a {
   white-space: nowrap;
 }
 
-.wrap {
-  width: min(100% - 2rem, 62rem);
-  margin-inline: auto;
-}
-
-.glass {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  backdrop-filter: blur(12px);
-}
-
 .btn {
   font: inherit;
-  font-weight: 500;
-  padding: 0.6rem 1.1rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
+  font-size: 0.95rem;
+  font-weight: 560;
+  padding: 0.5rem 0.95rem;
+  border-radius: 4px;
+  border: 1px solid var(--ink);
   background: transparent;
-  color: var(--text);
+  color: var(--ink);
   cursor: pointer;
-  transition:
-    background var(--motion),
-    border-color var(--motion);
+  transition: background var(--motion);
 }
 
-.btn:hover {
-  background: var(--card-hover);
-  border-color: var(--accent);
+.btn:hover:not(:disabled) {
+  background: var(--marker);
+  color: var(--on-marker);
+}
+
+.btn:disabled {
+  border-color: var(--rule);
+  color: var(--ink-3);
+  cursor: default;
 }
 
 .btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
 }
 
-.btn.primary:hover {
-  background: var(--accent-light);
-  border-color: var(--accent-light);
-  color: var(--on-accent-hover);
+.btn.primary:hover:not(:disabled) {
+  background: var(--marker);
+  color: var(--on-marker);
 }
 
 @media (prefers-reduced-motion: reduce) {

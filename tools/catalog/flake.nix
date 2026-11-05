@@ -25,6 +25,31 @@
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs-2511";
     };
+    nix-darwin = {
+      url = "github:nix-darwin/nix-darwin/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-darwin-2605 = {
+      url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
+      inputs.nixpkgs.follows = "nixpkgs-2605";
+    };
+    nix-darwin-2511 = {
+      url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
+      inputs.nixpkgs.follows = "nixpkgs-2511";
+    };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    impermanence.url = "github:nix-community/impermanence";
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -42,27 +67,37 @@
         unstable = {
           nixpkgs = inputs.nixpkgs;
           home-manager = inputs.home-manager;
+          nix-darwin = inputs.nix-darwin;
         };
         "2605" = {
           nixpkgs = inputs.nixpkgs-2605;
           home-manager = inputs.home-manager-2605;
+          nix-darwin = inputs.nix-darwin-2605;
         };
         "2511" = {
           nixpkgs = inputs.nixpkgs-2511;
           home-manager = inputs.home-manager-2511;
+          nix-darwin = inputs.nix-darwin-2511;
         };
       };
 
-      bundle =
-        pkgs: name: src: options:
+      bundle = pkgs: name: src: options: bundleWith pkgs name src options "";
+
+      # `extra` is shell run once the bundle is made.
+      bundleWith =
+        pkgs: name: src: options: extra:
         let
           documented =
             (pkgs.nixosOptionsDoc {
               inherit options;
               warningsAreErrors = false;
             }).optionsJSON;
+          # Options the manuals leave out: those that are not visible, and the internal ones (which exist and can
+          # be set, as `system.path` or `assertions`; the manuals just do not document them).
           hidden = map (o: o.name) (
-            lib.filter (o: !(o.visible or true)) (lib.optionAttrSetToDocList options)
+            lib.filter (o: !(o.visible or true) || (o.internal or false)) (
+              lib.optionAttrSetToDocList options
+            )
           );
         in
         pkgs.runCommand "nixchecker-catalog-${name}" { } ''
@@ -71,7 +106,28 @@
           cp ${pkgs.writeText "hidden.json" (builtins.toJSON hidden)} $out/hidden.json
           cp ${pkgs.writeText "shapes.json" (builtins.toJSON (import ./shapes.nix { inherit lib; } options))} $out/shapes.json
           ln -s ${src} $out/src
+          ${extra}
         '';
+
+      # Modules of other projects that add options to NixOS. The bundle holds only those options, and the
+      # path of the module, which the oracle puts to the real module system.
+      extension =
+        name: src: module: roots:
+        extensionOf name src module roots (nixosSystem releases.unstable [ module ]).options "";
+
+      # The same for the modules of Home Manager (the bundle is `ext-<name>-home`).
+      homeExtension =
+        name: src: module: roots:
+        extensionOf name src module roots (hm releases.unstable [ module ]).options "-home";
+
+      extensionOf =
+        name: src: module: roots: options: suffix:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        bundleWith pkgs "ext-${name}${suffix}" "${src}" (lib.foldl' lib.recursiveUpdate { } (
+          map (root: lib.setAttrByPath root (lib.attrByPath root null options)) roots
+        )) "echo -n ${module} > $out/module-path";
 
       nixosSystem =
         release: extra:
@@ -90,10 +146,10 @@
         };
 
       hm =
-        release:
+        release: extra:
         release.home-manager.lib.homeManagerConfiguration {
           pkgs = release.nixpkgs.legacyPackages.${system};
-          modules = [
+          modules = extra ++ [
             {
               home = {
                 username = "user";
@@ -102,6 +158,14 @@
               };
             }
           ];
+        };
+
+      # nix-darwin is evaluated for a Mac; the documentation is built on this system, so nothing is built for it.
+      darwin =
+        release:
+        release.nix-darwin.lib.darwinSystem {
+          system = "aarch64-darwin";
+          modules = [ { system.stateVersion = 6; } ];
         };
 
       perRelease =
@@ -114,7 +178,10 @@
             nixosSystem release [ ]
           ).options;
           "home-manager-${name}" = bundle pkgs "home-manager-${name}" "${release.home-manager}/modules" (
-            hm release
+            hm release [ ]
+          ).options;
+          "nix-darwin-${name}" = bundle pkgs "nix-darwin-${name}" "${release.nix-darwin}/modules" (
+            darwin release
           ).options;
         };
     in
@@ -125,6 +192,35 @@
           disko = bundle nixpkgs.legacyPackages.${system} "disko" "${disko}" {
             disko = (nixosSystem releases.unstable [ disko.nixosModules.disko ]).options.disko;
           };
+          ext-sops-nix = extension "sops-nix" inputs.sops-nix "${inputs.sops-nix}/modules/sops" [ [ "sops" ] ];
+          ext-sops-nix-home = homeExtension "sops-nix" inputs.sops-nix "${inputs.sops-nix}/modules/home-manager/sops.nix" [ [ "sops" ] ];
+          ext-agenix = extension "agenix" inputs.agenix "${inputs.agenix}/modules/age.nix" [ [ "age" ] ];
+          ext-lanzaboote = extension "lanzaboote" inputs.lanzaboote "${inputs.lanzaboote}/nix/modules/lanzaboote.nix" [
+            [
+              "boot"
+              "lanzaboote"
+            ]
+          ];
+          ext-impermanence = extension "impermanence" inputs.impermanence "${inputs.impermanence}/nixos.nix" [
+            [
+              "environment"
+              "persistence"
+            ]
+          ];
+          # The settings of nix.conf as the Nix of the development nixpkgs describes them.
+          nix-conf =
+            nixpkgs.legacyPackages.${system}.runCommand "nixchecker-catalog-nix-conf"
+              { nativeBuildInputs = [ nixpkgs.legacyPackages.${system}.nix ]; }
+              ''
+                mkdir $out
+                export HOME=$TMPDIR NIX_CONF_DIR=$TMPDIR/etc
+                nix config show --json --extra-experimental-features nix-command > $out/config.json
+                nix --version > $out/version
+              '';
+          # The options of every disk layout type, as disko serializes them for its own documentation.
+          disko-types = nixpkgs.legacyPackages.${system}.writeText "disko-types.json" (
+            builtins.toJSON disko.lib.jsonTypes
+          );
         };
     };
 }

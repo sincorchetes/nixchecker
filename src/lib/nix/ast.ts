@@ -19,7 +19,7 @@ export type Bind =
 export type Expr = Pos &
   (
     | { t: "ident"; name: string }
-    | { t: "num"; float: boolean }
+    | { t: "num"; float: boolean; text: string }
     | { t: "str"; value?: string }
     | { t: "path" }
     | { t: "list"; items: Expr[] }

@@ -1,3 +1,5 @@
+import { type Extension, extensionCatalog } from "./extensions";
+import { splitPath } from "./path";
 import { planner, shardFile } from "./shard";
 import { addEntries, addRoots, emptyTree, type OptionTree } from "./tree";
 import type { CatalogIndex, OptionEntry, OptionRow, Target } from "./types";
@@ -16,7 +18,7 @@ export interface Catalog {
 
 /** Expands a compact row into an entry, split into path segments for fast matching. */
 export function decodeRow([path, type, extra]: OptionRow): IndexedOption {
-  const entry: IndexedOption = { path, type, segs: path.split(".") };
+  const entry: IndexedOption = { path, type, segs: splitPath(path) };
   if (Array.isArray(extra)) entry.values = extra;
   else if (extra) entry.renamedTo = extra;
   return entry;
@@ -31,10 +33,27 @@ interface State {
 
 const states = new Map<string, State>();
 
+/**
+ * A part of a catalog that could not be had: the network is down, the server answered with an error, or what
+ * came was not a catalog. It is what a caller expects and can tell the user about; any other error is a bug.
+ */
+export class CatalogError extends Error {
+  override name = "CatalogError";
+}
+
 async function getJson<T>(fetcher: typeof fetch, url: string): Promise<T> {
-  const response = await fetcher(url);
-  if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
-  return (await response.json()) as T;
+  let response: Response;
+  try {
+    response = await fetcher(url);
+  } catch (cause) {
+    throw new CatalogError(`${url}: ${(cause as Error).message}`, { cause });
+  }
+  if (!response.ok) throw new CatalogError(`${url}: HTTP ${response.status}`);
+  try {
+    return (await response.json()) as T;
+  } catch (cause) {
+    throw new CatalogError(`${url}: not a catalog`, { cause });
+  }
 }
 
 /**
@@ -42,14 +61,28 @@ async function getJson<T>(fetcher: typeof fetch, url: string): Promise<T> {
  * the small index plus only the shards they touch. Everything is kept, so later runs reuse
  * it; a failed download is not kept, so the next run retries.
  */
-export async function loadCatalog(
+export const loadCatalog = (
   target: Target,
   version: Version,
   base: string,
   paths: string[][],
   fetcher: typeof fetch = fetch,
+): Promise<Catalog> =>
+  loadDirectory(`${base}catalog/${catalogName(target, version)}/`, paths, fetcher);
+
+/** The same for the catalog of an extension of NixOS (see extensions.ts), which has no versions. */
+export const loadExtension = (
+  ext: Extension,
+  base: string,
+  paths: string[][],
+  fetcher: typeof fetch = fetch,
+): Promise<Catalog> => loadDirectory(`${base}catalog/${extensionCatalog(ext)}/`, paths, fetcher);
+
+async function loadDirectory(
+  dir: string,
+  paths: string[][],
+  fetcher: typeof fetch,
 ): Promise<Catalog> {
-  const dir = `${base}catalog/${catalogName(target, version)}/`;
   let state = states.get(dir);
   if (!state) {
     const index = getJson<CatalogIndex>(fetcher, `${dir}index.json`);

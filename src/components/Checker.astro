@@ -1,15 +1,18 @@
 ---
 import { type Lang, messages } from "../lib/i18n";
 import { withBase } from "../lib/site";
-import Controls from "./checker/Controls.astro";
 import Editor from "./checker/Editor.astro";
 import Results from "./checker/Results.astro";
+import Status from "./checker/Status.astro";
+import Toolbar from "./checker/Toolbar.astro";
 
 interface Props {
   lang: Lang;
+  /** The id of the heading that names this section (it comes in the slot, with the introduction). */
+  titleId: string;
 }
 
-const { lang } = Astro.props;
+const { lang, titleId } = Astro.props;
 const m = messages[lang];
 // Only what the browser script needs to render results.
 const client = Object.fromEntries(
@@ -19,14 +22,39 @@ const client = Object.fromEntries(
 
 <section
   id="checker"
-  class="glass checker"
+  class="checker"
+  aria-labelledby={titleId}
+  data-view="editor"
   data-messages={JSON.stringify(client)}
   data-base={withBase(import.meta.env.BASE_URL)}
 >
-  <Editor lang={lang} />
-  <Controls lang={lang} />
-  <p class="privacy">{m["checker.privacy"]}</p>
-  <Results />
+  <!-- On a narrow screen the editor and the findings take turns; beside each other, there is nothing to switch. -->
+  <div class="views" role="group" aria-label={m["result.viewLabel"]}>
+    <button type="button" class="view" id="view-editor" aria-pressed="true">{m["result.viewEditor"]}</button>
+    <button type="button" class="view" id="view-problems" aria-pressed="false">{m["result.viewProblems"]}</button>
+  </div>
+  <div class="bench">
+    <div class="frame">
+      <Toolbar lang={lang} />
+      <Editor lang={lang} />
+      <Status lang={lang} />
+    </div>
+    <p class="privacy">{m["checker.privacy"]}</p>
+  </div>
+  <!-- Between the editor and the findings, when they are side by side: drag it or use the arrow keys. -->
+  <div
+    id="divider"
+    class="divider"
+    role="separator"
+    aria-orientation="vertical"
+    aria-label={m["result.divider"]}
+    aria-valuemin="40"
+    aria-valuemax="80"
+    aria-valuenow="72"
+    tabindex="0"
+  >
+  </div>
+  <Results><slot /></Results>
 </section>
 
 <script>
@@ -34,12 +62,107 @@ const client = Object.fromEntries(
 </script>
 
 <style>
+  /* Narrow screens: the editor, then what was found. */
   .checker {
-    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    width: var(--page);
+    margin: 1.5rem auto 0;
+  }
+  .views {
+    display: flex;
+    gap: 0.25rem;
+  }
+  .divider {
+    display: none;
+  }
+  .view {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 560;
+    cursor: pointer;
+  }
+  .view[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  @media (max-width: 63.99rem) {
+    .checker[data-view="editor"] :global(.panel) {
+      display: none;
+    }
+    .checker[data-view="problems"] .bench {
+      display: none;
+    }
+  }
+  .bench {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  .frame {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: var(--paper-2);
+    overflow: hidden;
+  }
+  .frame:focus-within {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--marker);
   }
   .privacy {
-    margin: 1rem 0 0;
-    color: var(--text-3);
-    font-size: 0.8rem;
+    color: var(--ink-3);
+    font-size: 0.875rem;
+  }
+  /* A workbench: the editor takes what the window leaves, the findings sit beside it and scroll on
+     their own, so nothing needs a scroll of the page to be seen. */
+  @media (min-width: 64rem) {
+    .views {
+      display: none;
+    }
+    .checker {
+      grid-template-columns: minmax(0, 1fr) 1.5rem minmax(20rem, var(--results-width, 28%));
+      column-gap: 0;
+      height: max(32rem, calc(100dvh - 15rem));
+    }
+    .bench {
+      min-height: 0;
+    }
+    .divider {
+      display: block;
+      position: relative;
+      cursor: col-resize;
+      touch-action: none;
+    }
+    .divider::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      left: 50%;
+      width: 1px;
+      background: var(--rule);
+      transform: translateX(-50%);
+    }
+    .divider:hover::before,
+    .divider:focus-visible::before,
+    .checker.resizing .divider::before {
+      width: 3px;
+      background: var(--ink);
+    }
+    .checker.resizing {
+      cursor: col-resize;
+      user-select: none;
+    }
   }
 </style>

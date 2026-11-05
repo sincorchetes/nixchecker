@@ -1,1 +1,1 @@
-[["meta.maintainers","list"],["meta.teams","list"]]
+[["meta","attrs"],["meta.buildDocsInSandbox","hidden"],["meta.doc","hidden"],["meta.maintainers","list",["attrs"]],["meta.teams","list",["attrs"]]]

@@ -1,4 +1,5 @@
 import { byName } from "../sort";
+import { ancestors, splitPath } from "./path";
 import { elementsOf, fromShape, type Shape } from "./shape";
 import type { OptionEntry, OptionRow, OptionType } from "./types";
 
@@ -13,6 +14,11 @@ export interface Overlay {
   renamed?: Record<string, string>;
   /** Entries that replace (or add to) the generated ones. */
   entries?: OptionEntry[];
+  /**
+   * Paths whose options the `entries` list in full: what the manuals document below them and the entries
+   * do not have is dropped (the manuals can describe options a module does not declare).
+   */
+  authoritative?: string[];
 }
 
 interface Mapped {
@@ -111,25 +117,45 @@ export function convert(
   const documentedParents = new Set<string>();
   const roots = new Set<string>();
   for (const path of entries.keys()) {
-    const segs = path.split(".");
-    roots.add(segs[0] as string);
-    for (let n = 1; n < segs.length; n++) documentedParents.add(segs.slice(0, n).join("."));
+    roots.add(splitPath(path)[0] as string);
+    for (const parent of ancestors(path)) documentedParents.add(parent);
   }
-  for (const [from, to] of Object.entries(overlay.renamed ?? {})) {
+  const applied = Object.entries(overlay.renamed ?? {}).filter(([from]) => {
     const current = entries.get(from);
-    if ((current && current.type !== "hidden") || documentedParents.has(from)) continue;
-    if (!roots.has(from.split(".")[0] as string)) continue;
-    entries.set(from, { path: from, type: entries.get(to)?.type ?? "any", renamedTo: to });
+    if ((current && current.type !== "hidden") || documentedParents.has(from)) return false;
+    return roots.has(splitPath(from)[0] as string);
+  });
+  // A rename that points at another rename takes the type at the end of the chain, whichever the order in
+  // which the sources were read (it differs between machines): the catalog must come out the same.
+  const next = new Map(applied);
+  const endOf = (path: string): string => {
+    const seen = new Set<string>();
+    for (let step = next.get(path); step !== undefined && !seen.has(path); step = next.get(path)) {
+      seen.add(path);
+      path = step;
+    }
+    return path;
+  };
+  const types = applied.map(([, to]) => entries.get(endOf(to))?.type ?? "any");
+  for (const [index, [from, to]] of applied.entries()) {
+    entries.set(from, { path: from, type: types[index] as OptionType, renamedTo: to });
   }
   for (const entry of overlay.entries ?? []) {
     containers.delete(entry.path);
     entries.set(entry.path, entry);
   }
+  const listed = new Set((overlay.entries ?? []).map((entry) => entry.path));
+  for (const prefix of overlay.authoritative ?? []) {
+    for (const path of [...entries.keys()]) {
+      if (!path.startsWith(`${prefix}.`) || listed.has(path)) continue;
+      entries.delete(path);
+      containers.delete(path);
+    }
+  }
 
   const parents = new Set<string>();
   for (const path of entries.keys()) {
-    const segs = path.split(".");
-    for (let n = 1; n < segs.length; n++) parents.add(segs.slice(0, n).join("."));
+    for (const parent of ancestors(path)) parents.add(parent);
   }
   for (const path of containers) {
     const entry = entries.get(path) as OptionEntry;

@@ -1,1 +1,1 @@
-[["sshAuthSock.initialization.bash","str"],["sshAuthSock.initialization.fish","str"],["sshAuthSock.initialization.nushell","str"]]
+[["sshAuthSock.initialization","hidden"],["sshAuthSock.initialization._module.args","hidden"],["sshAuthSock.initialization._module.check","hidden"],["sshAuthSock.initialization._module.freeformType","hidden"],["sshAuthSock.initialization._module.specialArgs","hidden"],["sshAuthSock.initialization.bash","str"],["sshAuthSock.initialization.fish","str"],["sshAuthSock.initialization.nushell","str"]]

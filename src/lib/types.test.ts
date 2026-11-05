@@ -33,6 +33,23 @@ describe("value types", () => {
     expect(codes("{ files.either = 3; }")).toEqual([]);
   });
 
+  test("an enum of integers takes only those integers", () => {
+    expect(codes("{ mixed.show = 100; }")).toEqual([]);
+    expect(codes("{ mixed.show = 7; }")).toEqual(["type-mismatch"]);
+    expect(run("{ mixed.show = 7; }").diagnostics[0]?.params).toMatchObject({
+      expected: "enum(100 | 101)",
+      got: "int",
+    });
+    // A word, a list or a name are no integer of the enum; a name is not judged.
+    expect(codes('{ mixed.show = "x"; }')).toEqual(["type-mismatch"]);
+    expect(codes("{ mixed.show = [ ]; }")).toEqual(["type-mismatch"]);
+    expect(codes("{ mixed.show = n; }")).toEqual(["undefined-variable"]);
+    expect(codes("{ mixed.maybe = 101; }")).toEqual([]);
+    expect(codes("{ mixed.maybe = 5; }")).toEqual(["type-mismatch"]);
+    expect(codes("{ mixed.many = [ 100 101 ]; }")).toEqual([]);
+    expect(codes("{ mixed.many = [ 100 5 ]; }")).toEqual(["type-mismatch"]);
+  });
+
   test("an alternative that is a list keeps the kind of its elements", () => {
     expect(codes('{ mixed.text = "a"; }')).toEqual([]);
     expect(codes('{ mixed.text = [ "a" "b" ]; }')).toEqual([]);
@@ -48,6 +65,13 @@ describe("value types", () => {
     expect(codes('{ mixed.jobs = "many"; }')).toEqual(["type-mismatch"]);
     expect(codes('{ mixed.jobs = "${x}"; }')).toEqual([]);
     expect(codes("{ mixed.jobs = [ ]; }")).toEqual(["type-mismatch"]);
+  });
+
+  test("a list says which of its elements are of a kind the option does not take", () => {
+    const [d] = run('{ networking.firewall.allowedTCPPorts = [ 22 "80" true "x" ]; }').diagnostics;
+    expect(d?.params.got).toBe("list with str and bool elements");
+    const [plain] = run("{ networking.firewall.allowedTCPPorts = 5; }").diagnostics;
+    expect(plain?.params.got).toBe("int");
   });
 
   test("checks the elements of a list and the kinds a mix takes", () => {
@@ -72,5 +96,69 @@ describe("value types", () => {
     expect(codes("{ x, ... }: { env.vars.A = x; }")).toEqual([]);
     // Deeper than the values themselves there is nothing to read.
     expect(codes("{ env.vars.A.b = [ ]; }")).toEqual([]);
+  });
+});
+
+describe("values narrowed by more than their kind", () => {
+  const got = (src: string) => run(src).diagnostics.map((d) => d.params.expected ?? d.code);
+
+  test("a list of paths takes absolute paths, and what is not written out", () => {
+    expect(got('{ files.list = [ "/etc/x" ./y ]; }')).toEqual([]);
+    expect(got('{ files.list = [ "x" ]; }')).toEqual(["list of path"]);
+    expect(got('{ x, ... }: { files.list = [ "${x}/a" x ]; }')).toEqual([]);
+  });
+
+  test("a function is anything that is not written out as another kind", () => {
+    expect(got("{ x, ... }: { mixed.overlays = [ (final: prev: { }) x ./o.nix ]; }")).toEqual([]);
+    expect(got('{ mixed.overlays = [ "x" 1 ]; }')).toEqual(["list of function"]);
+    expect(got("{ mixed.hook = 5; }")).toEqual(["function"]);
+    expect(got("{ mixed.hook = a: a; }")).toEqual([]);
+  });
+
+  test("the elements of a list can be held to an enum", () => {
+    expect(got('{ mixed.shells = [ "bash" "zsh+fzf" ]; }')).toEqual([]);
+    expect(got('{ x, ... }: { mixed.shells = [ "${x}" x ]; }')).toEqual([]);
+    expect(got('{ mixed.shells = [ "fish" ]; }')).toEqual(["list of enum(bash | zsh+fzf)"]);
+  });
+
+  test("a pattern too long for a sentence is not written into it", () => {
+    expect(got('{ mixed.long = "x"; }')).toEqual(["string matching its pattern"]);
+  });
+
+  test("a string with a pattern has to match it, and says which", () => {
+    expect(got('{ units.name = "a.service"; }')).toEqual([]);
+    expect(got('{ units.name = "a"; }')).toEqual(["string matching ^[a-z]+[.]service$"]);
+    expect(got('{ x, ... }: { units.name = "${x}.service"; }')).toEqual([]);
+    expect(got("{ units.name = 5; }")).toEqual(["string matching ^[a-z]+[.]service$"]);
+  });
+
+  test("the elements of a list are held to the pattern, and a mix takes either kind", () => {
+    expect(got('{ units.after = [ "a.service" "b.socket" ]; }')).toEqual([]);
+    expect(got('{ units.after = [ "a" ]; }')).toEqual([
+      "list of string matching [a-z]+[.](service|socket)",
+    ]);
+    expect(got("{ units.either = 5; }")).toEqual([]);
+    expect(got('{ units.either = "12"; }')).toEqual([]);
+    expect(got('{ units.either = "x"; }')).toEqual(["int | string matching [[:digit:]]+"]);
+  });
+});
+
+describe("renamed options", () => {
+  test("a value is held to the type of the option it was renamed to", () => {
+    const diagnostics = run('{ services.xserver.displayManager.gdm.enable = "yes"; }').diagnostics;
+    expect(diagnostics.map((d) => d.code).sort()).toEqual(["deprecated", "type-mismatch"]);
+    expect(codes("{ services.xserver.displayManager.gdm.enable = true; }")).toEqual(["deprecated"]);
+  });
+
+  test("through the renames of renames, and not past what cannot be followed", () => {
+    expect(codes('{ mixed.old = "yes"; }').sort()).toEqual(["deprecated", "type-mismatch"]);
+    expect(codes("{ mixed.old = true; }")).toEqual(["deprecated"]);
+    // The new name is not in the catalog, or the renames go round: the value is not judged.
+    expect(codes("{ mixed.lost = 5; }")).toEqual(["deprecated"]);
+    expect(codes("{ mixed.loop = 5; }")).toEqual(["deprecated"]);
+    // A key of an `attrsOf` is held to what its values may be; a free-form place judges nothing.
+    expect(codes("{ mixed.viaEnv = [ ]; }").sort()).toEqual(["deprecated", "type-mismatch"]);
+    expect(codes('{ mixed.viaEnv = "x"; }')).toEqual(["deprecated"]);
+    expect(codes("{ mixed.viaNowhere = 5; }")).toEqual(["deprecated"]);
   });
 });

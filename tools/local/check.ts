@@ -1,79 +1,52 @@
-// Checks a Nix file in two layers: the static analysis of the page, and the real module system of
-// the Nix on this machine, which settles what the analysis can only guess (imports, mkIf, merging,
-// priorities, assertions).
-//   bun tools/local/check.ts <file.nix> [--target nixos|home-manager|disko] [--release unstable|26.05|25.11]
-//        [--nixpkgs DIR] [--home-manager DIR] [--disko DIR] [--static] [--json]
-// Without --nixpkgs (and --home-manager) the pinned sources of --release are built (needs Nix).
-import { join } from "node:path";
-import { parseArgs } from "node:util";
-import { loadCatalog } from "../../src/lib/catalog/load";
-import { DEFAULT_VERSION, VERSIONS, type Version } from "../../src/lib/catalog/versions";
-import { analyze, check, resolveTarget, type TargetChoice } from "../../src/lib/validate";
-import { diskoRoot, releaseRoots } from "../corpus/sources";
-import type { Kind } from "./expressions";
-import { fromDiagnostic, fromFinding, type Located, printText } from "./report";
-import { evaluate } from "./run-nix";
+// Checks Nix files or flakes in two layers: the static analysis of the page, and the real module system
+// of the Nix on this machine, which settles what the analysis can only guess (imports, mkIf, merging,
+// priorities, assertions). Directories are searched for .nix files. `--help` says how.
+import { checkFile } from "./check-file";
+import { HELP, parseCommand, UsageError } from "./cli-args";
+import { MissingPath, nixFiles } from "./files";
+import { mapLimit } from "./pool";
+import { printText } from "./report";
+import { toSarif } from "./sarif";
 
-const { values: opts, positionals } = parseArgs({
-  args: process.argv.slice(2),
-  allowPositionals: true,
-  options: {
-    target: { type: "string" },
-    release: { type: "string" },
-    nixpkgs: { type: "string" },
-    "home-manager": { type: "string" },
-    disko: { type: "string" },
-    static: { type: "boolean" },
-    json: { type: "boolean" },
-  },
-});
-const file = positionals[0];
-if (!file || positionals.length > 1) {
-  console.error("usage: check.ts <file.nix> [--target T] [--release V] [--static] [--json]");
+async function version(): Promise<string> {
+  const file = Bun.file(`${import.meta.dir}/../../package.json`);
+  return (await file.exists()) ? (await file.json()).version : "unknown";
+}
+
+try {
+  const command = parseCommand(process.argv.slice(2));
+  if (command.help) {
+    process.stdout.write(HELP);
+    process.exit(0);
+  }
+  if (command.version) {
+    console.log(`nixchecker ${await version()}`);
+    process.exit(0);
+  }
+
+  const paths = await nixFiles(command.paths);
+  if (paths.length === 0) throw new UsageError("no .nix files found");
+  // Several files are checked at once: the sources Nix needs are built only once, whoever asks first.
+  const results = await mapLimit(paths, command.jobs, (path) =>
+    checkFile(path, { ...command, version: command.release }),
+  );
+
+  // The JSON has one shape, whatever the number of files: bump `schemaVersion` if it ever changes.
+  if (command.format === "sarif") console.log(JSON.stringify(toSarif(results), null, 2));
+  else if (command.format === "json") {
+    console.log(JSON.stringify({ schemaVersion: 1, results }, null, 2));
+  } else {
+    for (const r of results) {
+      if (results.length > 1) console.log(`\n== ${r.file}`);
+      const { checked, total } = r.coverage;
+      const nix = command.partial ? "partial" : "whole";
+      const how = r.evaluated ? nix : command.static ? "static" : "syntax";
+      printText(r.items, `${checked} of ${total} assignments checked statically.`, how);
+    }
+  }
+  process.exit(results.some((r) => r.items.some((i) => i.severity === "error")) ? 1 : 0);
+} catch (error) {
+  if (!(error instanceof UsageError || error instanceof MissingPath)) throw error;
+  console.error(`nixchecker: ${error.message}\nTry 'nixchecker --help'.`);
   process.exit(2);
 }
-const version = (opts.release ?? DEFAULT_VERSION) as Version;
-if (!VERSIONS.includes(version)) throw new Error(`unknown release ${version}`);
-
-const source = await Bun.file(file).text();
-const analysis = analyze(source);
-const target = resolveTarget(analysis, (opts.target ?? "auto") as TargetChoice);
-if (target === "flake")
-  throw new Error("flakes are not evaluated yet: pass a module of the system");
-
-// 1. The static layer, against the catalog of the release.
-const publicDir = join(import.meta.dir, "..", "..", "public");
-const files = (async (url) => new Response(Bun.file(join(publicDir, String(url))))) as typeof fetch;
-const catalog = await loadCatalog(
-  target,
-  version,
-  "/",
-  analysis.assignments.map((a) => a.path),
-  files,
-);
-const report = check(analysis, target, catalog.tree, version);
-const items: Located[] = report.diagnostics.map(fromDiagnostic);
-const { total, skipped } = report.coverage;
-const coverage = `${total - skipped.length} of ${total} assignments checked statically.`;
-
-// 2. The real evaluation, unless the text does not even parse.
-const broken = items.some((i) => i.level === "syntax" && i.severity === "error");
-const evaluated = !broken && !opts.static;
-if (evaluated) {
-  const [nixpkgs, homeManager] =
-    opts.nixpkgs && opts["home-manager"]
-      ? [opts.nixpkgs, opts["home-manager"]]
-      : await releaseRoots(version);
-  const roots = {
-    nixpkgs: nixpkgs as string,
-    homeManager: homeManager as string,
-    disko: opts.disko ?? (await diskoRoot()),
-  };
-  for (const finding of await evaluate(target as Kind, roots, file)) {
-    items.push(fromFinding(finding, analysis.assignments));
-  }
-}
-
-if (opts.json) console.log(JSON.stringify({ target, version, evaluated, items }, null, 2));
-else printText(items, coverage, evaluated || !!opts.static);
-process.exit(items.some((i) => i.severity === "error") ? 1 : 0);

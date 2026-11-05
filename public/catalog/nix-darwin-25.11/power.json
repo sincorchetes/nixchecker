@@ -1,0 +1,1 @@
+[["power.restartAfterFreeze","bool"],["power.restartAfterPowerFailure","bool"],["power.sleep.allowSleepByPowerButton","bool"],["power.sleep.computer","mix",["int","enum:[\"never\"]"]],["power.sleep.display","mix",["int","enum:[\"never\"]"]],["power.sleep.harddisk","mix",["int","enum:[\"never\"]"]]]
