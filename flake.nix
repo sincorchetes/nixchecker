@@ -25,7 +25,8 @@
         in
         pkgs.stdenvNoCC.mkDerivation {
           pname = "nixchecker";
-          version = "0.0.0+${self.shortRev or "dirty"}";
+          # One version for everything: package.json, which `nixchecker --version` prints too.
+          version = (builtins.fromJSON (builtins.readFile ./package.json)).version;
           src = fileset.toSource {
             root = ./.;
             fileset = fileset.unions [
@@ -51,7 +52,7 @@
               --add-flags $out/share/nixchecker/tools/lsp/server.ts
           '';
           meta = {
-            description = "Check NixOS, Home Manager, disko and flake files against the official options";
+            description = "Check NixOS, Home Manager, nix-darwin, nix.conf, disko and flake files against the official options";
             license = pkgs.lib.licenses.gpl3Plus;
             mainProgram = "nixchecker";
           };
@@ -84,6 +85,7 @@
           echo '{ networking.hostName = 5; }' > bad.nix
           echo '{ networking.hostName = "box"; }' > good.nix
           nixchecker --static --target nixos good.nix
+          [ "$(nixchecker --version)" = "nixchecker ${(builtins.fromJSON (builtins.readFile ./package.json)).version}" ]
           if nixchecker --static --target nixos bad.nix; then echo "a wrong type passed"; exit 1; fi
           touch $out
         '';
