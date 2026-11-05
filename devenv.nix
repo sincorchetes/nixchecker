@@ -50,7 +50,8 @@
   # The two message dictionaries repeat the same keys by design, so they are left out of duplication.
   scripts.sonar.exec = ''
     ${pkgs.sonar-scanner-cli}/bin/sonar-scanner \
-      -Dsonar.projectKey=nixchecker \
+      -Dsonar.organization="''${SONAR_ORGANIZATION:-sincorchetes}" \
+      -Dsonar.projectKey="''${SONAR_PROJECT_KEY:-sincorchetes_nixchecker}" \
       -Dsonar.sources=src,tools \
       -Dsonar.tests=e2e \
       -Dsonar.exclusions='**/*.test.ts,public/catalog/**' \

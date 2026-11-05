@@ -52,7 +52,14 @@ jobs:
       - uses: ./.github/actions/setup-devenv
       - run: devenv shell -- catalog
       - name: Fail if regenerating changed anything
-        run: git diff --exit-code --stat -- public/catalog
+        run: |
+          if ! git diff --quiet -- public/catalog; then
+            git diff --stat -- public/catalog
+            echo "Changed fields (the shards are one line each):"
+            git diff --word-diff=porcelain --word-diff-regex='[^,]+' -- public/catalog \
+              | grep -E '^[+-][^+-]' | cut -c1-300 | head -80
+            exit 1
+          fi
       - name: The parser accepts every .nix file of nixpkgs and Home Manager
         run: devenv shell -- corpus
       - name: The parser agrees with the official one on damaged files
@@ -104,13 +111,21 @@ jobs:
     # Only runs if the repository defines the SONAR_HOST_URL variable (and the SONAR_TOKEN secret).
     # The server must be reachable from GitHub (localhost will not work).
     if: ${{ vars.SONAR_HOST_URL != '' }}
+    # The coverage report comes from the quality job.
+    needs: quality
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: ./.github/actions/setup-devenv
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: coverage
+          path: coverage
       - run: devenv shell -- sonar
         env:
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
 
   # A single result to require in the branch ruleset.
   ci-ok:
