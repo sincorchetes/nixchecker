@@ -30,6 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: ./.github/actions/setup-devenv
+      - name: The tag is the version of the package
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: devenv shell -- release-check "$GITHUB_REF_NAME"
       - run: devenv shell -- site-build
         env:
           SITE: ${{ vars.PAGES_SITE || 'https://nixchecker.sincorchetes.tech' }}

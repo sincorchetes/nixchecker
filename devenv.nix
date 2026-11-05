@@ -41,6 +41,8 @@
   scripts.integration.exec = "bun test -c tools/local/integration/bunfig.toml ./tools/local/integration/*.integration.ts ./tools/lsp/*.integration.ts";
   scripts.lsp.exec = "bun tools/lsp/server.ts";
   scripts.oracle.exec = "bun tools/oracle/run.ts \"$@\" && bun tools/oracle/nix-conf.ts";
+  # Checks that a release tag is the version in package.json (the Release workflow runs it).
+  scripts.release-check.exec = "bun tools/release/verify.ts \"$@\"";
   scripts.secrets.exec = "${pkgs.gitleaks}/bin/gitleaks git --config .gitleaks.toml --no-banner --redact --verbose";
   # Sends the code and coverage (coverage/lcov.info, written by `unit`) to SonarQube.
   # Needs SONAR_HOST_URL and SONAR_TOKEN; the project settings are passed here, never committed.

@@ -6,6 +6,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ## Unreleased
 
 ### Changed
+- The version has one source, `version` in `package.json`, and the Release workflow fails when the tag is not `v` plus
+  that version (`devenv shell -- release-check <tag>`). `AGENTS.md` says to raise it, and to date this changelog, in the
+  pull request before tagging.
 - A Release carries the SHA-256 sum of the zip and a signed provenance attestation of it
   (`gh attestation verify <zip> --repo sincorchetes/nixchecker`).
 - One version: the Nix package takes it from `package.json`, as `nixchecker --version` does (the package said

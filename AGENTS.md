@@ -29,14 +29,15 @@ Siempre que se terminen de implementar cambios en el proyecto, seguir rigurosame
    - Abrir el PR hacia `main` (`gh pr create`) y esperar a que pasen los checks requeridos (`CI passed`, `CodeQL`, `Secret scan`).
    - Fusionar con *squash* y borrar la rama. Al fusionar, `deploy.yml` publica en GitHub Pages.
 6. **Tag versión n+** (solo cuando haya que marcar una versión):
+   - La versión sale de un solo sitio, `version` en `package.json` (la leen `nixchecker --version` y el paquete Nix). Antes de marcar, en un PR: subir `version` a `0.0.<n+1>` y pasar lo de `Unreleased` del `CHANGELOG.md` a un apartado `## 0.0.<n+1>`.
    - Actualizar `main` y obtener la última versión (`git tag -l "v*" --sort=-v:refname | head -n 1`).
-   - Crear el tag siguiente `v0.0.<n+1>` y subirlo a origin: `git tag v0.0.<n+1> && git push origin v0.0.<n+1>`. Los tags `v*` no se pueden mover ni borrar.
+   - Crear el tag siguiente `v0.0.<n+1>` (el mismo número que `package.json`: el workflow *Release* lo comprueba con `release-check` y falla si difieren) y subirlo a origin: `git tag v0.0.<n+1> && git push origin v0.0.<n+1>`. Los tags `v*` no se pueden mover ni borrar.
    - El tag lanza el workflow *Release*, que ejecuta la CI y crea la GitHub Release con el sitio empaquetado y notas automáticas.
    - Para probar el empaquetado sin publicar, lanzar a mano el workflow *Release* (Run workflow) sobre `main`.
 
 ## Convenciones del proyecto
 
-- **Todo pasa por devenv**: la CI ejecuta los mismos scripts que en local (`devenv shell -- <script>`). Scripts: `dev`, `check` (tsc), `lint`, `fix`, `unit`, `e2e`, `site-build`, `start`, `catalog`, `corpus`, `differential`, `oracle`, `evaluate`, `integration`, `lsp`, `releases`, `secrets`, `sonar`. Se definen en `devenv.nix`.
+- **Todo pasa por devenv**: la CI ejecuta los mismos scripts que en local (`devenv shell -- <script>`). Scripts: `dev`, `check` (tsc), `lint`, `fix`, `unit`, `e2e`, `site-build`, `start`, `catalog`, `corpus`, `differential`, `oracle`, `evaluate`, `integration`, `lsp`, `releases`, `release-check`, `secrets`, `sonar`. Se definen en `devenv.nix`.
 - **Paquete Nix**: `flake.nix` (raíz) empaqueta la CLI y el LSP (`nix run .# -- archivo.nix`, `nix run .#lsp`); `nix flake check` ejecuta el binario empaquetado y la CI lo corre. Si cambian los archivos que usan la CLI o el LSP (`src/lib`, `tools/local`, `tools/lsp`, `tools/corpus/sources.ts`, `tools/catalog/{flake.nix,flake.lock,shapes.nix}`, `public/catalog`), el `fileset` de `flake.nix` debe seguir cubriéndolos. Los archivos nuevos hay que añadirlos a git para que el flake los vea.
 - **Bun para todo** (instalar, ejecutar, tests); no usar `npm`.
 - **Idiomas**: la interfaz y lo que se genera existen en español (texto fuente, `src/lib/i18n/es.ts`) e inglés (`src/lib/i18n/en.ts`). Cada texto nuevo lleva su traducción; el compilador y un test fallan si falta. La documentación del repositorio (`README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CREDITS.md`) **y los comentarios del código** están en inglés americano; este archivo está en español.
