@@ -53,7 +53,8 @@ async function loadWithRenames(
  * The whole job of checking a text, the same for the page, the command line and the editor: read it,
  * download the parts of the catalogs it needs and hold it against each target it may be for. When the
  * text does not say what it is, NixOS and Home Manager both look possible and the one that finds fewer
- * errors wins. It throws when a catalog cannot be downloaded.
+ * errors wins. `others` are the texts of the other files of the project: the options they declare are known.
+ * It throws when a catalog cannot be downloaded.
  */
 export async function checkText(
   text: string,
@@ -61,10 +62,14 @@ export async function checkText(
   release: Version,
   base: string,
   fetcher?: typeof fetch,
+  others: string[] = [],
 ): Promise<Checked> {
   // A nix.conf is not Nix: chosen, or (when not told) a text that only has that shape.
   const conf = choice === "nix-conf" || (choice === "auto" && looksLikeConf(text));
-  const analysis = conf ? parseConf(text) : analyze(text);
+  const own = conf ? parseConf(text) : analyze(text);
+  // What the other files of the project declare is known here too (a module of your own split in several files).
+  const declared = conf ? [] : others.flatMap((other) => analyze(other).declared);
+  const analysis = { ...own, declared: [...own.declared, ...declared] };
   const kinds: Target[] = conf ? ["nix-conf"] : candidateTargets(analysis, choice);
   const paths = analysis.assignments.map((a) => a.path);
   const catalogs = await Promise.all(

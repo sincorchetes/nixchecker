@@ -11,8 +11,11 @@ const m = messages[Astro.props.lang];
 <!-- What can be done with the text, in the bar on top of the editor. Validate is the last one: the
      button a keyboard user reaches going back from the text. -->
 <div class="toolbar">
-  <input type="file" id="file" accept=".nix,text/plain" hidden />
+  <input type="file" id="file" accept=".nix,text/plain" multiple hidden />
+  <input type="file" id="folder" hidden />
   <button type="button" class="tool" id="open">{m["checker.open"]}</button>
+  <button type="button" class="tool" id="open-folder">{m["checker.openFolder"]}</button>
+  <select id="project" class="tool project" aria-label={m["checker.project"]} hidden></select>
   <button type="button" class="tool" id="export" disabled>{m["checker.export"]}</button>
   <button type="button" class="tool" id="clear">{m["checker.clear"]}</button>
   <button type="button" class="tool" id="example">{m["checker.example"]}</button>
@@ -52,6 +55,14 @@ const m = messages[Astro.props.lang];
   .tool:hover:not(:disabled) {
     background: var(--marker);
     color: var(--on-marker);
+  }
+  .project {
+    max-width: 14rem;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+  }
+  .project[hidden] {
+    display: none;
   }
   .tool:disabled {
     color: var(--ink-3);

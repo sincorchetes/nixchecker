@@ -21,6 +21,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   command line's exit status.
 
 ### Added
+- Several files at once: "Open files" and "Open folder" (and dropping several) make a project. A list of its files lets
+  one be checked at a time, an edit is kept when switching, and the options the other files declare are known to the
+  one in the editor. The command of the details names all of them.
 - The fixed integers of an `enum` are checked, where they were held to "an integer" only: the catalogs keep them as
   their digits (the numbers of a list too), and a number written out that is not one of them is a wrong value. In the
   oracle with 600 options per catalog nix-darwin lets through 10 wrong values of 3602, where it let through 14, with no false positive.

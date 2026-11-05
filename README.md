@@ -23,7 +23,11 @@ sampled files (cuts, a lost character, a stray symbol) and requires our parser a
 
 ## Using the page
 
-Paste or type your file, drop a `.nix` file on the editor, or use "Open file" (up to 512 KB). The page
+Paste or type your file, drop `.nix` files on the editor, or use "Open files" or "Open folder" (up to 512 KB each, 100
+files; a folder gives its `.nix` files and `nix.conf`). With two or more files a list appears beside the buttons: the one in
+the editor is checked, the text typed before stays in the list as `untitled.nix`, and the options the other files declare
+(`options.my.feature.enable = mkEnableOption ...`) are known to the one being checked. `imports` are not followed by
+the page, and nothing is uploaded; the command of the details names all the files. The page
 checks it by itself when you stop typing for a moment; the button checks at once. The text is colored,
 each finding is underlined where it is and marked in the line numbers, and the report lists them with a
 link to the offending word, a button for the fixes that are certain (one, or all at once) and the

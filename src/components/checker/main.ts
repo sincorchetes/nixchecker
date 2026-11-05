@@ -11,6 +11,7 @@ import { setupEditor } from "./editor";
 import { createEngine } from "./engine";
 import { download, reportData } from "./export";
 import { setupFiles } from "./files";
+import { setupProject } from "./project-ui";
 import { showReport } from "./report";
 import { setupStatus } from "./status";
 import { setupTooltip } from "./tooltip";
@@ -24,6 +25,7 @@ const source = query<HTMLTextAreaElement>("#source");
 const target = query<HTMLSelectElement>("#target");
 const version = query<HTMLSelectElement>("#version");
 const system = query<HTMLSelectElement>("#system");
+const picker = query<HTMLSelectElement>("#project");
 const results = query("#results");
 const gutter = query("#gutter");
 const layer = query("#highlight");
@@ -35,6 +37,7 @@ if (
   target &&
   version &&
   system &&
+  picker &&
   results &&
   gutter &&
   cursor &&
@@ -97,6 +100,7 @@ if (
         choice: target.value as TargetChoice,
         release: version.value as Version,
         base: root.dataset.base ?? "/",
+        others: project.others(),
       });
     } catch (error) {
       if (current !== run) return;
@@ -116,7 +120,12 @@ if (
       { source, results, tr, rerun: validate, reveal: () => status.view("editor") },
       report,
       verdict.source,
-      cliCommand(report.target, version.value, system.value),
+      cliCommand(
+        report.target,
+        version.value,
+        system.value,
+        project.names().length > 1 ? project.names() : undefined,
+      ),
     );
     offer(() => reportData(report, verdict.source, version.value, system.value));
   };
@@ -152,6 +161,16 @@ if (
     source.value = next;
     validate();
   };
+  // The files of a configuration split in several: the one in the editor is checked, the others are known.
+  const project = setupProject({
+    select: picker,
+    source,
+    replace,
+    switched: () => {
+      forget();
+      validate();
+    },
+  });
   query("#undo-button")?.addEventListener("click", () => {
     if (previous === undefined) return;
     source.value = previous;
@@ -165,8 +184,10 @@ if (
   if (area) setupTooltip(area, layer, editor.findingAt, tr);
   const input = query<HTMLInputElement>("#file");
   const opener = query("#open");
-  if (area && input && opener) {
-    setupFiles({ area, input, opener, tr, say, replace });
+  const folder = query<HTMLInputElement>("#folder");
+  const folderOpener = query("#open-folder");
+  if (area && input && opener && folder && folderOpener) {
+    setupFiles({ area, input, opener, folder, folderOpener, tr, say, load: project.load });
   }
   const remember = query<HTMLInputElement>("#remember");
   if (remember) setupDraft(source, remember);

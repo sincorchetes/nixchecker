@@ -11,6 +11,12 @@ describe("cliCommand", () => {
     );
   });
 
+  test("the files of a project are all named, and a name that needs quotes has them", () => {
+    expect(cliCommand("nixos", "26.05", "x86_64-linux", ["a.nix", "my dir/b's.nix"])).toContain(
+      "-- a.nix 'my dir/b'\\''s.nix' --target nixos",
+    );
+  });
+
   test("disko has no release, and a flake or nix.conf has neither release nor system", () => {
     expect(cliCommand("disko", "26.05", "x86_64-linux")).toEndWith(
       "--target disko --system x86_64-linux",

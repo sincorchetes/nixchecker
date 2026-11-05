@@ -26,7 +26,9 @@ export const en: Record<MessageKey, string> = {
   "checker.validate": "Validate",
   "checker.example": "Load example",
   "checker.clear": "Clear",
-  "checker.open": "Open file",
+  "checker.open": "Open files",
+  "checker.openFolder": "Open folder",
+  "checker.project": "File of the project",
   "checker.export": "Download report",
   "checker.remember": "Save draft on this device",
   "checker.privacy":

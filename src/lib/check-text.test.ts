@@ -124,6 +124,23 @@ describe("checkText", () => {
     ).toEqual(["my.feature.enable", "other.thing"]);
   });
 
+  test("an option declared in another file of the project is known here", async () => {
+    const declaring = '{ lib, ... }: { options.my.feature.enable = lib.mkEnableOption "x"; }';
+    const using = "{ my.feature.enable = true; services.openssh.enabel = true; }";
+    const alone = await checkText(using, "nixos", "26.05", "/", disk);
+    expect(alone.report.diagnostics.map((d) => d.params.path)).toEqual([
+      "my.feature.enable",
+      "services.openssh.enabel",
+    ]);
+    const joined = await checkText(using, "nixos", "26.05", "/", disk, [declaring, "{ a = ; }"]);
+    expect(joined.report.diagnostics.map((d) => d.params.path)).toEqual([
+      "services.openssh.enabel",
+    ]);
+    // A nix.conf has no options to declare.
+    const conf = await checkText("cores = 4\n", "nix-conf", "26.05", "/", disk, [declaring]);
+    expect(conf.report.diagnostics).toEqual([]);
+  });
+
   test("a group written as a set above a declared option is not an unknown one either", async () => {
     const { report } = await run(
       '{ lib, ... }: { options.my.on = lib.mkEnableOption "x"; config.my = { on = true; }; }',
