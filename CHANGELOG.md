@@ -8,6 +8,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ### Changed
 - One version: the Nix package takes it from `package.json`, as `nixchecker --version` does (the package said
   `0.0.0+revision`), and `nix flake check` fails when they differ.
+- The content security policy allows no inline style either: the ruler of the editor is placed by a script, and the
+  page has no `style` attribute left.
 - The content security policy no longer allows every inline script: the one script written into the page (the theme) is
   allowed by its hash, computed where the policy is written, and a test checks there is no violation.
 - A setting of `nix.conf` that Nix does not know is a warning, not an error, as it is for Nix: it no longer fails the

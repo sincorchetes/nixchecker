@@ -26,6 +26,10 @@ export function setupEditor(
   let painted = 0;
   let queued = false;
 
+  // The place of the ruler: set from a script, as a style attribute in the page is not allowed by the policy.
+  const ruler = layer.parentElement?.querySelector<HTMLElement>(".ruler");
+  ruler?.style.setProperty("--ruler-columns", ruler.dataset.columns ?? "");
+
   // What sits behind the text moves with it: the colors, and the line at the column to keep within.
   const follow = () => {
     layer.scrollTop = source.scrollTop;

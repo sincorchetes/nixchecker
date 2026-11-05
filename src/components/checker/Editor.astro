@@ -13,8 +13,8 @@ const m = messages[Astro.props.lang];
 <div class="editor">
   <pre id="gutter" class="gutter" aria-hidden="true"></pre>
   <div class="pane">
-    <!-- The vertical line at the column a line is kept within; it moves with the text when that scrolls sideways. -->
-    <div class="ruler" style={`--ruler-columns: ${RULER}`} aria-hidden="true"></div>
+    <!-- The vertical line at the column a line is kept within (its place is set by editor.ts: the policy allows no style attribute); it moves with the text when that scrolls sideways. -->
+    <div class="ruler" data-columns={RULER} aria-hidden="true"></div>
     <pre id="highlight" class="highlight" aria-hidden="true"></pre>
     <textarea
       id="source"

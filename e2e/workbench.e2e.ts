@@ -177,7 +177,7 @@ describe("theme", () => {
     expect(await background()).toBe(light);
   });
 
-  test("the policy allows the theme script by its hash, with no violation and no 'unsafe-inline' for scripts", async () => {
+  test("the policy allows the theme script by its hash, with no violation and no 'unsafe-inline' at all", async () => {
     await page.evaluateOnNewDocument(() => {
       const seen: string[] = [];
       (window as unknown as { violations: string[] }).violations = seen;
@@ -191,6 +191,14 @@ describe("theme", () => {
       el.getAttribute("content"),
     );
     expect(policy).toMatch(/script-src 'self' 'sha256-[A-Za-z0-9+/=]+';/);
+    expect(policy).not.toContain("unsafe-inline");
+    // The ruler is placed by a script, not by a style attribute the policy would block.
+    expect(await page.$eval(".ruler", (el) => el.hasAttribute("style"))).toBe(true);
+    expect(
+      await page.$eval(".ruler", (el) =>
+        (el as HTMLElement).style.getPropertyValue("--ruler-columns"),
+      ),
+    ).toBe("100");
     expect(
       await page.evaluate(() => (window as unknown as { violations: string[] }).violations),
     ).toEqual([]);
