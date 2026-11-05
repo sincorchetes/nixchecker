@@ -18,6 +18,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   command line's exit status.
 
 ### Added
+- The fixed integers of an `enum` are checked, where they were held to "an integer" only: the catalogs keep them as
+  their digits (the numbers of a list too), and a number written out that is not one of them is a wrong value. In the
+  oracle with 600 options per catalog nix-darwin lets through 10 wrong values of 3602, where it let through 14, with no false positive.
 - The details of a result give the command that makes the same check with your own Nix (release and system included), for
   what a page that only reads the text cannot judge.
 - An option the text declares itself (`options.my.feature.enable = mkEnableOption ...`) is no longer reported as unknown

@@ -28,6 +28,10 @@ export const fixtures: Record<Target, OptionTree> = {
     opt("mixed.old", "any", { renamedTo: "mixed.mid" }),
     opt("mixed.mid", "any", { renamedTo: "mixed.flag" }),
     opt("mixed.flag", "bool"),
+    // Enums of integers are stored as their digits.
+    opt("mixed.show", "enum", { values: ["100", "101"] }),
+    opt("mixed.maybe", "mix", { values: ['enum:["100","101"]'] }),
+    opt("mixed.many", "list", { values: [enumElementKind(["100", "101"])] }),
     opt("mixed.lost", "any", { renamedTo: "mixed.nowhere" }),
     opt("mixed.loop", "any", { renamedTo: "mixed.loop" }),
     opt("mixed.viaEnv", "any", { renamedTo: "env.vars.KEY" }),

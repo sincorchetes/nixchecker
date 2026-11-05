@@ -2,15 +2,22 @@
 // everything (hover is not there, and the buttons must not need it).
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { Browser, Page } from "puppeteer-core";
-import { dist, launchChrome, serveSite } from "./support";
+import { dist, launchChrome, serveSite, settled } from "./support";
 
 let site: ReturnType<typeof serveSite>;
 let browser: Browser;
 let page: Page;
 
+// The findings are drawn again when a run ends, so an element found can be gone when it is tapped: look again.
 const tap = async (selector: string) => {
-  const handle = await page.waitForSelector(selector);
-  await handle?.tap();
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await (await page.waitForSelector(selector))?.tap();
+      return;
+    } catch (error) {
+      if (attempt === 3 || !String(error).includes("detached")) throw error;
+    }
+  }
 };
 const text = (selector: string) => page.$eval(selector, (el) => el.textContent ?? "");
 const shown = (selector: string) =>
@@ -35,7 +42,7 @@ describe("a touch screen", () => {
   test("a tap on the example loads it, and a tap on Validate shows the problems", async () => {
     await tap("#example");
     await tap("#validate");
-    await page.waitForSelector(".diag");
+    await settled(page);
     expect(await shown(".panel")).toBe(true);
     expect((await page.$$(".diag")).length).toBe(3);
   });

@@ -8,7 +8,7 @@ export interface Assignment {
   line: number;
   col: number;
   kind: ValueKind;
-  /** Raw content of a plain string value, used to check enums. */
+  /** Raw content of a plain string value, or the digits of an integer, used to check enums. */
   value?: string;
   /** The kind of each element of a list written out in full. */
   items?: ValueKind[];
@@ -139,7 +139,7 @@ function classify(e: Expr): Classified {
     case "str":
       return e.value === undefined ? { kind: "str" } : { kind: "str", value: e.value };
     case "num":
-      return { kind: e.float ? "other" : "int" };
+      return e.float ? { kind: "other" } : { kind: "int", value: e.text };
     case "list": {
       // A set in a list is judged only when it cannot be a derivation; any other set stays unjudged.
       const parts = e.items.map(
@@ -148,7 +148,7 @@ function classify(e: Expr): Classified {
       return {
         kind: "list",
         items: parts.map((part) => part.kind),
-        ...(parts.some((part) => part.kind === "str") && {
+        ...(parts.some((part) => part.kind === "str" || part.kind === "int") && {
           itemValues: parts.map((part) => part.value),
         }),
         ...(parts.some((part) => part.kind === "attrs") && {

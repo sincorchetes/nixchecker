@@ -33,6 +33,23 @@ describe("value types", () => {
     expect(codes("{ files.either = 3; }")).toEqual([]);
   });
 
+  test("an enum of integers takes only those integers", () => {
+    expect(codes("{ mixed.show = 100; }")).toEqual([]);
+    expect(codes("{ mixed.show = 7; }")).toEqual(["type-mismatch"]);
+    expect(run("{ mixed.show = 7; }").diagnostics[0]?.params).toMatchObject({
+      expected: "enum(100 | 101)",
+      got: "int",
+    });
+    // A word, a list or a name are no integer of the enum; a name is not judged.
+    expect(codes('{ mixed.show = "x"; }')).toEqual(["type-mismatch"]);
+    expect(codes("{ mixed.show = [ ]; }")).toEqual(["type-mismatch"]);
+    expect(codes("{ mixed.show = n; }")).toEqual(["undefined-variable"]);
+    expect(codes("{ mixed.maybe = 101; }")).toEqual([]);
+    expect(codes("{ mixed.maybe = 5; }")).toEqual(["type-mismatch"]);
+    expect(codes("{ mixed.many = [ 100 101 ]; }")).toEqual([]);
+    expect(codes("{ mixed.many = [ 100 5 ]; }")).toEqual(["type-mismatch"]);
+  });
+
   test("an alternative that is a list keeps the kind of its elements", () => {
     expect(codes('{ mixed.text = "a"; }')).toEqual([]);
     expect(codes('{ mixed.text = [ "a" "b" ]; }')).toEqual([]);

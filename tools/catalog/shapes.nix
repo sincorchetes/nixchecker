@@ -100,7 +100,8 @@ let
     else if t.name == "enum" && lib.all lib.isString values then
       [ ([ "e" ] ++ values) ]
     else if t.name == "enum" && lib.all lib.isInt values then
-      [ "i" ]
+      # The digits, which is what a number written out is compared with.
+      [ ([ "e" ] ++ map toString values) ]
     else if t.name == "enum" && lib.all lib.isBool values then
       [ "b" ]
     else

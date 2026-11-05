@@ -52,7 +52,12 @@ function elementFits(
 ): boolean {
   if (kind === "other" || allowed.includes(kind)) return true;
   if (kind === "str" && allowed.some((k) => isPatternKind(k) && matches(k, value))) return true;
-  if (kind === "str" && allowed.some((k) => k.startsWith("enum:") && inEnum(k, value))) return true;
+  // An enum of integers is stored as the digits, which is what an integer written out is compared with.
+  if (
+    (kind === "str" || kind === "int") &&
+    allowed.some((k) => k.startsWith("enum:") && inEnum(k, value))
+  )
+    return true;
   if (kind === "str" && allowed.includes("path") && (value === undefined || value.startsWith("/")))
     return true;
   return allowed.includes("pkg") && packageFits(kind, value, plain);
@@ -100,7 +105,7 @@ const isAbsolute = (a: Assignment) =>
 function mixMismatch(kinds: string[], a: Assignment): string | undefined {
   const fits = (kind: string) => {
     if (kind.startsWith("enum:")) {
-      return a.kind === "str" && inEnum(kind, a.value);
+      return (a.kind === "str" || a.kind === "int") && inEnum(kind, a.value);
     }
     if (isPatternKind(kind)) return a.kind === "str" && matches(kind, a.value);
     if (kind === "path") return isAbsolute(a);
@@ -127,7 +132,9 @@ export function typeMismatch(entry: IndexedOption, a: Assignment): string | unde
   const { type } = entry;
   if (a.kind === "other" || type === "any" || type === "hidden") return undefined;
   if (type === "enum") {
-    const ok = a.kind === "str" && (a.value === undefined || entry.values?.includes(a.value));
+    const ok =
+      (a.kind === "str" || a.kind === "int") &&
+      (a.value === undefined || entry.values?.includes(a.value));
     return ok ? undefined : `enum(${entry.values?.join(" | ")})`;
   }
   if (type === "path") return isAbsolute(a) ? undefined : "absolute path";

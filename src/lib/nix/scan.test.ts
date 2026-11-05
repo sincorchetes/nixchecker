@@ -14,7 +14,7 @@ describe("scan", () => {
     const src =
       "{ pkgs }: let x = 1; in with pkgs; assert x == 1; ({ a.b = 1; c = { d = true; }; })";
     expect(scanned(src).assignments).toEqual([
-      { path: ["a", "b"], kind: "int", line: 1, col: 54 },
+      { path: ["a", "b"], kind: "int", value: "1", line: 1, col: 54 },
       { path: ["c"], kind: "attrs", plain: true, line: 1, col: 63 },
       { path: ["c", "d"], kind: "bool", line: 1, col: 69 },
     ]);
@@ -116,15 +116,22 @@ describe("scan: the strings in a list", () => {
     return [a?.items, a?.itemValues];
   };
 
-  test("keep their text, and nothing for what is not a plain string", () => {
+  test("keep their text, and so do the digits of a number; nothing for what is not plain", () => {
     expect(items('{ a = [ "x" 1 "${y}" ]; }')).toEqual([
       ["str", "int", "str"],
-      ["x", undefined, undefined],
+      ["x", "1", undefined],
     ]);
   });
 
-  test("a list with no strings has no texts", () => {
-    expect(items("{ a = [ 1 true ]; }")).toEqual([["int", "bool"], undefined]);
+  test("a list with neither strings nor numbers has no texts", () => {
+    expect(items("{ a = [ true [ ] ]; }")).toEqual([["bool", "list"], undefined]);
+  });
+
+  test("a float is not judged, and a number keeps the digits it was written with", () => {
+    expect(scanned("{ a = 1.5; b = 007; }").assignments.map((x) => [x.kind, x.value])).toEqual([
+      ["other", undefined],
+      ["int", "007"],
+    ]);
   });
 });
 

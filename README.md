@@ -120,10 +120,12 @@ Limits to know about:
   (`content`) the options of all of them are accepted there, and what the manual describes below a
   device that its type does not declare is dropped, and layouts nested more than six deep are
   not read.
+- The fixed integers of an `enum` (`system.defaults.ActivityMonitor.ShowCategory`) are checked: a number written out
+  that is not one of them is a wrong value (a name or an expression is not judged).
 - A string that must match a pattern (`strMatching`: a host name, a unit name such as `x.service`) is
   checked against it, and so are the elements of a list of paths. What narrows a value in other ways is
-  checked as its base type, and the page lets such a value through (`evaluate` finds it): the fixed
-  integers of an `enum`, a few options with a type of their own
+  checked as its base type, and the page lets such a value through (`evaluate` finds it): a few
+  options with a type of their own
   (`ibus.engines`, `helix.languages`), and everything disko narrows (it serializes its patterns as plain strings).
   In the oracle these are about 1 % of the wrong values.
 - A value written for a renamed option is held to the type of its new name. About four in five of the
