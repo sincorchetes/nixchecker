@@ -73,6 +73,6 @@ export function looksLikeConf(source: string): boolean {
     .map((l) => (l.split("#")[0] as string).trim())
     .filter(Boolean);
   const isLine = (l: string) =>
-    /^[A-Za-z][\w-]*\s+=(\s+[^;{}[\]()"]+)?$/.test(l) || /^!?include\s+\S+$/.test(l);
+    /^[A-Za-z][\w-]*\s+=(\s+\S[^;{}[\]()"]*)?$/.test(l) || /^!?include\s+\S+$/.test(l);
   return lines.length > 0 && lines.every(isLine) && lines.some((l) => !/^!?include/.test(l));
 }

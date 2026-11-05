@@ -12,9 +12,44 @@ export interface Context {
   partial: string;
 }
 
-// An attribute path and `=`, at the end of the text before a `{`: the set is the value of that option.
-const OPENS_VALUE = /([A-Za-z_"][\w'".-]*)\s*=\s*$/;
-const WORD = /(?:[A-Za-z_][\w'-]*\.)*[\w'-]*$/;
+const NAME_CHAR = /[\w'".-]/;
+const SEGMENT = /^[A-Za-z_][\w'-]*$/;
+
+// The characters at the end of `text` that can belong to a name, as far back as they go. Read from the end
+// on purpose: a pattern that searches from every position of the text is quadratic on a large file.
+function runAtEnd(text: string, accepts: RegExp): number {
+  let from = text.length;
+  while (from > 0 && accepts.test(text[from - 1] as string)) from--;
+  return from;
+}
+
+// The attribute path in `path =` at the end of the text before a `{`: the set is the value of that option.
+function ownerBefore(text: string): string | undefined {
+  const equals = text.trimEnd();
+  if (!equals.endsWith("=")) return undefined;
+  const head = equals.slice(0, -1).trimEnd();
+  let start = runAtEnd(head, NAME_CHAR);
+  // A path starts with a letter, an underscore or a quote.
+  while (start < head.length && !/[A-Za-z_"]/.test(head[start] as string)) start++;
+  return start < head.length ? head.slice(start) : undefined;
+}
+
+// The name being typed at the end of the code, `a.b.par`: the segments before the last one start like a name.
+function wordAt(code: string): string {
+  const run = runAtEnd(code, /[\w'.-]/);
+  for (let start = run; start < code.length; start++) {
+    if (
+      code
+        .slice(start)
+        .split(".")
+        .slice(0, -1)
+        .every((part) => SEGMENT.test(part))
+    ) {
+      return code.slice(start);
+    }
+  }
+  return "";
+}
 
 // The text with comments and strings blanked out (same length), so what is left is code.
 function codeOf(text: string): { code: string; open: boolean } {
@@ -38,7 +73,7 @@ export function contextAt(text: string, offset: number): Context | undefined {
   const { code, open } = codeOf(text.slice(0, offset));
   if (open) return undefined;
 
-  const typed = WORD.exec(code)?.[0] ?? "";
+  const typed = wordAt(code);
   const start = code.length - typed.length;
   const previous = code.slice(0, start).trimEnd().slice(-1);
   // A name starts a statement: after `{`, after `;`, or at the start of the file.
@@ -51,7 +86,7 @@ export function contextAt(text: string, offset: number): Context | undefined {
       stack.pop();
     } else if (code[i] === "{") {
       // A quoted name is a string, so the owner is read from the text as written.
-      const owner = OPENS_VALUE.exec(text.slice(0, i))?.[1];
+      const owner = ownerBefore(text.slice(0, i));
       const parent = stack.length === 0 ? [] : stack[stack.length - 1];
       // Under `config = { ... }` the options are the module's own, as if the `config` were not written.
       const written = splitPath(owner ?? "");

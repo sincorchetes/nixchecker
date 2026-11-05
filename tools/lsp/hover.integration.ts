@@ -12,8 +12,8 @@ const proc = Bun.spawn(["bun", join(import.meta.dir, "server.ts")], {
 const incoming = readMessages(proc.stdout)[Symbol.asyncIterator]();
 const write = (message: Record<string, unknown>) => {
   const body = JSON.stringify({ jsonrpc: "2.0", ...message });
-  proc.stdin.write(`Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`);
-  proc.stdin.flush();
+  void proc.stdin.write(`Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`);
+  void proc.stdin.flush();
 };
 const next = async () => (await incoming.next()).value as Message & Record<string, unknown>;
 

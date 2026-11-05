@@ -5,6 +5,7 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { splitPath } from "../../src/lib/catalog/path";
 import type { OptionRow } from "../../src/lib/catalog/types";
+import { byName } from "../../src/lib/sort";
 
 const catalogDir = join(import.meta.dir, "..", "..", "public", "catalog");
 
@@ -15,7 +16,7 @@ export const VALUES = ["true", "1", '"x"', "[ ]", "{ }", "[ 1 ]", '[ "x" ]'];
 function random(seed: number): () => number {
   let state = seed;
   return () => {
-    state = (state + 0x6d2b79f5) | 0;
+    state = (state + 0x6d2b79f5) >>> 0;
     let t = Math.imul(state ^ (state >>> 15), 1 | state);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -42,7 +43,7 @@ export async function sampleOptions(
       if (!renamedOnly && type === "attrs" && Array.isArray(extra)) paths.push(`${path}.k`);
     }
   }
-  paths.sort();
+  paths.sort(byName);
   const next = random(seed);
   const picked: string[] = [];
   for (let n = 0; n < count && paths.length > 0; n++) {

@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { OptionRow } from "../../src/lib/catalog/types";
 import { checkText } from "../../src/lib/check-text";
+import { byName } from "../../src/lib/sort";
 
 const catalogDir = join(import.meta.dir, "..", "..", "public", "catalog", "nix-conf");
 const fromDisk = (async (url: string) => {
@@ -129,6 +130,6 @@ await Promise.all(
 await rm(dir, { recursive: true });
 console.log(`nix.conf: ${cases.length} lines, ${problems.length} disagreements`);
 if (problems.length > 0) {
-  console.error(problems.sort().join("\n"));
+  console.error(problems.sort(byName).join("\n"));
   process.exit(1);
 }

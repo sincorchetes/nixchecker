@@ -3,6 +3,8 @@ import { CatalogError } from "../../lib/catalog";
 import { type Request, validateText } from "./analysis";
 
 self.addEventListener("message", async (event: MessageEvent<{ id: number; request: Request }>) => {
+  // A dedicated worker only hears the page that started it, and those messages carry no origin.
+  if (event.origin !== "") return;
   const { id, request } = event.data;
   try {
     self.postMessage({ id, verdict: await validateText(request) });

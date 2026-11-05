@@ -11,6 +11,7 @@
 import { EXTENSIONS, extensionCatalog } from "../../src/lib/catalog/extensions";
 import { DEFAULT_SYSTEM } from "../../src/lib/catalog/systems";
 import { VERSIONS, type Version } from "../../src/lib/catalog/versions";
+import { byName } from "../../src/lib/sort";
 import { bundleOut, darwinRoot, diskoRoot, releaseRoots } from "../corpus/sources";
 import { CASES } from "./cases";
 import { EXTENSION_CASES } from "./cases-extensions";
@@ -163,6 +164,6 @@ for (const { kind, version, cases, catalog, module } of TARGETS) {
   );
 }
 
-for (const line of problems.sort()) console.log(line);
+for (const line of problems.sort(byName)) console.log(line);
 if (tooLoose) console.log(`  too many wrong values let through (over ${MAX_MISSED})`);
 if (problems.length > 0 || tooLoose) process.exit(1);

@@ -8,6 +8,10 @@ import { evaluate, scratch } from "./support";
 const TIME = 900_000;
 let dir: string;
 
+// The lines of the findings that have one (the assertions of a whole system have none), in order.
+const linesOf = (items: Array<{ line?: number }>) =>
+  items.flatMap((i) => (i.line === undefined ? [] : [i.line])).sort((a, b) => a - b);
+
 beforeAll(async () => {
   dir = await scratch();
   await writeModules(dir);
@@ -108,7 +112,7 @@ describe("an option that does not exist does not hide the wrong values", () => {
         join(dir, "mixed.nix"),
       );
       const confirmed = run.items.filter((i) => i.level === "evaluation");
-      expect(confirmed.map((i) => i.line).sort()).toEqual([2, 3, 4]);
+      expect(linesOf(confirmed)).toEqual([2, 3, 4]);
       const text = confirmed.map((i) => i.message).join("\n");
       expect(text).toContain("services.openssh.enabel does not exist");
       expect(text).toContain("networking.hostName");
@@ -130,7 +134,7 @@ describe("a whole system", () => {
         join(dir, "two-wrong.nix"),
       );
       const confirmed = run.items.filter((i) => i.level === "evaluation");
-      expect(confirmed.map((i) => i.line).sort()).toEqual([2, 3]);
+      expect(linesOf(confirmed)).toEqual([2, 3]);
       const text = confirmed.map((i) => i.message).join("\n");
       expect(text).toContain("networking.hostName");
       expect(text).toContain("services.openssh.ports");

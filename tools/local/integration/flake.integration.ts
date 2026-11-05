@@ -2,6 +2,7 @@
 // outputs when asked. `devenv shell -- integration` (needs Nix; the first run builds the pinned sources).
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
+import { byName } from "../../../src/lib/sort";
 import { currentSystem, evaluate, scratch, writeFlake } from "./support";
 
 const TIME = 900_000;
@@ -108,8 +109,8 @@ describe("a flake with a NixOS and a Home Manager configuration", () => {
       });
       const run = await evaluate("--format", "json", join(flake, "flake.nix"));
       expect(run.code).toBe(1);
-      const configs = run.items.filter((i) => i.severity === "error").map((i) => i.config);
-      expect(configs.sort()).toEqual(["homeConfigurations.u", "nixosConfigurations.box"]);
+      const configs = run.items.filter((i) => i.severity === "error").map((i) => i.config ?? "");
+      expect(configs.sort(byName)).toEqual(["homeConfigurations.u", "nixosConfigurations.box"]);
     },
     TIME,
   );

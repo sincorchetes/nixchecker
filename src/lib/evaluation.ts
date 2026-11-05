@@ -32,7 +32,7 @@ export interface Finding {
 
 // The names between `quotes' in "The options `a', `b' do not exist".
 const quoted = (text: string): string[] =>
-  [...text.matchAll(/`([^']+)'/g)].map((m) => m[1] as string);
+  [...text.matchAll(/`([^'`]+)'/g)].map((m) => m[1] as string);
 
 // The messages of a "Failed assertions:" list: each starts with "- " and may go on over more lines.
 function assertions(block: string): string[] {
@@ -46,7 +46,7 @@ function assertions(block: string): string[] {
 
 // What the module system lists under "Definition values:": `- In `file': value`.
 function definitionsIn(text: string): Definition[] {
-  return [...text.matchAll(/^\s*- In `([^']+)': (.*)$/gm)].map((m) => ({
+  return [...text.matchAll(/^[ \t]*- In `([^'\n]+)': (.*)$/gm)].map((m) => ({
     file: m[1] as string,
     value: (m[2] as string).trim(),
   }));

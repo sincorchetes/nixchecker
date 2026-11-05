@@ -7,6 +7,7 @@ import { EXTENSIONS, extensionCatalog } from "../../src/lib/catalog/extensions";
 import { extractRenames } from "../../src/lib/catalog/renames";
 import { shardFile, toShards } from "../../src/lib/catalog/shard";
 import { catalogName, VERSIONS, type Version } from "../../src/lib/catalog/versions";
+import { byName } from "../../src/lib/sort";
 import { diskoEntries, LAYOUT_ROOTS } from "./disko";
 import { nixConfEntries } from "./nix-conf";
 import { overlays } from "./overlay";
@@ -70,6 +71,10 @@ const nodes = (version: Version) =>
         nixDarwin: `nix-darwin-${suffix(version)}`,
       };
 
+// The entries of a record ordered by key, by code unit (the same on every machine).
+const sortedByKey = (record: Record<string, string>) =>
+  Object.fromEntries(Object.entries(record).sort(([a], [b]) => byName(a, b)));
+
 // Every `mkRenamedOptionModule` found in the module sources the bundle links to.
 async function renamesIn(dir: string): Promise<Record<string, string>> {
   const found: Record<string, string> = {};
@@ -79,7 +84,7 @@ async function renamesIn(dir: string): Promise<Record<string, string>> {
   for await (const file of new Bun.Glob("**/*.nix").scan({ cwd: dir, followSymlinks: true })) {
     files.push(file);
   }
-  for (const file of files.sort()) {
+  for (const file of files.sort(byName)) {
     Object.assign(found, extractRenames(await Bun.file(join(dir, file)).text()));
   }
   return found;
@@ -149,7 +154,7 @@ async function write(
   await put("index.json", index);
   for (const [key, rows] of Object.entries(shards)) await put(shardFile(key), rows);
   const revisions = Object.fromEntries(nodes.map((n) => [n, locked(n)?.rev ?? "unknown"]));
-  manifest[name] = { source, revisions, files: Object.fromEntries(Object.entries(files).sort()) };
+  manifest[name] = { source, revisions, files: sortedByKey(files) };
   console.log(`${name}: ${entries.length} options in ${index.keys.length} shards (${source})`);
 }
 
