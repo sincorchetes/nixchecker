@@ -39,9 +39,12 @@ describe("checkText", () => {
       const { report, source } = await run(text, choice);
       expect(report.target).toBe("nix-conf");
       expect(source).toContain("nix.conf");
-      expect(report.diagnostics.map((d) => [d.code, d.line, d.suggestion ?? null])).toEqual([
-        ["type-mismatch", 2, null],
-        ["unknown-option", 3, "keep-going"],
+      expect(
+        report.diagnostics.map((d) => [d.code, d.severity, d.line, d.suggestion ?? null]),
+      ).toEqual([
+        ["type-mismatch", "error", 2, null],
+        // Nix only warns about a setting it does not know.
+        ["unknown-option", "warning", 3, "keep-going"],
       ]);
     }
     expect((await run("{ cores = 4; }")).report.target).not.toBe("nix-conf");

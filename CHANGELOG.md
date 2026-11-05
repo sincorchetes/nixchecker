@@ -5,6 +5,10 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 
 ## Unreleased
 
+### Changed
+- A setting of `nix.conf` that Nix does not know is a warning, not an error, as it is for Nix: it no longer fails the
+  command line's exit status.
+
 ### Added
 - The Home Manager module of sops-nix has its catalog (`ext-sops-nix-home`), loaded on top of Home Manager's when a file
   writes below `sops`; the extensions now belong to the target they extend.

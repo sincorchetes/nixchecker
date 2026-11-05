@@ -152,6 +152,18 @@ describe("nix-darwin", () => {
 
 describe("nix.conf", () => {
   test(
+    "a setting Nix does not know is a warning, as it is for Nix, and does not fail the run",
+    async () => {
+      const file = join(dir, "unknown.conf");
+      await Bun.write(file, "keep-goin = true\n");
+      const run = await evaluate("--format", "json", "--target", "nix-conf", file);
+      expect(run.code).toBe(0);
+      expect(run.items.map((i) => [i.code, i.severity])).toEqual([["unknown-option", "warning"]]);
+    },
+    TIME,
+  );
+
+  test(
     "is recognized by its shape, checked without evaluating, and found in a directory",
     async () => {
       const conf = join(dir, "etc");

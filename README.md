@@ -157,7 +157,7 @@ The `nix.conf` catalog is the list of settings Nix itself prints (`nix config sh
 `extra-` forms), so it follows the Nix of the pinned nixpkgs. A text is read as a `nix.conf` when it is chosen, or when every
 line is a comment, an `include` or `name = words` (Nix needs the spaces around the `=`). It is checked statically only: the
 oracle (`devenv shell -- oracle`) holds the validator to what the real `nix` accepts, on every setting. An unknown setting is
-an error here, though Nix only warns about it.
+a warning, as it is for Nix, which goes on without it.
 
 Validation runs entirely in the browser: your configuration is never uploaded. The catalogs are
 sharded (`public/catalog/<target>/`): the browser downloads a small index plus only the shards for

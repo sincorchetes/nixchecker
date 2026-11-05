@@ -187,7 +187,8 @@ export function check(
       const suggestion = suggest(tree, a.path, known);
       const options = available(tree, a.path, known, a.path[known]);
       diagnostics.push({
-        severity: "error",
+        // Nix only warns about a setting of nix.conf it does not know, and goes on.
+        severity: target === "nix-conf" ? "warning" : "error",
         code: "unknown-option",
         ...at,
         params: { path },
