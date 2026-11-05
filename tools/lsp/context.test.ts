@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { contextAt } from "./context";
 
 // `|` marks the cursor.
-const at = (marked: string) => contextAt(marked.replace("|", ""), marked.indexOf("|"));
+const at = (marked: string) => contextAt(marked.replaceAll("|", ""), marked.indexOf("|"));
 
 describe("completion context", () => {
   test("a name at the start of a statement, written so far", () => {
