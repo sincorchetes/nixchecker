@@ -6,6 +6,8 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
 ## Unreleased
 
 ### Changed
+- The content security policy no longer allows every inline script: the one script written into the page (the theme) is
+  allowed by its hash, computed where the policy is written, and a test checks there is no violation.
 - A setting of `nix.conf` that Nix does not know is a warning, not an error, as it is for Nix: it no longer fails the
   command line's exit status.
 

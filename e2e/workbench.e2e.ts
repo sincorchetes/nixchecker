@@ -177,6 +177,26 @@ describe("theme", () => {
     expect(await background()).toBe(light);
   });
 
+  test("the policy allows the theme script by its hash, with no violation and no 'unsafe-inline' for scripts", async () => {
+    await page.evaluateOnNewDocument(() => {
+      const seen: string[] = [];
+      (window as unknown as { violations: string[] }).violations = seen;
+      document.addEventListener("securitypolicyviolation", (e) => seen.push(e.violatedDirective));
+    });
+    await page.goto(site.url());
+    await page.evaluate(() => localStorage.setItem("theme", "dark"));
+    await page.reload();
+    expect(await theme()).toBe("dark");
+    const policy = await page.$eval("meta[http-equiv='Content-Security-Policy']", (el) =>
+      el.getAttribute("content"),
+    );
+    expect(policy).toMatch(/script-src 'self' 'sha256-[A-Za-z0-9+/=]+';/);
+    expect(
+      await page.evaluate(() => (window as unknown as { violations: string[] }).violations),
+    ).toEqual([]);
+    await page.evaluate(() => localStorage.removeItem("theme"));
+  });
+
   test("the other language says it in its own words", async () => {
     await page.goto(site.url("/en/"));
     expect(await page.$eval("#theme", (el) => el.textContent)).toMatch(/mode$/);

@@ -1,4 +1,5 @@
 ---
+import { createHash } from "node:crypto";
 import "../styles/global.css";
 import "../styles/listing.css";
 import "../styles/page.css";
@@ -8,6 +9,14 @@ import { withBase } from "../lib/site";
 interface Props {
   lang: Lang;
 }
+
+// The theme chosen with the button, applied before the first paint so the page does not flash. It is the only
+// script written into the page, so the policy allows it by its hash instead of allowing every inline script.
+const themeScript = `try {
+  const theme = localStorage.getItem("theme");
+  if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+} catch {}`;
+const themeHash = createHash("sha256").update(themeScript).digest("base64");
 
 const { lang } = Astro.props;
 const m = messages[lang];
@@ -30,7 +39,7 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
     <!-- Pages cannot send headers, so the policy rides in a meta tag. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'"
+      content={`default-src 'self'; script-src 'self' 'sha256-${themeHash}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'`}
     />
     <meta name="referrer" content="no-referrer" />
     <meta property="og:title" content={m["site.title"]} />
@@ -40,13 +49,7 @@ const href = (l: Lang) => new URL(path(l), Astro.site).href;
     <link rel="alternate" hreflang="es" href={href("es")} />
     <link rel="alternate" hreflang="en" href={href("en")} />
     <link rel="alternate" hreflang="x-default" href={href("es")} />
-    <!-- The theme chosen with the button, applied before the first paint so the page does not flash. -->
-    <script is:inline>
-      try {
-        const theme = localStorage.getItem("theme");
-        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
-      } catch {}
-    </script>
+    <script is:inline set:html={themeScript} />
     <link rel="icon" href={withBase(base, "favicon.svg")} type="image/svg+xml" />
   </head>
   <body>
