@@ -65,12 +65,13 @@ describe("a flake in a Git repository", () => {
       const run = await evaluate("--format", "json", join(flake, "flake.nix"));
       expect(run.code).toBe(0);
 
-      // The copy Nix made for that evaluation is the tracked files alone.
+      // The copy Nix makes of the flake is the tracked files alone (`archive` writes it to the store, where
+      // `metadata` may only name it).
       const proc = Bun.spawn(
         [
           "nix",
           "flake",
-          "metadata",
+          "archive",
           flake,
           "--json",
           "--extra-experimental-features",
