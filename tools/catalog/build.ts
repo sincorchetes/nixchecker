@@ -73,7 +73,13 @@ const nodes = (version: Version) =>
 // Every `mkRenamedOptionModule` found in the module sources the bundle links to.
 async function renamesIn(dir: string): Promise<Record<string, string>> {
   const found: Record<string, string> = {};
+  // The scan comes in the order of the file system, which differs between machines: sorted, so that two
+  // files that rename the same option settle the same way everywhere.
+  const files: string[] = [];
   for await (const file of new Bun.Glob("**/*.nix").scan({ cwd: dir, followSymlinks: true })) {
+    files.push(file);
+  }
+  for (const file of files.sort()) {
     Object.assign(found, extractRenames(await Bun.file(join(dir, file)).text()));
   }
   return found;

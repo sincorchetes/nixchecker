@@ -120,11 +120,25 @@ export function convert(
     roots.add(splitPath(path)[0] as string);
     for (const parent of ancestors(path)) documentedParents.add(parent);
   }
-  for (const [from, to] of Object.entries(overlay.renamed ?? {})) {
+  const applied = Object.entries(overlay.renamed ?? {}).filter(([from]) => {
     const current = entries.get(from);
-    if ((current && current.type !== "hidden") || documentedParents.has(from)) continue;
-    if (!roots.has(splitPath(from)[0] as string)) continue;
-    entries.set(from, { path: from, type: entries.get(to)?.type ?? "any", renamedTo: to });
+    if ((current && current.type !== "hidden") || documentedParents.has(from)) return false;
+    return roots.has(splitPath(from)[0] as string);
+  });
+  // A rename that points at another rename takes the type at the end of the chain, whichever the order in
+  // which the sources were read (it differs between machines): the catalog must come out the same.
+  const next = new Map(applied);
+  const endOf = (path: string): string => {
+    const seen = new Set<string>();
+    for (let step = next.get(path); step !== undefined && !seen.has(path); step = next.get(path)) {
+      seen.add(path);
+      path = step;
+    }
+    return path;
+  };
+  const types = applied.map(([, to]) => entries.get(endOf(to))?.type ?? "any");
+  for (const [index, [from, to]] of applied.entries()) {
+    entries.set(from, { path: from, type: types[index] as OptionType, renamedTo: to });
   }
   for (const entry of overlay.entries ?? []) {
     containers.delete(entry.path);

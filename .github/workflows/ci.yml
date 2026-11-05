@@ -55,9 +55,11 @@ jobs:
         run: |
           if ! git diff --quiet -- public/catalog; then
             git diff --stat -- public/catalog
-            echo "Changed fields (the shards are one line each):"
-            git diff --word-diff=porcelain --word-diff-regex='[^,]+' -- public/catalog \
-              | grep -E '^[+-][^+-]' | cut -c1-300 | head -80
+            echo "Changed rows (< committed, > regenerated):"
+            for f in $(git diff --name-only -- public/catalog | grep -v manifest.json); do
+              echo "== $f"
+              diff <(git show "HEAD:$f" | jq -c '.[]') <(jq -c '.[]' "$f") | cut -c1-300 | head -40 || true
+            done
             exit 1
           fi
       - name: The parser accepts every .nix file of nixpkgs and Home Manager
