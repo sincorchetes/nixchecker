@@ -16,7 +16,11 @@ export async function currentSystem(): Promise<string> {
  * The system to evaluate for. One asked for has to suit the target (a Mac for nix-darwin, Linux for the
  * rest); otherwise this machine's when it does, else the first of the family.
  */
-export async function systemFor(asked: string | undefined, target: string): Promise<string> {
+export async function systemFor(
+  asked: string | undefined,
+  target: string,
+  own: () => Promise<string> = currentSystem,
+): Promise<string> {
   const darwin = target === "nix-darwin";
   if (asked) {
     if (isDarwin(asked) !== darwin) {
@@ -24,7 +28,7 @@ export async function systemFor(asked: string | undefined, target: string): Prom
     }
     return asked;
   }
-  const own = await currentSystem();
+  const mine = await own();
   const family = SYSTEMS.filter((s) => isDarwin(s) === darwin);
-  return (family as readonly string[]).includes(own) ? own : (family[0] as string);
+  return (family as readonly string[]).includes(mine) ? mine : (family[0] as string);
 }
