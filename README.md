@@ -127,7 +127,9 @@ Limits to know about:
   checked as its base type, and the page lets such a value through (`evaluate` finds it): a few
   options with a type of their own
   (`ibus.engines`, `helix.languages`), and everything disko narrows (it serializes its patterns as plain strings).
-  In the oracle these are about 1 % of the wrong values.
+  Types with a check of their own that runs when the definitions are merged (a launchd calendar interval that must
+  not be empty, the directives of `kanshi`, `initrd.systemd.storePaths`) are in the same case. In the oracle, with 600
+  options per catalog, these are 3 of 3,615 wrong values in NixOS, 9 of 3,308 in Home Manager and 10 of 3,602 in nix-darwin.
 - A value written for a renamed option is held to the type of its new name. About four in five of the
   renamed options of NixOS have a new name the catalogs type; the rest point to a free-form set
   (`settings`), to an option the manuals hide, or to one they do not list, and a wrong value there is
