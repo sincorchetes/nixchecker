@@ -89,6 +89,17 @@ describe("checkText", () => {
     expect(report.diagnostics[0]?.docUrl).toContain("sops-nix#home-manager");
   });
 
+  test("lanzaboote's options sit under boot, which NixOS has, and are typed", async () => {
+    const { report, source } = await run(
+      '{ boot.loader.systemd-boot.enable = false; boot.lanzaboote.enable = "yes"; boot.lanzaboote.pkiBundle = "/var/lib/sbctl"; }',
+      "nixos",
+    );
+    expect(source).toContain("+ lanzaboote");
+    expect(report.diagnostics.map((d) => [d.code, d.params.path])).toEqual([
+      ["type-mismatch", "boot.lanzaboote.enable"],
+    ]);
+  });
+
   test("a text that uses sops-nix is NixOS for the page, not Home Manager", async () => {
     const { report } = await run("{ sops.secrets.x = { }; services.openssh.enable = true; }");
     expect(report.target).toBe("nixos");

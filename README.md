@@ -147,7 +147,7 @@ The NixOS, Home Manager and nix-darwin catalogs exist per release (26.05, 25.11 
 version selector; disko, flakes and `nix.conf` have one catalog each.
 
 Projects that add options to NixOS have a catalog of their own, with only what they add: sops-nix (`sops.*`), agenix
-(`age.*`) and impermanence (`environment.persistence`). It is downloaded and added to the NixOS one when a file writes
+(`age.*`), lanzaboote (`boot.lanzaboote`) and impermanence (`environment.persistence`). It is downloaded and added to the NixOS one when a file writes
 below one of those names, so a `sops.secrets` is known and typed instead of reported as unknown, its documentation link
 is the project's, and the source in the report lists them (`nixpkgs … + sops-nix …`). The oracle puts each to a NixOS with
 its module added. sops-nix also has one for Home Manager (`sops.*` in a Home Manager file). The Home Manager module of impermanence is
@@ -203,7 +203,7 @@ devenv test             # lint, types, unit tests (100% line coverage gate) and 
 
 Other scripts: `check`, `lint`, `unit`, `site-build`, `start`, `catalog`, `corpus` (the parser against nixpkgs and
 Home Manager), `differential` (the parser against the official one on damaged files), `evaluate` (a file against real Nix), `oracle` (the validator against
-the real NixOS (also with sops-nix, agenix and impermanence), Home Manager, nix-darwin and disko module systems, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
+the real NixOS (also with sops-nix, agenix, lanzaboote and impermanence), Home Manager, nix-darwin and disko module systems, on written and generated modules), `e2e` (browser tests of the built site, needs Chrome), `secrets` (gitleaks) and
 `sonar`.
 
 ## Deployment (GitHub Pages)

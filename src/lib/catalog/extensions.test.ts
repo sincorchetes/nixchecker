@@ -47,6 +47,7 @@ describe("extensions of NixOS", () => {
       "ext-sops-nix",
       "ext-sops-nix-home",
       "ext-agenix",
+      "ext-lanzaboote",
       "ext-impermanence",
     ]);
   });

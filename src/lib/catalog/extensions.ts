@@ -34,6 +34,12 @@ export const EXTENSIONS: Extension[] = [
     docs: "https://github.com/ryantm/agenix#tutorial",
   },
   {
+    name: "lanzaboote",
+    target: "nixos",
+    prefix: ["boot", "lanzaboote"],
+    docs: "https://nix-community.github.io/lanzaboote/",
+  },
+  {
     name: "impermanence",
     target: "nixos",
     prefix: ["environment", "persistence"],

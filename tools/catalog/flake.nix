@@ -45,6 +45,10 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     impermanence.url = "github:nix-community/impermanence";
     disko = {
       url = "github:nix-community/disko";
@@ -191,6 +195,12 @@
           ext-sops-nix = extension "sops-nix" inputs.sops-nix "${inputs.sops-nix}/modules/sops" [ [ "sops" ] ];
           ext-sops-nix-home = homeExtension "sops-nix" inputs.sops-nix "${inputs.sops-nix}/modules/home-manager/sops.nix" [ [ "sops" ] ];
           ext-agenix = extension "agenix" inputs.agenix "${inputs.agenix}/modules/age.nix" [ [ "age" ] ];
+          ext-lanzaboote = extension "lanzaboote" inputs.lanzaboote "${inputs.lanzaboote}/nix/modules/lanzaboote.nix" [
+            [
+              "boot"
+              "lanzaboote"
+            ]
+          ];
           ext-impermanence = extension "impermanence" inputs.impermanence "${inputs.impermanence}/nixos.nix" [
             [
               "environment"

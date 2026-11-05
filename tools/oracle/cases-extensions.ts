@@ -30,6 +30,19 @@ export const EXTENSION_CASES: Record<string, string[]> = {
     '{ age.identityPaths = "/etc/key"; }',
     '{ age.secrets.token.symlink = "yes"; }',
   ],
+  "ext-lanzaboote": [
+    // correct
+    "{ boot.lanzaboote.enable = true; }",
+    '{ boot.lanzaboote.pkiBundle = "/var/lib/sbctl"; }',
+    "{ boot.lanzaboote.autoGenerateKeys.enable = true; }",
+    // unknown options
+    "{ boot.lanzaboote.enabel = true; }",
+    '{ boot.lanzaboote.pkiBundl = "/var/lib/sbctl"; }',
+    // wrong types
+    '{ boot.lanzaboote.enable = "yes"; }',
+    "{ boot.lanzaboote.pkiBundle = 3; }",
+    '{ boot.lanzaboote.autoGenerateKeys.enable = "yes"; }',
+  ],
   "ext-impermanence": [
     // correct
     '{ environment.persistence."/persist".directories = [ "/var/lib/nixos" ]; }',

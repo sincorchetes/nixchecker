@@ -10,6 +10,9 @@ versions are the `v0.0.N` tags, each published as a GitHub Release with its note
   command line's exit status.
 
 ### Added
+- lanzaboote (`boot.lanzaboote`, 41 options) as an extension of NixOS. stylix is left out on purpose: its module is a
+  function of its own flake's inputs, so it cannot be put to the oracle, and a catalog nothing checks is not shipped;
+  nixos-hardware only has profiles, no options.
 - The Home Manager module of sops-nix has its catalog (`ext-sops-nix-home`), loaded on top of Home Manager's when a file
   writes below `sops`; the extensions now belong to the target they extend.
 - The "System" selector offers only the systems that suit the target: Macs for nix-darwin, Linux for NixOS and disko.

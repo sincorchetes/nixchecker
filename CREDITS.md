@@ -8,7 +8,7 @@ Option data and documentation links come from:
 - [NixOS options](https://search.nixos.org/options) and the [NixOS manual](https://nixos.org/manual/nixos/stable/)
 - [Home Manager](https://nix-community.github.io/home-manager/options.xhtml)
 - [nix-darwin](https://nix-darwin.github.io/nix-darwin/manual/index.html)
-- [sops-nix](https://github.com/Mic92/sops-nix), [agenix](https://github.com/ryantm/agenix) and [impermanence](https://github.com/nix-community/impermanence)
+- [sops-nix](https://github.com/Mic92/sops-nix), [agenix](https://github.com/ryantm/agenix), [lanzaboote](https://github.com/nix-community/lanzaboote) and [impermanence](https://github.com/nix-community/impermanence)
 - [Nix manual: nix.conf](https://nix.dev/manual/nix/latest/command-ref/conf-file.html)
 - [disko](https://github.com/nix-community/disko)
 - [Nix manual: flake format](https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-format)
