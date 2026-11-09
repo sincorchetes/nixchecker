@@ -82,7 +82,7 @@ for (const root of await sourceRoots()) {
     files.push(join(root, file));
   }
 }
-files.sort();
+files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)); // by code point, whatever the runner's locale
 for (const [index, file] of files.entries()) {
   if (index % STEP !== 0 || Math.floor(index / STEP) % PARTS !== PART - 1) continue;
   const text = await Bun.file(file).text();
