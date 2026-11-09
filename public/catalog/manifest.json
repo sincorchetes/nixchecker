@@ -1,10 +1,10 @@
 {
- "lock": "33dcc0e49922511ca5abf665cf10e5b4ebea274143ce5906b2a1e2ff5d5912d4",
+ "lock": "34e2b53824fb693d721928cafdb29096fe972635dbdbe5b9d05e10f1f134ece2",
  "catalogs": {
   "nixos-26.05": {
-   "source": "nixpkgs 26.05 · 08d3a97 · 2026-10-28",
+   "source": "nixpkgs 26.05 · c56a87d · 2026-11-05",
    "revisions": {
-    "nixpkgs-2605": "08d3a97586f6b6343b3b5e799980773629432610"
+    "nixpkgs-2605": "c56a87d8e41ce69bd2af57eb35dcc117a9dfca33"
    },
    "files": {
     "_module.json": "2ab82b67100961dc974cfaeff94cf1ad555ad0111aac2127d7bc20e2ee2843e8",
@@ -31,7 +31,7 @@
     "ids.json": "29edb925d89e1dd1af34bf80cfefb73d8444a6c0aad5d6408e501ba8c48a044c",
     "image.json": "5a77b27fe3e9f1b9c7f9a00359253db7c7cd7e84857f2d118d59be2fabec91ab",
     "imports.json": "f937c674c84236870443e933439c760f144492d3628f3ae773d0fd20e1d0c65a",
-    "index.json": "56277d29a1b41dcb6cf16d43aea828a436a72301b97d51b75ec87d8963715487",
+    "index.json": "70a648e6786638e462e0dd4765c2e73aa43e6d451c94e1288093fec2fbab6137",
     "isSpecialisation.json": "56f88501a095820b0dc881457afb6c3f1aff0348fec5633bdf08e20e45ae5748",
     "jobs.json": "a671c31858a269650a782d54a5df2656fcfecfb717de4aeb067b917f6979ed9d",
     "krb5.json": "f1ca852765f14a11355e9d8c98a184fd65f4613ed7981233c2e7d75768054814",
@@ -140,7 +140,7 @@
     "services~8.json": "8d95451bc6765af108fd9055f1b07db36b6f64aaadcb26a35f73e73591e0d8e9",
     "services~80.json": "322c8dde86b6f1677cf6061fd60bca27ca7ac59afa9eda5b31ccd479df925f7f",
     "services~81.json": "c15df6132c3a69f95dde37d34ff46c5a8514abe3749fd0563b34df915fd507f8",
-    "services~82.json": "13b6b5c75bd2f903bfa0a4f2afb29a669a28d0ed5cc10435c3bd8edbaf3d94b4",
+    "services~82.json": "c9c2d54b7c7d3efddf26227be971dedd8f1a78502312058dbf18d50417f8716e",
     "services~83.json": "82e103e093b9e85d1b6f181881ce898fb5675b30120bfc91a62baa6c90040c5c",
     "services~84.json": "52596f82b737afb75fee35ea4ae31fd15570ab33671d6fae3e46e61e9f1460d4",
     "services~85.json": "962d9b05443d3c650f7ef67e64b978de43e212ebf665eebc817183d7f5659718",
@@ -172,7 +172,7 @@
    "source": "home-manager 26.05 · 24f2190 · 2026-10-24",
    "revisions": {
     "home-manager-2605": "24f2190587513b9c2f73db112a17844ae912d965",
-    "nixpkgs-2605": "08d3a97586f6b6343b3b5e799980773629432610"
+    "nixpkgs-2605": "c56a87d8e41ce69bd2af57eb35dcc117a9dfca33"
    },
    "files": {
     "_module.json": "2ab82b67100961dc974cfaeff94cf1ad555ad0111aac2127d7bc20e2ee2843e8",
@@ -242,7 +242,7 @@
    "source": "nix-darwin 26.05 · d31953c · 2026-10-24",
    "revisions": {
     "nix-darwin-2605": "d31953cf55f9027a56e9be938daf5db8c5655663",
-    "nixpkgs-2605": "08d3a97586f6b6343b3b5e799980773629432610"
+    "nixpkgs-2605": "c56a87d8e41ce69bd2af57eb35dcc117a9dfca33"
    },
    "files": {
     "_module.json": "2ab82b67100961dc974cfaeff94cf1ad555ad0111aac2127d7bc20e2ee2843e8",
@@ -538,9 +538,9 @@
    }
   },
   "nixos-unstable": {
-   "source": "nixpkgs-unstable · 31ecbac · 2026-10-27",
+   "source": "nixpkgs-unstable · f4a03c0 · 2026-11-07",
    "revisions": {
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
     "_module.json": "2ab82b67100961dc974cfaeff94cf1ad555ad0111aac2127d7bc20e2ee2843e8",
@@ -558,16 +558,16 @@
     "ec2.json": "ded35708e33713b90244db8db334f0296c43d261b511da23d0dd44acb8bddc7e",
     "environment.json": "c310d70e83213e92f9f3739c73f95903fab9ee026d1211a903e1d03021507106",
     "fileSystems.json": "37403ac1c9e54a09da28841de6380ccf97e248bd8c3feab7d9c1e9bb70ab5794",
-    "fonts.json": "90c7960c14ff5f45d5ded10d2554d5121366c73249b44f909e434c59795b6d80",
+    "fonts.json": "9b4893a72420ce3c08b8bbf89be5cef156190d4b4c5ec5de22cb1d98442686a4",
     "freeformType.json": "b83f3a682b11c90d5ebb40e3a6b6896b16b1f171c848c9e8730503bf0f4a903b",
     "gtk.json": "308c0760b3c85aaf87a4c2271447a4246d270fce492a0cffc78ae393ac3ff4bb",
     "hardware~0.json": "f69b8cdae2c8a250e8379b64e8d3df1f6d92c38d0a2ba66818bea7c9639f419e",
     "hardware~1.json": "7f94934ffa4b99278e3800c046f4d2032fbf49e9e3def7af403502e742dd7085",
-    "i18n.json": "5ffddef540d01739f569dff57d6c592ab816b8663e2f00b953e29d09ee7a070d",
+    "i18n.json": "f1fb8e20ef1944b571829d1d626147ff733c8a09438fb43decae6310c7022b3c",
     "ids.json": "29edb925d89e1dd1af34bf80cfefb73d8444a6c0aad5d6408e501ba8c48a044c",
     "image.json": "5a77b27fe3e9f1b9c7f9a00359253db7c7cd7e84857f2d118d59be2fabec91ab",
     "imports.json": "f937c674c84236870443e933439c760f144492d3628f3ae773d0fd20e1d0c65a",
-    "index.json": "ad1da88fa015585cf424ea09c950a587103d19998e5c312c3c853c501114035e",
+    "index.json": "36cc8765e39622ae096f11c952063f8d9ebc8da9ada3c5f3df250384fbe0289b",
     "isSpecialisation.json": "56f88501a095820b0dc881457afb6c3f1aff0348fec5633bdf08e20e45ae5748",
     "jobs.json": "a671c31858a269650a782d54a5df2656fcfecfb717de4aeb067b917f6979ed9d",
     "krb5.json": "f1ca852765f14a11355e9d8c98a184fd65f4613ed7981233c2e7d75768054814",
@@ -588,111 +588,112 @@
     "passthru.json": "d0621ef0adc5763a4199b5daf9a38807558db611a06e695a88fda8827a84a58a",
     "power.json": "fbb987af614c95c8fee134a08c3fecd36ea93526a85ab09e4c320896ff9d02fa",
     "powerManagement.json": "e9c8a9febe838e0948330ad19b0c7272e45477ae5f0be378cca6dc555236b028",
-    "programs~0.json": "ebd9d84ac2fa07517ce543a3aab91a22f143877153a9f89625ca3c4d02d057d6",
+    "programs~0.json": "ee456415bdde0c6c80de965d38a629c39d3c53466a593e2223b645c7e0b1905c",
     "programs~1.json": "349abd1cdb89d4a4693daa7673cda4afb93a3f21ea13d7d2d13615be47318410",
     "programs~2.json": "c33c48844bf021c42077991c1fe18205a169dfd81be71feddc09e7e09c34d4d3",
-    "programs~3.json": "7eb4ad1475fa2ba0743713577a6f882be564c13b8780af844b96ef80f12478a2",
+    "programs~3.json": "0d6f0c2b7d011a6bd7ab4cf9b1c9a32a75c93a6f50b63d480cc95104fd54b268",
     "qt.json": "9a59a7ef2cb6b42ee43a7892318ac02365e805735214dba84945dfe0d59670a2",
     "qt5.json": "9dfebc9cdcef9229f97acb67efa91d175988a475fde52bc41d01f8cefce47ba6",
     "security~0.json": "9937711119bf919a5d98d6fa93fcfc7c8dc89a4e05554314e559a05f730f398e",
     "security~1.json": "d58da05cd301da58fb3f837c5502820c339c5af2a61c05a19c4bd3ec6c3f7bb2",
-    "services~0.json": "c1cde8857d0860c9d4037a1952936195685a00848a12a07ee05b9618f5d30ab6",
-    "services~1.json": "44dfd59335a54836eb94f8b90f1a8c6027b960edf9d41e97d1f6bbc3e4974cd8",
-    "services~10.json": "0197a71307b0f5ab1914c0f8cdb98279fbec20d708c65f8e01e7d4176f31d4e3",
-    "services~11.json": "c96c2ae9a6b5dca73d85bb9053ce99474c4e36f81e85c4e729754b75e9dd176f",
-    "services~12.json": "27c0c9bad4d27a2c2fecf9804c343f5d80ca01cb9b3a5f348238717766fe4985",
-    "services~13.json": "2ccfebec0ba88c832545ebef1b98ac80c5abb629e922a577e2867d84742b334f",
-    "services~14.json": "bd5b8f30a41d585927a61071d6d8dc38d8b7082fa938e2bb9ac9925049e7821b",
-    "services~15.json": "6b3d48d86ea4902775f6d713384aff4241232ab8b416c86fd9ce55a144f35a63",
-    "services~16.json": "8d96b1b9375e0886ba6d8776eca2424a3538b244d35da399add5bc6b729b78bf",
-    "services~17.json": "ed7da131a811bc0499c4425f8b2abccf5990cd1b1839f2936e104adc93cc5c24",
-    "services~18.json": "9abfbf392a74ea739b09a4a864377b7a8134c995c8a3629f64c9d7f1a2463108",
-    "services~19.json": "d72ac2d50f5f8f89a0c768fd1a5f27dfe1c17f3b2be5c540cdea65e7ae8b2c45",
-    "services~2.json": "75614f4dbfffa4846804e00ed09e923009ef2a2e553ce0109bcf3e96f5610d75",
-    "services~20.json": "d9ab73db31984a013c749c5a20dec3ad3dbdd81e53f79092c75e18deb6a83ade",
-    "services~21.json": "6047cbec916c58f54f23d1856b23d901b83b15b63caf837c13bd797ed96ac031",
-    "services~22.json": "9f803019d7ad2e3eed5793a19643524d84da94c96ac16570282b57ce1532a7e1",
-    "services~23.json": "135d675eb812968565b17245b7ce05d6393797ba68d9a68aadbee78a3e0d7776",
-    "services~24.json": "6db33d6ed870791c887d013261fa91b30940cceca003dad40faed99ffbd1bac3",
-    "services~25.json": "be6cd118ac993d982a1fe37a27abd1699f586852dc2429321611b2b52140fff6",
-    "services~26.json": "253ce32be14a9d49e49fd6aa84d0408f401489d4abfb12072b3e2ba105b5b92b",
-    "services~27.json": "8604b2341e20cfcb804e7a5a19acb92c31419aaa99ededf25ccffaadcf3b1002",
-    "services~28.json": "35326c4452ad701b320b0bc6e03c4fed9a0411c57eb2772406296dfc4fb7f4bd",
-    "services~29.json": "77d8206564c19202fec7275d1d19a8cc7f9f8f205dfc53bf11f6200805dea205",
-    "services~3.json": "37b202acf84d698357c3d7e8367a88a27927a0da6beb281a70d39bbd8863f460",
-    "services~30.json": "2d704e7fa04ca083edfc3a2d69524746f9290f801bb92c46d14d94d525d94635",
-    "services~31.json": "d653d25277336dd1668a25ab749414e5ca72982f68ec6e10904ead527216c84c",
-    "services~32.json": "aa05c650f028ac2d9658f94bc90ecc32a713379940e522657958f6e7d6143db3",
-    "services~33.json": "d97669bce9a55c56fe88fa4b05f1550b4d9a760cf64f3ea6283ddf68fb4b9b39",
-    "services~34.json": "a25261e8a097e093567b1d5cf3b0cd65ff48c4d260f9dd70163d43f3e8aa021f",
-    "services~35.json": "5191d038be7eefa4622e198e6425526d70e4ebcf7c6e0a3de056f65ab91a0982",
-    "services~36.json": "d836e2097bcc98daf01adb6ec3ad96fe797595572767831040918d6a15bf9163",
-    "services~37.json": "75edad572d7fd3826a78aa5c4c38a97218364d5364b601c1c8d9ecdec7372f3a",
-    "services~38.json": "a65759423549245d76646ada86fa10dbeec95c1d49bc1dd4b5ef6de9e825076c",
-    "services~39.json": "138ece94cd0b18de396537e8e1b0ff2c904f3930099813e6be7fa49e2c545554",
-    "services~4.json": "9b1979def2f8621bc28e3278017d6ab544a231e741b9439a9ab467c22c790188",
-    "services~40.json": "aa6f7cf4bb45d62d611339fc0c3db1ffc07055212f6d676ec32fc01a218d788f",
-    "services~41.json": "ea0a0be791926168955d83edc7afccfd878e12fb320889979a9d55e736688502",
-    "services~42.json": "1899c7edf490030a6456a5311b1e8712907d2585a580cea0e57247c9b2f8a1fa",
-    "services~43.json": "fc372ca140f92197fb75be325367996c0a684764185807bc1413d6a1bb9ec7f8",
-    "services~44.json": "fb96d748ac69f7eab4347d0af0d43e7f0dcc789a7e32f3a3b692bcdb47637796",
-    "services~45.json": "27fb3d1236e68ec31c4b9e15153f788d423902a8a8276664b99cc785a4804d39",
-    "services~46.json": "b24236bf628b04a62bce7949b725fd911f2e7e21ca48067a1da0788178419f63",
-    "services~47.json": "7d59d13a41e076437b83beb7cbd3a3e0d4bf3bd7c9131d6cac1663eaf61fc5c2",
-    "services~48.json": "ff56d2f4bf8aaafb70de7bbd470d495ed0cb11be1bb68f512e584760abc02cf6",
-    "services~49.json": "2f68d387f01b96a09c322c121bc9663c25aec9e1cf157acea715a1c5f490d546",
-    "services~5.json": "5a5e9ad6df1b3698bcc0911a382b8c5c1296701c90e387a488af12c86a3ea127",
-    "services~50.json": "326926fcc140ea5a79ad3fe54d6367310057ac083c1ed00b854fd6839507551f",
-    "services~51.json": "9576fe9ee44072d7fec51b9d731fb7c83b7030b5a3229772ad9fcb27f0f7f465",
-    "services~52.json": "5c701ec40923d53f5a5be85a6a222557c8723461eb3f3cab24a76621628068c6",
-    "services~53.json": "53faa499c2f48fa7e9cbf44c8263d79ee256ea721b7e47a8287dd37b1e88c6a5",
-    "services~54.json": "328de7a833272a97bf4eec9de314d18833a62d0b787226b24363cc4fd370e963",
-    "services~55.json": "204ad1bcafd7de6605fa5dfcb4a6e61a5514de78dc3ce023357859ada2755728",
-    "services~56.json": "3b3c619f6f1ad6a426feea69fed41fd4d9f5b7d325bbc37d55f9718e7e831f5a",
-    "services~57.json": "93e2b7fe02d056cdf61c7d6e6a7bf60830de009730da279fc83c37b6879e0dbb",
-    "services~58.json": "3fc60fd234d1bbe27d4d2e9a08300fc61cc0e88a7361278d81ecd64dfe756f4d",
-    "services~59.json": "f6d86c3bb549de9f4d13cf931ef7280702d2ba049749a2d0ec3ab1100399a8c3",
-    "services~6.json": "d12257300dd6c17f4c15b5cb05704c8ab2d3327909dbd38f50c3934162da8224",
-    "services~60.json": "52428532c9dff4ba079a851c554bf7c0336baa69503ad75ae5c4a34686bf929c",
-    "services~61.json": "9f40c3d96b8a014dae2f0eac3bc6c2283d91a4f691e1aaebae27a3fb17d1e080",
-    "services~62.json": "c34fe2d6049ceb7959476d66041e9090aa08ad9d08b69dd804de53c4220612bc",
-    "services~63.json": "5880ef0617c204b64351ed6dcae0d8a133a58985b452cb15eaa31dd528ffd26e",
-    "services~64.json": "ea8f3d0a66e0247332bf5e30d4c3337b97f8886b265899f542c40671b88c9477",
-    "services~65.json": "920706d327a9c95973b8bb11a26e6a74c39959f846aa0bec6bae4fbd796fe753",
-    "services~66.json": "fddefb79ff92162534fec835b976502679b5aacd9cf72630d77e5daa0d8338ed",
-    "services~67.json": "1e95781f4bb983935739d53511bef3b31d026f908b64576cf9093e4fbc21e85c",
-    "services~68.json": "28d7f2bb7fcc39e798742de94b3d5996d7f5efc088d9b2b5916b07fdf2d83e4d",
-    "services~69.json": "7033ff109f34519a61ebe429dbdaa30012f6ccd35d0144d6587ae1314e18162c",
-    "services~7.json": "c231f80eda24db01787df0b18c3e8af4b13d65d582e6f9ac53f5f2c0c97cdf83",
-    "services~70.json": "5f89fa289b6530840119fe980da1da0b0a517845b30b6cb259cd02b3aedb7df1",
-    "services~71.json": "847df5a10cbe47e8d4bfb88a1d442ce8cbb3a44ae152848d8355926dbf9a3807",
-    "services~72.json": "21a8910c37fb1e0ba80e256841ef935d0f353df163ce5c072b2654527eb5eda9",
-    "services~73.json": "7d9f5819b717ff2857fdec18b6009f09d64ae802f25fd01e9ee1d8f60500d531",
-    "services~74.json": "87d6127f6d50d81ea185609ca270e897339021ce3366c6e4daa33a30d773f76d",
-    "services~75.json": "ec032d3e1fdea7b00234066cf07d0ce21804ad71e652fb0d5cab547559c083b3",
-    "services~76.json": "90bb7d36149b2ea477b1dc5c253f1a71d29985645d95d2ffade25f75e69f40ff",
-    "services~77.json": "b8b43f4bf5135ac4bcc40ff7a301c536770ab835a976932a1ac0721a26fca31b",
-    "services~78.json": "659dd2ee1bc1bd32d40cdc6fe9adc483ecf45ae6b5f619ba5442248fab1c9dbb",
-    "services~79.json": "0df20d3bfe748670cd52fea2001352ebac897df33230d34b0d0c7d2a87174094",
-    "services~8.json": "f7a3e5b0fe1b7d9d63af5a5c576c83722da0665e93a242811da87302615879ad",
-    "services~80.json": "00effdff154ad8c85fa4b29925cfc2b48d7d1209660820e4933c1ed7689a4a3a",
-    "services~81.json": "7e552e95d95a4b3d384dbb64983183e248656bb18d32fbcfaef1c669f0fbd7b2",
-    "services~82.json": "ad0bc56040a0c4ac3366317063ec1889603434cd0d16691b63b84d0e83f3df9b",
-    "services~83.json": "c908893dbc239f1195015dce38fd9810c2cdd1d4cc02065d4bc5bdc0c627cc32",
-    "services~84.json": "0efcbb6034e16b29387fa15b724744894ac2c39372556a06691af3cfbbee9a39",
-    "services~85.json": "904f86af78a29ec01c0918a05cacb92eb65fd7183b07695701cd19e787d10d76",
-    "services~86.json": "e66a0f0656b9385d10341de81d74dbeddf321cd9e20e2576a8b78c0ea090dab6",
-    "services~87.json": "e4bf25b806a2af9e1fc9eb2ba06cb8be9d98d1b2890325cea556a1ad5474c472",
-    "services~88.json": "d24db14339c4df454acc9102668eb234fd92703b451f774e45745915b0a980f0",
-    "services~89.json": "9cc602325ba7a613cdc075d8dc407c63e9f59a06ae71045c2cccf13ca7cbb10e",
-    "services~9.json": "7311fab19426c3111788d5bcd5e681efa1b3c3300b217abe91efba3377fe5290",
-    "services~90.json": "a96941a532e05919c1d823c6aec7750e715c7a97592fceac7ab3b1535214794b",
-    "services~91.json": "e92007f46822f43edf4bde5c57bb99595e659555cb5149f82c18b20dee4ce8fe",
-    "services~92.json": "40ad3a0b720b76f244b83903606da0210d7490da232bf9d900b5b00119675b52",
-    "services~93.json": "54d12250887fcd87ad1ad4ef9201c71ecc6c8f4f95aae70230b20a9b9261ef88",
-    "services~94.json": "2f0e6d2e7b874dad4e39947d654aff67361702a6bbc5e51ec5265891144ec2b3",
-    "services~95.json": "a4ea51914973153e25118caf18ea004b52ee9d2cea9cf530d2454447f2ad6fc7",
-    "services~96.json": "49cb37f6f82127a603bc2d0d4b0d14a7ebe8cd62c9bb86b98b197994ee8c043e",
+    "services~0.json": "319b626215c120c8a29531f3880a18e74439a504bd3e29466d76ae6e5306dddc",
+    "services~1.json": "b4ecd9e3ae8b7b7f97621a16838b5d8d4b03de163b8f8a71ed26dc091194ba4c",
+    "services~10.json": "bdf965c0832dcf23a6e927568c2084896758737726d861842c5b87f33d7e9f0c",
+    "services~11.json": "ea749d4a479950d01b5c40d96b990aecf8a587dc92f94670223bcaa623299e60",
+    "services~12.json": "7d51c040dce7ab2657e3909bf464967dc9fc6ed7c0da446dce1bbbeb04d483cd",
+    "services~13.json": "8240c1e3abfb8f8aae6ef6ac378bb0e497bd8ff6a130665e10d32133a9a1efb0",
+    "services~14.json": "29720f3e0853b50346842e54b65d86b0d26bd42d38832b7604decca698949b30",
+    "services~15.json": "90c4ce67faa8db2453b5c801c00f728fd87c6d3c32d85dc00ba190df24d1ce8f",
+    "services~16.json": "98405dd2d7bba317ee584d76294341355a081a080e75dbe342ab88d640277046",
+    "services~17.json": "8ea1eccb8a48b627fe3876f6ccba01e0500ee8674afd770659ec5da274f1f393",
+    "services~18.json": "ded4d2041dbd49fe3b61345779ee8c42c92fd896ed8a6ccd54a17eb37f514a14",
+    "services~19.json": "6f6f3c4ed15f24ba7e27ed8bc130230315ada791d8f302692d4efe01298c54a6",
+    "services~2.json": "f3f0edac58e10a89f241aa1b785b850e31001e58b2238a5d54ce36199147a1ec",
+    "services~20.json": "ca2d25ae6dc8d75bbf6dbce15b6d57be786ab501fe0fb05a08b2358065e1058e",
+    "services~21.json": "66fafd083ff452e43f8737f2a1b60376358334bccb3178448cbd6241888d6385",
+    "services~22.json": "b1792497d907314e74591839b00bcb42490747cb06e6520383f0970107a7846a",
+    "services~23.json": "f680bb464418ec5b12d837a1b8b4b257f9055125153b9b00b63faa9ca95e2c11",
+    "services~24.json": "ff32fbcbb186b8745ada9ecbb453855c9997be79d1c74a507fdc4ac0199e365c",
+    "services~25.json": "d387907e74a2ba49146542bd7eaf4e884d2e675e2be69d2cea1f6837b52fff43",
+    "services~26.json": "d4946b1e364c9bfdbcbecb611c01fdec9373b43f12a4ff488f91db373d37c8b0",
+    "services~27.json": "87865d6fb8cdfdaea30b4ae67ac7d701fd6e2553db02c03926128274e1ed2f6a",
+    "services~28.json": "037abbf70ac7cd01b50ff9717da093f57dfd609e4fea53b08cc86e25fb7c8e4e",
+    "services~29.json": "c65e36012e1503ccc5893fd8be3427f3c50efa9cf9ea06726cf9e5ce2e1756a4",
+    "services~3.json": "9b38c3945c019926d2057a7bd6c6604abe2ac8a06750c86d0036e13db004a8b3",
+    "services~30.json": "dc8d73c36996b81c4c2ed02ee00ea0d66dacc247ff0282f722f70e220ffb75e5",
+    "services~31.json": "31472a4fb587f5b11457f9ed517e04de906f0a53d21ecd4e84ce418cb2446af8",
+    "services~32.json": "f1afc66fae9f61376dc34e4c893a8c9cc964ec82071b8806dbebae64b1e9542c",
+    "services~33.json": "067c9c2a5afb432351667bd93e36f90401b4c2e2e75ab4e715d3db4d5923aaa6",
+    "services~34.json": "50bcae729879113b3044e0d2d1e02e8923a76a34cf012dc24de0ce7323cb2667",
+    "services~35.json": "2f6056dde825fe8441431178b5e417fa5eb267eb9a20c2bc2a6819885bc8f684",
+    "services~36.json": "4167bca09e46eca53c21d799ee30a23d55d9a8891f640c425792d024f254a18c",
+    "services~37.json": "e2aa8d692eeecf0c8a4b9ba82cb010de0d65076db1f0d9ac6c74b6ee95a53fda",
+    "services~38.json": "e76da219fdf8e8b2d8fc536d004c630c1212f13af027b8e2c38e34d0d11011ef",
+    "services~39.json": "2fab9383d93399ee11a10bff1d54ce0ff40ea254cea7956b1ae679335ae8fb19",
+    "services~4.json": "a47ce58ae5146e9e6cd49c5d8ecb5fbb32a511d580b58134ddeedf92af6f6a3c",
+    "services~40.json": "e9b752ca332d94eb7cfa4f8cb381e6e0e80cc900f35d2e8cf21934751f700868",
+    "services~41.json": "ff5e04405e4d7f6bffca84e6739b1e05dd55a9965d63fb79e17fc38413ef2ad8",
+    "services~42.json": "6704ec6bffd96587cc1df389b8dda6db53ed44d4142a1d41fc208dd98a0128a5",
+    "services~43.json": "19b68266d2c1ecaecd7fed361a1db3d62e2fbbd39ccc1c945b076356b34e9bb7",
+    "services~44.json": "55cb7388561ef90a3987382d1346d5da85afac5f725292a15b8df7b5b475b423",
+    "services~45.json": "c224c63a4bcb36b0d8694c39e746b90301923a26698936730c9878a80de50efb",
+    "services~46.json": "66ab28f36bef4067945d6cc737141b0c6c0cd625be2d5f3d44888bc2b8b0c0e2",
+    "services~47.json": "e64d0340b1bf5dabc306d3555b94b31077abb3758653a93b385d67c03cf21031",
+    "services~48.json": "6d9047a8f949d87e71ad969a451d7c5f0e09e231b1044ae388035d7a59e0c61b",
+    "services~49.json": "f211ec4fd21706319ae4ccf00de90d48594dd1e2e4cdefde80a32acd9a8616ee",
+    "services~5.json": "5182c3b8463beb027f2464c65acf10efa2e69e7f5997394a637e45ea78b3e152",
+    "services~50.json": "136933f64c683402a9cc8dd514b742a7e407c1fd831322405b8a8b8ec245dc8d",
+    "services~51.json": "13f1876bf57e510ebfce9e36a784279b0858304dc0e3d38af43b1543300889cf",
+    "services~52.json": "53f5e334f2a065e7ee2f51fee78b134d99f416104015b863b2d53ef17df525de",
+    "services~53.json": "3b761c62cfc37df4151bae9922c9a3a12b93ecf14190f33ba7965f57ff20032f",
+    "services~54.json": "f242c93dce247f393ab9192ace21782d7f29af80000d7066a1154a297917bc73",
+    "services~55.json": "61dbdb6c00d605a4b9c89ed5a8f1abd8f139d55acf15a764befa1bafb8c0ad4f",
+    "services~56.json": "3fef53d9f74033e25d0800a8c6c1c23518be16ce5e9039130cd1484889e150f8",
+    "services~57.json": "af74a9122b3a957a476ac65fbe324b14cfc60bbe08af63e083c0427e42535f35",
+    "services~58.json": "9a3e690038b400aea917e8ff2f3704bd8d483823c75926b30e2c71883035e545",
+    "services~59.json": "ba2273598143eb86621d8cd8777144cfd616b089922a0bd8861a790baa9c0181",
+    "services~6.json": "edf0af160183252ba62ddac949d3889f6e6656dbe5f817c9adaba9352e2431e0",
+    "services~60.json": "93142433bc8a4894adaa850757b9afba6cb5eeaf7f97a5b62197ac94a942efe8",
+    "services~61.json": "3f3a341d33eedc86cf61b23a66015338f6c5a1d84b7b90bb960f3146092ce0cf",
+    "services~62.json": "3c284e36153e8ae42a08a5f6b102f97b3b8e4ab6b737bcf8335511113f1deb70",
+    "services~63.json": "fb5ef55955b71cec5e61170bf12b3539947f3d02018aa4242e4fd64f94aad8aa",
+    "services~64.json": "381106f1c942f0bd0f88298779d46f2e169bb92d1081e77f1ab8d961d48160fe",
+    "services~65.json": "f84561de123597b1b37569a00fe338561128c120b35132d36e28098f46851f8e",
+    "services~66.json": "4ee5b56f678e84b0a2ed86cf50c932f8ccf6bb3760409a8874912d3d9f94e1fa",
+    "services~67.json": "f5dfdbe0b73b68b336ff958c0a0d78184990bdaa55429cbf1ecd4b41b79a20e9",
+    "services~68.json": "8407683c45e5c7b6e50d44e58be85dc22bf4e5a980dddf73dc6dfde70c48e21e",
+    "services~69.json": "ec4e5ee02593efec36436e4154f8f1509278dd6711be7ce713748f1ecf7284bf",
+    "services~7.json": "6f94cb51cc8a6b625ba3257fad0ce69b91ed02ef78e858b4d817889125f0010c",
+    "services~70.json": "31c560776ff94aa27967b85dfab7e3c846939569963a7492004e7b39c6d2157a",
+    "services~71.json": "9535265a6cbd1ebcd58ffd2c6a10c3b66adf993cc58e54b14d33037fd6afd9fb",
+    "services~72.json": "55d3d7ca88507dad6c02c73023f3ed9de1abab929a75cc651e002d1d6d4ec5b4",
+    "services~73.json": "fd17568650887edc219319ab6a80839a0b75f40fc8b6bf74b19a8f159a3f650f",
+    "services~74.json": "a062eb6cdde3aa9dc01fdc5723bba1cb974a739a9a1e697b964731df0d7dcf15",
+    "services~75.json": "c80f02988357483ec48a09472955dd1d9654096cdf48c3ab821dd6d6fa1d16fb",
+    "services~76.json": "fc42c7ef2024ffacd5f31ae3c88cecee23a46953a0e7310ee0b601e95f1aaebd",
+    "services~77.json": "597b27dc3b9339748846bd2bbcf28312fbe204f44888458712097f836c30123e",
+    "services~78.json": "189ebf98e6c27613f1edca434cdfacda20851483dca2efa48a18a0a314ee7c03",
+    "services~79.json": "9606b0d0f9d22e464b8d1ee822697c733984a36886582039933d41db35d510f7",
+    "services~8.json": "6144e4ad264cc0586a1c0b8f085291020846557786c6dd245a23b28a9cd91422",
+    "services~80.json": "54ccd4b2bd4d90491955b356c6a942472e5bd4ed88d6368d78bd96789b285353",
+    "services~81.json": "634dd7a0e3c301cc3953c50105d4bfcb93901c2d318fd18bd33cb081775e8816",
+    "services~82.json": "281648e3225f6296172bfa54fe3b3750dc17adb578042b5a7b78f061a90dca73",
+    "services~83.json": "90f44415539873578bff6bf4e2418210126a0b13290a0f38134becbbbbca00fd",
+    "services~84.json": "00958caa7423c8270fbf591b1d16defe4d8a8d7fed6c498c54499c1eed609a40",
+    "services~85.json": "0777ec5243f10dafdc9f578b479a3a77d70accd016a01aa56f5a536139039945",
+    "services~86.json": "6a4de82f3f694aa5423945e91c9c28ab318dfef6d60b169cb13512c24474bc54",
+    "services~87.json": "c8c1bdc6dc63f90838dfd0e0096ce1e4f147af55ac9cede0d1ac5dc96add7c39",
+    "services~88.json": "5ed99eb5c35309eed39906ffa5b701b7ba04a703e70d7f9e19a9a020ee7b72d0",
+    "services~89.json": "b4d69b2dcde2295f92f93be2174cdd1bba02bcbff41eb0bc1b3c69e6a129e5ed",
+    "services~9.json": "633b322e05cc1a891e296e3c92d51cb5bc233e38d25e651f5725ba45a83feb66",
+    "services~90.json": "565b13a882546a929492a23716e4933842888662646f3b282ef9d2559c8e0754",
+    "services~91.json": "054f1cdbdfddd465518ddae944d92530d936162af833aefd9f33c7af6a206b60",
+    "services~92.json": "96f6d1ac1521cb2d410eebdbc9035e50092d2151b42b46747e7000293a63f4b1",
+    "services~93.json": "c103254b8a2afb9cf9593d35939cbe9876e7bc711e0856faf708662552893b2a",
+    "services~94.json": "f2a04c647c13d06de35d93883598ac8d8f960beec4eeb85e548ebf5a4d361fe0",
+    "services~95.json": "2c43a413a8f656cc630b6a45966549e5cba410f1a50755cf744c32b177999a9d",
+    "services~96.json": "3bf14eb182428b55e6de4452228c0cd1ccde4f90d79a05e6cb486194b1c10a6b",
+    "services~97.json": "0d8555ccc9e8c4e7b52b67a7fe650c8a9ddd1ba7b3b3efc3a05ad36feeb665d3",
     "snapraid.json": "8d776251ef059119217fa7c1ea0efabf31650e6722f9b660b2882b59228a3b71",
     "sound.json": "c5075f1e993614d895efb7b3f101b1a24b6a993e69e50d0790a4aefb44a55c7a",
     "specialisation.json": "97b0be643d0754e68e96f25249481809b560b826a9e6dbf5caba8d7bbff08835",
@@ -711,14 +712,14 @@
    }
   },
   "home-manager-unstable": {
-   "source": "home-manager · 095fef2 · 2026-10-28",
+   "source": "home-manager · 2c0c1f0 · 2026-11-06",
    "revisions": {
-    "home-manager": "095fef2f265c3c0da4fe315efba8f8a04495ab34",
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "home-manager": "2c0c1f01521469cf0271180c453c79782d53c2f6",
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
     "_module.json": "2ab82b67100961dc974cfaeff94cf1ad555ad0111aac2127d7bc20e2ee2843e8",
-    "accounts~1.json": "d1f79c6ba831fcb01fe17470215f2c67b7e26c0d5570990c26b11d5ad095e4f8",
+    "accounts~1.json": "7d93da2a961b05e92d8e8c3731e7fd303b4454d676edd878ae4c8b3422022e22",
     "assertions.json": "a37e9e857de8b94d1b402559939ece7e235abc0ac8cc5d3a2ea0ba5441328a80",
     "config.json": "74208283e98225fcc8f759dfe07eb27cc7162eb28d7f09f38db3e5bc8b678dde",
     "dbus.json": "b759b3deb025d8542ae6da23840e710486006af418f33d4cf20b18ef6e7fa825",
@@ -732,7 +733,7 @@
     "home.json": "aa1bc4127ff48b4f6af7ad7e4de9cdbfef14079144bb59cf203d37b255881647",
     "i18n.json": "f73545f9bd7f4347fa667670c2b86c14cc3e646f8ba97ddf36c54a5d56eeae4d",
     "imports.json": "f937c674c84236870443e933439c760f144492d3628f3ae773d0fd20e1d0c65a",
-    "index.json": "bd884c59b54460c77ba29036277a562baf18c25d91fe4dc833a0477763c7de18",
+    "index.json": "e69feffdfccf0db82e3a30c7c18c0bd71ab09b7ae94262d796b483103c1fab91",
     "launchd.json": "c08a72ebeaca1e35f28c503b646868601d650c1be1e737d915493d7a3df0e7d3",
     "lib.json": "972526c1f8bca615cab9cb805e6d6d9822f82a83455e0d8a899a130d6238fbc6",
     "manual.json": "e437aa813a4042f88a9e6fb40a95906b3f614e7caf84707c2c901cbef29f507b",
@@ -785,7 +786,7 @@
    "source": "nix-darwin · ff0e21a · 2026-10-31",
    "revisions": {
     "nix-darwin": "ff0e21a414d4547183396da1b44a66f2577b65e9",
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
     "_module.json": "2ab82b67100961dc974cfaeff94cf1ad555ad0111aac2127d7bc20e2ee2843e8",
@@ -821,7 +822,7 @@
    "source": "disko · cedd626 · 2026-10-20",
    "revisions": {
     "disko": "cedd626e11b635470fa6f9fdb8ad79b0075dd7f9",
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
     "assertions.json": "a37e9e857de8b94d1b402559939ece7e235abc0ac8cc5d3a2ea0ba5441328a80",
@@ -841,32 +842,32 @@
    }
   },
   "ext-sops-nix": {
-   "source": "sops-nix · b18e01c · 2026-11-02",
+   "source": "sops-nix · 89a234c · 2026-11-06",
    "revisions": {
-    "sops-nix": "b18e01ce148eb3efff5de2f2d3181ca53b2b2a54",
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "sops-nix": "89a234ce2daf6e568a7d4b4fe250afdd23d84e20",
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
-    "index.json": "c71c0844d7577ad6338701ca175434ab8eeb7e3be64bcffc23e75571bc039254",
-    "sops.json": "5c7adf0150073fd3f547f0ac88d86196e187622c71673ef7277ef7f58573e3db"
+    "index.json": "af39f49f9cbcf65d73834847f1cf01327a264f4ebee363d3964954875f1f4fb9",
+    "sops.json": "ceae1f41491ea73a5f511cb4f962f058f2ef52615e8237a94957064fc2ed3727"
    }
   },
   "ext-sops-nix-home": {
-   "source": "sops-nix · b18e01c · 2026-11-02",
+   "source": "sops-nix · 89a234c · 2026-11-06",
    "revisions": {
-    "sops-nix": "b18e01ce148eb3efff5de2f2d3181ca53b2b2a54",
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "sops-nix": "89a234ce2daf6e568a7d4b4fe250afdd23d84e20",
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
-    "index.json": "c71c0844d7577ad6338701ca175434ab8eeb7e3be64bcffc23e75571bc039254",
-    "sops.json": "4ff73169cb1f0015e10b7122bc4a38f668a173aec61c1585f7f44876773b9293"
+    "index.json": "af39f49f9cbcf65d73834847f1cf01327a264f4ebee363d3964954875f1f4fb9",
+    "sops.json": "6e3fbd035da9086476ecb5d4ef4b021a94c6de8adf78064f82b0d6a57fa76f52"
    }
   },
   "ext-agenix": {
    "source": "agenix · 5e5b88a · 2026-10-20",
    "revisions": {
     "agenix": "5e5b88a0c8e56f291a108c2fe9934054d9745b2e",
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
     "age.json": "1b57f37b5bc2121f5ad273e18b8ec9b54f53c1518c76a85d6c690f324a0f1655",
@@ -877,7 +878,7 @@
    "source": "lanzaboote · 4b98333 · 2026-10-17",
    "revisions": {
     "lanzaboote": "4b98333073bdaf9b1b5dd7d87c2dab96883b234e",
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
     "boot.json": "06e967cba60c0fdf4754d56b50603c5af2166147a6719c8b86ede504ea779eae",
@@ -888,7 +889,7 @@
    "source": "impermanence · fa627f4 · 2026-10-23",
    "revisions": {
     "impermanence": "fa627f4c8b8e92f58f58a73d99ee4e1304e64eb2",
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
     "environment.json": "d73e29ef37b0aa0145e9e6c3014392c2e74fafe9a3db012a9a06c5a02ba4ed26",
@@ -898,7 +899,7 @@
   "nix-conf": {
    "source": "Nix manual · nix.conf · Nix 2.34.9",
    "revisions": {
-    "nixpkgs": "31ecbaca1bdefa45dffc409f0250bd8039ea0010"
+    "nixpkgs": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6"
    },
    "files": {
     "abort-on-warn.json": "292bb370f78868ebec257a989c484b609f6cdd411b6737684f282182859ffbf2",
