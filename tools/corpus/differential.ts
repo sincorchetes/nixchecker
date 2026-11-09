@@ -1,7 +1,7 @@
 // Compares our parser with the official one (`nix-instantiate --parse`) on damaged copies of real
 // files: for each, both must agree on whether the text is valid Nix. A sample of the corpus keeps
 // it quick; the seed makes every run damage the same way.
-//   bun tools/corpus/differential.ts [step] [seed]   (needs Nix; `devenv shell -- differential`)
+//   bun tools/corpus/differential.ts [step] [seed] [k/n]   (needs Nix; `devenv shell -- differential`)
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -10,6 +10,12 @@ import { parse } from "../../src/lib/nix/parse";
 import { sourceRoots } from "./sources";
 
 const STEP = Number(process.argv[2] ?? 40); // one file out of this many
+// `k/n` as the third argument: this run takes the k-th of n equal parts of those files, so that
+// the canary can compare all of them in parallel jobs.
+const [PART = 1, PARTS = 1] = (process.argv[4] ?? "1/1").split("/").map(Number);
+if (!Number.isInteger(PART) || !Number.isInteger(PARTS) || PART < 1 || PART > PARTS) {
+  throw new Error(`bad part "${process.argv[4]}": expected k/n with 1 <= k <= n`);
+}
 const WORKERS = 12;
 const MAX_BYTES = 40_000;
 const SYMBOLS = "{}[]()\";'=.$:@,?";
@@ -69,14 +75,19 @@ const officialVerdict = async (path: string): Promise<"valid" | "invalid" | "oth
 
 const dir = await mkdtemp(join(tmpdir(), "nixchecker-diff-"));
 const cases: string[] = [];
-let index = 0;
+// Sorted, so that every runner splits the same list into the same parts.
+const files: string[] = [];
 for (const root of await sourceRoots()) {
   for await (const file of new Bun.Glob("**/*.nix").scan({ cwd: root, followSymlinks: true })) {
-    if (index++ % STEP !== 0) continue;
-    const text = await Bun.file(join(root, file)).text();
-    if (text.length > MAX_BYTES) continue;
-    for (const change of damage) cases.push(change(text));
+    files.push(join(root, file));
   }
+}
+files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)); // by code point, whatever the runner's locale
+for (const [index, file] of files.entries()) {
+  if (index % STEP !== 0 || Math.floor(index / STEP) % PARTS !== PART - 1) continue;
+  const text = await Bun.file(file).text();
+  if (text.length > MAX_BYTES) continue;
+  for (const change of damage) cases.push(change(text));
 }
 
 if (cases.length === 0) throw new Error("no files to damage: are the sources readable?");
