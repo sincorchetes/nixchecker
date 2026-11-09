@@ -1,5 +1,6 @@
-import type { AttrPart, Bind, Expr, Param, Pos } from "./ast";
-import { Cursor, KEYWORDS, posOf } from "./cursor";
+import type { Expr, Param, Pos } from "./ast";
+import { Atoms } from "./atoms";
+import { KEYWORDS, posOf } from "./cursor";
 import type { Token } from "./lex";
 
 // Binary operators: [precedence, right associative]. Higher binds tighter.
@@ -21,11 +22,11 @@ const BINARY: Record<string, [number, boolean]> = {
   "++": [9, true],
 };
 
-/** The expression grammar. Bindings, which it needs for sets and lets, come from the subclass. */
-export abstract class Expressions extends Cursor {
-  protected abstract binds(stop: "}" | "in"): Bind[];
-  protected abstract attrPath(binding?: boolean): AttrPart[];
+// The precedence levels of the operators that cannot be chained: equality and order.
+const NONASSOCIATIVE = new Set([3, 4]);
 
+/** The expression grammar. Bindings, which it needs for sets and lets, come from the subclass. */
+export abstract class Expressions extends Atoms {
   protected expr(): Expr {
     const t = this.tok;
     if (!t) return this.unexpected();
@@ -138,6 +139,9 @@ export abstract class Expressions extends Cursor {
       this.next();
       const right = this.binary(entry[1] ? entry[0] : entry[0] + 1);
       left = { t: "binary", op: op.text, left, right, ...this.at(op) };
+      // Comparisons do not chain in Nix: `a == b == c` and `a < b > c` are syntax errors.
+      const again = this.tok?.kind === "punct" ? BINARY[this.tok.text] : undefined;
+      if (again?.[0] === entry[0] && NONASSOCIATIVE.has(entry[0])) this.unexpected();
     }
   }
 
@@ -157,94 +161,5 @@ export abstract class Expressions extends Cursor {
       return { t: "unary", op: "-", arg: this.negate(), ...this.at(t) };
     }
     return this.application();
-  }
-
-  // Does `name = ...` (or `a.b = ...`) begin at `at`? An argument can never be followed by `=`, so
-  // this is the next binding and not another argument: the `;` before it was forgotten.
-  protected startsBinding(at: number): boolean {
-    let n = at;
-    while (this.isP(".", this.toks[n + 1])) n += 2;
-    const name = this.toks[n];
-    return (name?.kind === "ident" || name?.kind === "string") && this.isP("=", this.toks[n + 1]);
-  }
-
-  protected canStartArgument(): boolean {
-    const t = this.tok;
-    if (!t) return false;
-    if ((t.kind === "ident" || t.kind === "string") && this.startsBinding(this.i)) return false;
-    if (t.kind === "ident") return !KEYWORDS.has(t.text) || t.text === "rec";
-    if (t.kind === "punct") return ["(", "[", "{"].includes(t.text);
-    return true;
-  }
-
-  protected application(): Expr {
-    let fn = this.select();
-    while (this.canStartArgument()) {
-      const arg = this.select();
-      fn = { t: "app", fn, arg, ...posOf(fn) };
-    }
-    return fn;
-  }
-
-  protected select(): Expr {
-    const base = this.atom();
-    if (!this.isP(".")) return base;
-    this.next();
-    const path = this.attrPath();
-    let fallback: Expr | undefined;
-    if (this.isK("or")) {
-      this.next();
-      fallback = this.select();
-    }
-    return { t: "select", base, path, ...(fallback && { fallback }), ...posOf(base) };
-  }
-
-  protected atom(): Expr {
-    const t = this.tok;
-    if (!t) return this.unexpected();
-    const pos = this.at(t);
-    switch (t.kind) {
-      case "number":
-        this.next();
-        return { t: "num", float: t.float === true, text: t.text, ...pos };
-      case "string":
-        this.next();
-        return { t: "str", ...(t.value !== undefined && { value: t.value }), ...pos };
-      case "path":
-        this.next();
-        return { t: "path", ...pos };
-      case "ident":
-        if (t.text === "rec" && this.isP("{", this.peek())) {
-          this.next();
-          return this.set(true, pos);
-        }
-        if (KEYWORDS.has(t.text)) return this.unexpected();
-        this.next();
-        return { t: "ident", name: t.text, ...pos };
-      default:
-        break;
-    }
-    if (this.isP("(")) {
-      this.next();
-      const inner = this.expr();
-      this.expectP(")", t);
-      return { t: "paren", inner, ...pos };
-    }
-    if (this.isP("[")) {
-      this.next();
-      const items: Expr[] = [];
-      while (this.tok && !this.isP("]")) items.push(this.select());
-      this.expectP("]", t);
-      return { t: "list", items, ...pos };
-    }
-    if (this.isP("{")) return this.set(false, pos);
-    return this.unexpected();
-  }
-
-  protected set(rec: boolean, pos: Pos): Expr {
-    const open = this.expectP("{");
-    const binds = this.binds("}");
-    this.expectP("}", open);
-    return { t: "set", rec, binds, ...pos };
   }
 }

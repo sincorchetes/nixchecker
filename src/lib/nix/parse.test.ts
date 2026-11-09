@@ -140,6 +140,26 @@ describe("parse: problems", () => {
     expect(codes('a."b"')).toEqual([]);
   });
 
+  test("comparisons do not chain, as in Nix", () => {
+    for (const src of ["a == b == c", "a != b == c", "a < b > c", "import </a.nix> { }"]) {
+      expect(codes(src), src).toEqual(["syntax-unexpected"]);
+    }
+    for (const src of ["(a == b) == c", "a < b == c", "a == b < c", "a < b && c > d"]) {
+      expect(codes(src), src).toEqual([]);
+    }
+  });
+
+  test("`or` is a keyword, but still an argument right after a simple expression", () => {
+    expect(codes("f or")).toEqual([]);
+    expect(codes("(f x or y)")).toEqual([]);
+    expect(codes("[ a or ]")).toEqual([]);
+    expect(codes("{ or = 1; a.or = 2; }")).toEqual([]);
+    expect(codes("(f or.b)")).toEqual(["syntax-expected"]);
+    expect(codes("f or or")).toEqual(["syntax-unexpected"]);
+    expect(codes("1 + or")).toEqual(["syntax-unexpected"]);
+    expect(codes("[ or ]")).toEqual(["syntax-unexpected"]);
+  });
+
   test("what Nix rejects around paths, formals and inherit", () => {
     expect(problems("import ./a//b")[0]).toEqual(["syntax-unexpected", 1, 12, { found: "/" }]);
     expect(codes("a //b")).toEqual([]);
